@@ -6,13 +6,22 @@
     <conv:BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
     <conv:CountToVisibilityConverter x:Key="CountToVisibility" />
+    <conv:EnumLabelConverter x:Key="EnumLabel" />
+
+    <!-- Списки форматов и кодеков показывают человеческие названия -->
+    <DataTemplate x:Key="EnumLabelTemplate">
+        <TextBlock Foreground="{StaticResource Brush.Text}"
+                   Text="{Binding Converter={StaticResource EnumLabel}}" />
+    </DataTemplate>
 
     <!-- Строка «поле — значение» в карточках информации о файле -->
     <DataTemplate x:Key="MediaFieldTemplate" DataType="{x:Type vm:MediaField}">
         <Grid Margin="0,0,0,7">
+            <!-- Подпись фиксирована, значение занимает остаток и при нужде обрезается:
+                 иначе длинное имя контейнера съедает подпись. -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"

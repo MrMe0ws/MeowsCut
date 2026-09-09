@@ -63,14 +63,14 @@
 
 ## M3. Сквозной экспорт
 
-- [ ] `ExportSettings`, `ExportRequest`, `ExportPlan`, `ExportSummary`, `CompatibilityMatrix`
-- [ ] `FfmpegArgumentBuilder`, `EncoderCatalog`, `FilterGraphBuilder` (клипы → trim/concat)
-- [ ] Стратегии: Remux, один клип stream-copy, полный `filter_complex`
-- [ ] `TempWorkspace`, `OrphanTempCleaner`, запись в `.part` + `File.Move`
-- [ ] `FfmpegProgressReader`, `EtaEstimator`, `StageProgressAggregator`
-- [ ] `IJobQueue` + worker, `ProcessTerminator` (отмена)
-- [ ] Панель экспорта: сводка → прогресс → результат, «Открыть файл» / «Открыть папку»
-- [ ] Тесты: парсер прогресса, билдер аргументов, выбор стратегии, генерация графа для 3 клипов
+- [x] `ExportSettings`, `ExportRequest`, `ExportPlan`, `ExportSummary`, `CompatibilityMatrix`, `RateControlPolicy`
+- [x] `FfmpegArgumentBuilder`, `EncoderCatalog`, `FilterGraphBuilder` (клипы → trim/concat), `SpeedFilter`
+- [x] Стратегии: копирование потоков и полный `filter_complex`; concat demuxer — на M7
+- [x] `TempWorkspace` + уборка сирот при старте, запись в `.part` + `File.Move`
+- [x] `FfmpegProgressParser`, `EtaEstimator`, веса стадий в движке
+- [x] `IJobQueue` + worker на канале, отмена через ProcessRunner (q → Kill(tree))
+- [x] Панель экспорта: настройки, сводка, прогресс, отмена, «Открыть файл» / «Открыть папку»
+- [x] Тесты: парсер прогресса, граф фильтров, выбор стратегии, 8 сквозных экспортов на настоящем ffmpeg
 
 **Готово, когда:** проект из нескольких клипов экспортируется в MP4 с прогрессом, ETA и рабочей отменой.
 

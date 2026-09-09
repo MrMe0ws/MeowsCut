@@ -170,4 +170,55 @@
   <data name="CloseFile" xml:space="preserve">
     <value>Закрыть файл</value>
   </data>
+  <data name="SectionExport" xml:space="preserve">
+    <value>Экспорт</value>
+  </data>
+  <data name="SectionSummary" xml:space="preserve">
+    <value>Что получится</value>
+  </data>
+  <data name="FieldContainerFormat" xml:space="preserve">
+    <value>Формат</value>
+  </data>
+  <data name="FieldVideoCodec" xml:space="preserve">
+    <value>Видеокодек</value>
+  </data>
+  <data name="FieldOutputFile" xml:space="preserve">
+    <value>Файл результата</value>
+  </data>
+  <data name="KeepAudio" xml:space="preserve">
+    <value>Оставить звук</value>
+  </data>
+  <data name="FastMode" xml:space="preserve">
+    <value>Быстро, без перекодирования</value>
+  </data>
+  <data name="EstimatedSize" xml:space="preserve">
+    <value>Примерный размер</value>
+  </data>
+  <data name="StartExport" xml:space="preserve">
+    <value>Экспортировать</value>
+  </data>
+  <data name="CancelExport" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Elapsed" xml:space="preserve">
+    <value>Прошло</value>
+  </data>
+  <data name="Remaining" xml:space="preserve">
+    <value>Осталось</value>
+  </data>
+  <data name="ExportDone" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="ExportFailed" xml:space="preserve">
+    <value>Не удалось выполнить экспорт</value>
+  </data>
+  <data name="OpenResultFile" xml:space="preserve">
+    <value>Открыть файл</value>
+  </data>
+  <data name="ShowInFolder" xml:space="preserve">
+    <value>Открыть папку</value>
+  </data>
+  <data name="ExportAgain" xml:space="preserve">
+    <value>Экспортировать ещё раз</value>
+  </data>
 </root>

@@ -81,3 +81,9 @@ public sealed class UnsupportedMediaException(string message, string filePath)
 /// </summary>
 public sealed class EditOperationException(string message)
     : MeowsCutException(ErrorCode.EditOperationFailed, message);
+
+/// <summary>
+/// Не удалось записать результат: нет прав, нет места, файл занят другой программой.
+/// </summary>
+public sealed class OutputWriteException(string message, Exception? innerException = null)
+    : MeowsCutException(ErrorCode.OutputWriteFailed, message, innerException);

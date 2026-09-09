@@ -7,6 +7,7 @@ using MeowsCut.App.Services;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Diagnostics;
+using MeowsCut.Core.Editing;
 using Microsoft.Extensions.Logging;
 
 namespace MeowsCut.App.ViewModels;
@@ -48,6 +49,7 @@ public sealed partial class ShellViewModel : ObservableObject
         IAppSettingsStore settingsStore,
         IFileDialogService fileDialogService,
         IDialogService dialogService,
+        ExportViewModel export,
         ILogger<ShellViewModel> logger)
     {
         _mediaProbe = mediaProbe;
@@ -56,8 +58,15 @@ public sealed partial class ShellViewModel : ObservableObject
         _settingsStore = settingsStore;
         _fileDialogService = fileDialogService;
         _dialogService = dialogService;
+        Export = export;
         _logger = logger;
     }
+
+    /// <summary>Панель экспорта. Живёт рядом с проектом и обновляется вместе с ним.</summary>
+    public ExportViewModel Export { get; }
+
+    /// <summary>Проект целиком: источники и таймлайн. Доска монтажа появится на следующем этапе.</summary>
+    public Project? Project { get; private set; }
 
     public bool HasMedia => Media is not null;
 
@@ -114,7 +123,10 @@ public sealed partial class ShellViewModel : ObservableObject
         try
         {
             var info = await _mediaProbe.ProbeAsync(path, cancellationToken).ConfigureAwait(true);
+
             Media = MediaSummaryViewModel.Create(info);
+            Project = Project.FromMedia(info);
+            Export.Attach(Project);
 
             var settings = _settingsStore.Current.WithRecentFile(path);
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(true);
@@ -136,7 +148,12 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CloseMedia() => Media = null;
+    private void CloseMedia()
+    {
+        Media = null;
+        Project = null;
+        Export.Detach();
+    }
 
     [RelayCommand]
     private async Task ChooseFfmpegFolderAsync(CancellationToken cancellationToken)

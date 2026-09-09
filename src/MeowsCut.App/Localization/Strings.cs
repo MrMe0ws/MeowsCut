@@ -81,5 +81,39 @@ public static class Strings
 
     public static string CloseFile => Get(nameof(CloseFile));
 
+    public static string SectionExport => Get(nameof(SectionExport));
+
+    public static string SectionSummary => Get(nameof(SectionSummary));
+
+    public static string FieldContainerFormat => Get(nameof(FieldContainerFormat));
+
+    public static string FieldVideoCodec => Get(nameof(FieldVideoCodec));
+
+    public static string FieldOutputFile => Get(nameof(FieldOutputFile));
+
+    public static string KeepAudio => Get(nameof(KeepAudio));
+
+    public static string FastMode => Get(nameof(FastMode));
+
+    public static string EstimatedSize => Get(nameof(EstimatedSize));
+
+    public static string StartExport => Get(nameof(StartExport));
+
+    public static string CancelExport => Get(nameof(CancelExport));
+
+    public static string Elapsed => Get(nameof(Elapsed));
+
+    public static string Remaining => Get(nameof(Remaining));
+
+    public static string ExportDone => Get(nameof(ExportDone));
+
+    public static string ExportFailed => Get(nameof(ExportFailed));
+
+    public static string OpenResultFile => Get(nameof(OpenResultFile));
+
+    public static string ShowInFolder => Get(nameof(ShowInFolder));
+
+    public static string ExportAgain => Get(nameof(ExportAgain));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

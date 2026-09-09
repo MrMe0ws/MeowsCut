@@ -6,7 +6,9 @@ using MeowsCut.App.Localization;
 using MeowsCut.App.Services;
 using MeowsCut.App.ViewModels;
 using MeowsCut.App.Views;
+using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
+using MeowsCut.Core.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -56,6 +58,10 @@ public partial class App : Application
         MainWindow = window;
         window.Show();
 
+        // Папки задач, оставшиеся после аварийного завершения, убираем в фоне.
+        var tempFactory = _host.Services.GetRequiredService<ITempWorkspaceFactory>();
+        _ = Task.Run(() => tempFactory.CleanOrphans(TimeSpan.FromHours(24)), _shutdown.Token);
+
         var shell = _host.Services.GetRequiredService<ShellViewModel>();
         await shell.InitializeAsync(CommandLine.FindFilePath(e.Args), _shutdown.Token);
 
@@ -64,6 +70,14 @@ public partial class App : Application
 
     protected override async void OnExit(ExitEventArgs e)
     {
+        if (_host is not null)
+        {
+            // Сначала отменяем работающие задачи и ждём, пока ffmpeg завершится
+            // и уберёт за собой временные файлы, и только потом гасим хост.
+            var jobs = _host.Services.GetRequiredService<IJobQueue>();
+            await jobs.ShutdownAsync();
+        }
+
         _shutdown.Cancel();
 
         if (_host is not null)

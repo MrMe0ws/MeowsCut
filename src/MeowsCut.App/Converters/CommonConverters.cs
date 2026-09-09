@@ -24,6 +24,32 @@ public sealed class InverseBooleanToVisibilityConverter : IValueConverter
         value is Visibility.Collapsed;
 }
 
+/// <summary>
+/// Человеческие названия для перечислений: в списке должно быть «MP4» и «H.264»,
+/// а не имена элементов перечисления.
+/// </summary>
+public sealed class EnumLabelConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
+    {
+        Core.Export.ContainerFormat container => container switch
+        {
+            Core.Export.ContainerFormat.Mp4 => "MP4",
+            Core.Export.ContainerFormat.WebM => "WebM",
+            Core.Export.ContainerFormat.Mov => "MOV",
+            Core.Export.ContainerFormat.Mkv => "MKV",
+            Core.Export.ContainerFormat.Avi => "AVI",
+            _ => container.ToString()
+        },
+        Core.Export.VideoCodec codec => Core.Export.CodecNames.DisplayName(codec),
+        Core.Export.AudioCodec codec => Core.Export.CodecNames.DisplayName(codec),
+        _ => value?.ToString() ?? string.Empty
+    };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>Ненулевое количество элементов → Visible.</summary>
 public sealed class CountToVisibilityConverter : IValueConverter
 {

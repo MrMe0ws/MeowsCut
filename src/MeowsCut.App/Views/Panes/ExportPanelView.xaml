@@ -1,0 +1,185 @@
+<UserControl x:Class="MeowsCut.App.Views.Panes.ExportPanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:ExportViewModel}"
+             Background="{StaticResource Brush.Surface}">
+
+    <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1,0,0,0" Padding="18">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Margin="0,0,0,14"
+                       Style="{StaticResource Text.Section}"
+                       Text="{loc:Tr SectionExport}" />
+
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+
+                    <!-- Настройки -->
+                    <StackPanel Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibility}}">
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldContainerFormat}" />
+                        <ComboBox Margin="0,4,0,12"
+                                  ItemTemplate="{StaticResource EnumLabelTemplate}"
+                                  ItemsSource="{Binding Containers}"
+                                  SelectedItem="{Binding Container}" />
+
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldVideoCodec}" />
+                        <ComboBox Margin="0,4,0,12"
+                                  ItemTemplate="{StaticResource EnumLabelTemplate}"
+                                  ItemsSource="{Binding VideoCodecs}"
+                                  SelectedItem="{Binding VideoCodec}" />
+
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldResolution}" />
+                        <ComboBox Margin="0,4,0,12"
+                                  ItemsSource="{Binding Resolutions}"
+                                  SelectedItem="{Binding Resolution}" />
+
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldFrameRate}" />
+                        <ComboBox Margin="0,4,0,12"
+                                  ItemsSource="{Binding FrameRates}"
+                                  SelectedItem="{Binding FrameRate}" />
+
+                        <CheckBox Margin="0,2,0,6"
+                                  Content="{loc:Tr KeepAudio}"
+                                  Foreground="{StaticResource Brush.Text}"
+                                  IsChecked="{Binding KeepAudio}" />
+
+                        <CheckBox Margin="0,0,0,14"
+                                  Content="{loc:Tr FastMode}"
+                                  Foreground="{StaticResource Brush.Text}"
+                                  IsChecked="{Binding PreferStreamCopy}" />
+
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldOutputFile}" />
+                        <TextBox Margin="0,4,0,14"
+                                 Padding="8,6"
+                                 Background="{StaticResource Brush.SurfaceRaised}"
+                                 BorderBrush="{StaticResource Brush.Border}"
+                                 Foreground="{StaticResource Brush.Text}"
+                                 Text="{Binding OutputPath, UpdateSourceTrigger=PropertyChanged}"
+                                 TextWrapping="Wrap" />
+
+                        <!-- Сводка -->
+                        <TextBlock Margin="0,4,0,8"
+                                   Style="{StaticResource Text.Section}"
+                                   Text="{loc:Tr SectionSummary}" />
+
+                        <ItemsControl ItemsSource="{Binding SummaryLines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:SummaryLine}">
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Style="{StaticResource Text.Muted}"
+                                                   Text="{Binding Label}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Margin="10,0,0,0"
+                                                   HorizontalAlignment="Right"
+                                                   Style="{StaticResource Text.Base}"
+                                                   Text="{Binding Value}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding Warnings}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="0,0,0,6"
+                                               Foreground="{StaticResource Brush.Warning}"
+                                               Style="{StaticResource Text.Base}"
+                                               Text="{Binding}"
+                                               TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Прогресс -->
+                    <StackPanel Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Style="{StaticResource Text.Base}" Text="{Binding ProgressStage}" TextWrapping="Wrap" />
+
+                        <ProgressBar Height="6"
+                                     Margin="0,12,0,10"
+                                     Background="{StaticResource Brush.SurfaceRaised}"
+                                     BorderThickness="0"
+                                     Foreground="{StaticResource Brush.Accent}"
+                                     Maximum="100"
+                                     Value="{Binding Percent, Mode=OneWay}" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource Text.Muted}">
+                                <Run Text="{loc:Tr Elapsed}" />
+                                <Run Text=" " />
+                                <Run Text="{Binding ElapsedText, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Grid.Column="1" Style="{StaticResource Text.Muted}">
+                                <Run Text="{loc:Tr Remaining}" />
+                                <Run Text=" " />
+                                <Run Text="{Binding RemainingText, Mode=OneWay}" />
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Результат -->
+                    <StackPanel Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Foreground="{StaticResource Brush.Accent}"
+                                   Style="{StaticResource Text.Title}"
+                                   Text="{loc:Tr ExportDone}" />
+                        <TextBlock Margin="0,4,0,0"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{Binding ResultSizeText}" />
+                        <TextBlock Margin="0,10,0,0"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{Binding OutputPath}"
+                                   TextWrapping="Wrap" />
+
+                        <Button Margin="0,14,0,0"
+                                Command="{Binding OpenResultCommand}"
+                                Content="{loc:Tr OpenResultFile}"
+                                Style="{StaticResource Button.Primary}" />
+                        <Button Margin="0,8,0,0"
+                                Command="{Binding ShowInFolderCommand}"
+                                Content="{loc:Tr ShowInFolder}"
+                                Style="{StaticResource Button.Ghost}" />
+                    </StackPanel>
+
+                    <TextBlock Margin="0,12,0,0"
+                               Foreground="{StaticResource Brush.Danger}"
+                               Style="{StaticResource Text.Base}"
+                               Text="{Binding ErrorMessage}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Margin="0,14,0,0">
+                <Button Command="{Binding StartCommand}"
+                        Content="{loc:Tr StartExport}"
+                        Style="{StaticResource Button.Primary}"
+                        Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                <Button Command="{Binding CancelCommand}"
+                        Content="{loc:Tr CancelExport}"
+                        Style="{StaticResource Button.Ghost}"
+                        Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
