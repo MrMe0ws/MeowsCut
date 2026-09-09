@@ -53,10 +53,10 @@
 
 ## M2. Ядро таймлайна (чистый Core)
 
-- [ ] `Project`, `Sequence`, `VideoTrack`, `Clip`, `ClipAudio`, `SequenceFormat`
-- [ ] `Clip.SplitAt / TrimStart / TrimEnd / WithSpeed`, `Sequence.Resolve`
-- [ ] `IEditCommand` + все команды v1, `EditHistory` (снимки, undo/redo, `TryMergeWith`)
-- [ ] Тесты: разрез на границах, ripple-удаление, обрезка за пределы источника, undo/redo,
+- [x] `Project`, `Sequence`, `VideoTrack`, `Clip`, `ClipAudio`, `ClipTransform`, `SequenceFormat`
+- [x] `Clip.SplitAt / TrimStart / TrimEnd / WithSpeed`, `Sequence.Resolve`, `Sequence.SplitAt`
+- [x] `IEditCommand` + 9 команд, `EditHistory` (снимки, undo/redo, склейка серий, глубина 100)
+- [x] Тесты: разрез на границах, ripple-удаление, обрезка за пределы источника, undo/redo,
       пересчёт длительности при скорости, слияние серий drag-команд
 
 **Готово, когда:** модель монтажа полностью покрыта тестами и ведёт себя предсказуемо без UI.

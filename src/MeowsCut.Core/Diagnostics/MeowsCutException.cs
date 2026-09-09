@@ -13,7 +13,8 @@ public enum ErrorCode
     OutputWriteFailed,
     NotEnoughDiskSpace,
     TempWorkspaceFailed,
-    SettingsFailed
+    SettingsFailed,
+    EditOperationFailed
 }
 
 /// <summary>
@@ -73,3 +74,10 @@ public sealed class UnsupportedMediaException(string message, string filePath)
 {
     public string FilePath { get; } = filePath;
 }
+
+/// <summary>
+/// Недопустимая правка таймлайна: разрез вплотную к краю, ссылка на несуществующий клип
+/// и подобное. Интерфейс должен не давать так делать, но модель обязана защищаться сама.
+/// </summary>
+public sealed class EditOperationException(string message)
+    : MeowsCutException(ErrorCode.EditOperationFailed, message);
