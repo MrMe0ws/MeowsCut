@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="AppTitle" xml:space="preserve">
+    <value>Meows Cut</value>
+  </data>
+  <data name="EmptyStateTitle" xml:space="preserve">
+    <value>Перетащите видео сюда</value>
+  </data>
+  <data name="EmptyStateOr" xml:space="preserve">
+    <value>или</value>
+  </data>
+  <data name="OpenVideo" xml:space="preserve">
+    <value>Открыть видео</value>
+  </data>
+  <data name="OpenDialogTitle" xml:space="preserve">
+    <value>Выберите видеофайл</value>
+  </data>
+  <data name="FilterVideoFiles" xml:space="preserve">
+    <value>Видеофайлы</value>
+  </data>
+  <data name="FilterAllFiles" xml:space="preserve">
+    <value>Все файлы</value>
+  </data>
+  <data name="RecentFiles" xml:space="preserve">
+    <value>Недавние</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="Reading" xml:space="preserve">
+    <value>Читаю файл…</value>
+  </data>
+  <data name="SectionFile" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="SectionVideo" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="SectionAudio" xml:space="preserve">
+    <value>Аудио</value>
+  </data>
+  <data name="FieldDuration" xml:space="preserve">
+    <value>Длительность</value>
+  </data>
+  <data name="FieldSize" xml:space="preserve">
+    <value>Размер файла</value>
+  </data>
+  <data name="FieldContainer" xml:space="preserve">
+    <value>Контейнер</value>
+  </data>
+  <data name="FieldOverallBitrate" xml:space="preserve">
+    <value>Общий битрейт</value>
+  </data>
+  <data name="FieldResolution" xml:space="preserve">
+    <value>Разрешение</value>
+  </data>
+  <data name="FieldFrameRate" xml:space="preserve">
+    <value>Частота кадров</value>
+  </data>
+  <data name="FieldCodec" xml:space="preserve">
+    <value>Кодек</value>
+  </data>
+  <data name="FieldBitrate" xml:space="preserve">
+    <value>Битрейт</value>
+  </data>
+  <data name="FieldPixelFormat" xml:space="preserve">
+    <value>Формат пикселя</value>
+  </data>
+  <data name="FieldChannels" xml:space="preserve">
+    <value>Каналы</value>
+  </data>
+  <data name="FieldSampleRate" xml:space="preserve">
+    <value>Частота дискретизации</value>
+  </data>
+  <data name="NoAudio" xml:space="preserve">
+    <value>Без звука</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>неизвестно</value>
+  </data>
+  <data name="WarningVariableFrameRate" xml:space="preserve">
+    <value>Переменная частота кадров — при нарезке без перекодирования возможен рассинхрон звука</value>
+  </data>
+  <data name="WarningRotated" xml:space="preserve">
+    <value>В метаданных задан поворот кадра: {0}°</value>
+  </data>
+  <data name="FfmpegSearching" xml:space="preserve">
+    <value>Ищу FFmpeg…</value>
+  </data>
+  <data name="FfmpegReady" xml:space="preserve">
+    <value>FFmpeg {0}</value>
+  </data>
+  <data name="FfmpegNotFoundTitle" xml:space="preserve">
+    <value>FFmpeg не найден</value>
+  </data>
+  <data name="FfmpegNotFoundMessage" xml:space="preserve">
+    <value>Положите ffmpeg.exe и ffprobe.exe в папку ffmpeg рядом с приложением или укажите папку вручную.</value>
+  </data>
+  <data name="FfmpegChooseFolder" xml:space="preserve">
+    <value>Указать папку</value>
+  </data>
+  <data name="FfmpegChooseFolderTitle" xml:space="preserve">
+    <value>Папка с ffmpeg.exe и ffprobe.exe</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>Не удалось открыть файл</value>
+  </data>
+  <data name="CloseFile" xml:space="preserve">
+    <value>Закрыть файл</value>
+  </data>
+</root>

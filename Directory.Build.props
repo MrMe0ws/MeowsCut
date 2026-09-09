@@ -1,0 +1,17 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NeutralLanguage>ru</NeutralLanguage>
+    <Product>Meows Cut</Product>
+    <Company>Meows Cut</Company>
+    <Version>0.1.0</Version>
+    <Copyright>© 2026</Copyright>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BFE2B108-A788-406E-9982-B4729F14BE03}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeowsCut.Core", "src\MeowsCut.Core\MeowsCut.Core.csproj", "{603B05B2-E07D-4B31-9B4A-50805F85241A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeowsCut.Ffmpeg", "src\MeowsCut.Ffmpeg\MeowsCut.Ffmpeg.csproj", "{1D4AB418-1A94-48A5-BE94-269E1160B2C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeowsCut.App", "src\MeowsCut.App\MeowsCut.App.csproj", "{80D38B8F-3187-4E71-9523-40678B6F8AFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{234BB77D-4C22-4E76-A330-265856BC60F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeowsCut.Core.Tests", "tests\MeowsCut.Core.Tests\MeowsCut.Core.Tests.csproj", "{E9E4F013-7525-47C7-8589-274CEC34FB13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeowsCut.Ffmpeg.Tests", "tests\MeowsCut.Ffmpeg.Tests\MeowsCut.Ffmpeg.Tests.csproj", "{473EF96D-AB4A-4810-B091-D5AB729B0899}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{603B05B2-E07D-4B31-9B4A-50805F85241A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{603B05B2-E07D-4B31-9B4A-50805F85241A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{603B05B2-E07D-4B31-9B4A-50805F85241A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{603B05B2-E07D-4B31-9B4A-50805F85241A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D4AB418-1A94-48A5-BE94-269E1160B2C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D4AB418-1A94-48A5-BE94-269E1160B2C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D4AB418-1A94-48A5-BE94-269E1160B2C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D4AB418-1A94-48A5-BE94-269E1160B2C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80D38B8F-3187-4E71-9523-40678B6F8AFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80D38B8F-3187-4E71-9523-40678B6F8AFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80D38B8F-3187-4E71-9523-40678B6F8AFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80D38B8F-3187-4E71-9523-40678B6F8AFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9E4F013-7525-47C7-8589-274CEC34FB13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9E4F013-7525-47C7-8589-274CEC34FB13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9E4F013-7525-47C7-8589-274CEC34FB13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9E4F013-7525-47C7-8589-274CEC34FB13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{473EF96D-AB4A-4810-B091-D5AB729B0899}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{473EF96D-AB4A-4810-B091-D5AB729B0899}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{473EF96D-AB4A-4810-B091-D5AB729B0899}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{473EF96D-AB4A-4810-B091-D5AB729B0899}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{603B05B2-E07D-4B31-9B4A-50805F85241A} = {BFE2B108-A788-406E-9982-B4729F14BE03}
+		{1D4AB418-1A94-48A5-BE94-269E1160B2C9} = {BFE2B108-A788-406E-9982-B4729F14BE03}
+		{80D38B8F-3187-4E71-9523-40678B6F8AFA} = {BFE2B108-A788-406E-9982-B4729F14BE03}
+		{E9E4F013-7525-47C7-8589-274CEC34FB13} = {234BB77D-4C22-4E76-A330-265856BC60F3}
+		{473EF96D-AB4A-4810-B091-D5AB729B0899} = {234BB77D-4C22-4E76-A330-265856BC60F3}
+	EndGlobalSection
+EndGlobal

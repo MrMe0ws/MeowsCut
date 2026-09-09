@@ -1,0 +1,30 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:MeowsCut.App.Converters"
+                    xmlns:vm="clr-namespace:MeowsCut.App.ViewModels">
+
+    <conv:BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
+    <conv:CountToVisibilityConverter x:Key="CountToVisibility" />
+
+    <!-- Строка «поле — значение» в карточках информации о файле -->
+    <DataTemplate x:Key="MediaFieldTemplate" DataType="{x:Type vm:MediaField}">
+        <Grid Margin="0,0,0,7">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Style="{StaticResource Text.Muted}"
+                       Text="{Binding Label}" />
+            <TextBlock Grid.Column="1"
+                       Margin="12,0,0,0"
+                       HorizontalAlignment="Right"
+                       Style="{StaticResource Text.Base}"
+                       TextTrimming="CharacterEllipsis"
+                       Text="{Binding Value}" />
+        </Grid>
+    </DataTemplate>
+
+</ResourceDictionary>

@@ -1,0 +1,10 @@
+bin/
+obj/
+publish/
+third_party/
+*.user
+*.suo
+.vs/
+.idea/
+TestResults/
+*.log

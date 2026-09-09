@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>MeowsCut.App</RootNamespace>
+    <AssemblyName>MeowsCut</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Минимальная ОС — Windows 10 1809; версия не задаётся через TargetPlatformVersion,
+         чтобы не тянуть проекции WinRT: приложению они не нужны. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeowsCut.Core\MeowsCut.Core.csproj" />
+    <ProjectReference Include="..\MeowsCut.Ffmpeg\MeowsCut.Ffmpeg.csproj" />
+  </ItemGroup>
+
+  <!-- Строки интерфейса: resx как ресурс, доступ через Localization/Strings.cs и loc:Tr.
+       Английский добавляется файлом Strings.en.resx, код не меняется. -->
+  <ItemGroup>
+    <EmbeddedResource Update="Localization\Strings.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
