@@ -8,8 +8,8 @@
     <Color x:Key="Color.Border">#FF2E2E33</Color>
     <Color x:Key="Color.Text">#FFEDEDF0</Color>
     <Color x:Key="Color.TextMuted">#FF9A9AA3</Color>
-    <Color x:Key="Color.Accent">#FF6E8BFF</Color>
-    <Color x:Key="Color.AccentHover">#FF849BFF</Color>
+    <Color x:Key="Color.Accent">#FF5FE06B</Color>
+    <Color x:Key="Color.AccentHover">#FF7BEA85</Color>
     <Color x:Key="Color.Warning">#FFE0B341</Color>
     <Color x:Key="Color.Danger">#FFE06C6C</Color>
 
@@ -20,6 +20,8 @@
     <SolidColorBrush x:Key="Brush.Text" Color="{StaticResource Color.Text}" />
     <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}" />
     <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
+    <!-- Текст на акцентной кнопке: на ярко-зелёном читается только тёмный -->
+    <SolidColorBrush x:Key="Brush.OnAccent" Color="{StaticResource Color.Background}" />
     <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}" />
     <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
     <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
@@ -51,8 +53,9 @@
     <Style x:Key="Button.Primary" TargetType="Button">
         <Setter Property="FontFamily" Value="{StaticResource Font.Ui}" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.OnAccent}" />
         <Setter Property="Background" Value="{StaticResource Brush.Accent}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Padding" Value="20,9" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">

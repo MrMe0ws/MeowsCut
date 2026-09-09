@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MeowsCut.Core\MeowsCut.Core.csproj" />
     <ProjectReference Include="..\MeowsCut.Ffmpeg\MeowsCut.Ffmpeg.csproj" />
   </ItemGroup>

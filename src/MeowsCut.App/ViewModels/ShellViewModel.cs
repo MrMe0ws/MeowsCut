@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MeowsCut.App.Localization;
@@ -63,15 +64,21 @@ public sealed partial class ShellViewModel : ObservableObject
     public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
 
     /// <summary>
-    /// Стартовая проверка: ищем ffmpeg, не блокируя показ окна.
+    /// Стартовая проверка: ищем ffmpeg, не блокируя показ окна. Если приложение запущено
+    /// с путём к файлу (двойной клик по видео, «Открыть с помощью»), сразу открываем его.
     /// </summary>
-    public async Task InitializeAsync(CancellationToken cancellationToken)
+    public async Task InitializeAsync(string? initialFile, CancellationToken cancellationToken)
     {
         await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(true);
         RefreshRecentFiles();
 
         var result = await _toolsetLocator.LocateAsync(cancellationToken).ConfigureAwait(true);
         ApplyToolsetResult(result);
+
+        if (initialFile is not null && File.Exists(initialFile))
+        {
+            await OpenAsync(initialFile, cancellationToken).ConfigureAwait(true);
+        }
     }
 
     [RelayCommand]
