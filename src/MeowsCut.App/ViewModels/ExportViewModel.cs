@@ -141,6 +141,22 @@ public sealed partial class ExportViewModel : ObservableObject
         RefreshSummary();
     }
 
+    /// <summary>
+    /// Проект изменился на таймлайне: пересчитываем сводку, но путь результата
+    /// и настройки не трогаем — их выбрал пользователь.
+    /// </summary>
+    public void UpdateProject(Project project)
+    {
+        _project = project;
+
+        if (State == ExportState.Done)
+        {
+            State = ExportState.Idle;
+        }
+
+        RefreshSummary();
+    }
+
     public void Detach()
     {
         _project = null;

@@ -1,0 +1,61 @@
+<UserControl x:Class="MeowsCut.App.Views.Panes.PreviewPaneView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:PreviewViewModel}">
+
+    <Grid Background="{StaticResource Brush.Background}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Margin="18,14,18,8" Background="#FF0B0B0D" CornerRadius="8">
+            <Image Margin="6"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Source="{Binding Frame}"
+                   Stretch="Uniform" />
+        </Border>
+
+        <!-- Транспорт. Воспроизведение появится вместе с плеером последовательности. -->
+        <StackPanel Grid.Row="1"
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+            <Button Command="{Binding GoToStartCommand}"
+                    Content="⏮"
+                    Style="{StaticResource Button.Ghost}" />
+            <Button Margin="6,0,0,0"
+                    Command="{Binding StepCommand}"
+                    Content="−1 с"
+                    Style="{StaticResource Button.Ghost}">
+                <Button.CommandParameter>
+                    <sys:Double>-1</sys:Double>
+                </Button.CommandParameter>
+            </Button>
+            <Button Margin="6,0,0,0"
+                    Command="{Binding StepCommand}"
+                    Content="+1 с"
+                    Style="{StaticResource Button.Ghost}">
+                <Button.CommandParameter>
+                    <sys:Double>1</sys:Double>
+                </Button.CommandParameter>
+            </Button>
+            <Button Margin="6,0,0,0"
+                    Command="{Binding GoToEndCommand}"
+                    Content="⏭"
+                    Style="{StaticResource Button.Ghost}" />
+
+            <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Muted}">
+                <Run Text="{Binding PositionText, Mode=OneWay}" />
+                <Run Text="/" />
+                <Run Text="{Binding DurationText, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</UserControl>

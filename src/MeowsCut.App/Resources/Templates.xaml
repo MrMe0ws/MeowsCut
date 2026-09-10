@@ -7,6 +7,7 @@
     <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
     <conv:CountToVisibilityConverter x:Key="CountToVisibility" />
     <conv:EnumLabelConverter x:Key="EnumLabel" />
+    <conv:EnumToBooleanConverter x:Key="EnumToBool" />
 
     <!-- Списки форматов и кодеков показывают человеческие названия -->
     <DataTemplate x:Key="EnumLabelTemplate">

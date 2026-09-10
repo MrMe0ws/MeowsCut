@@ -1,5 +1,6 @@
 using System.Windows;
 using MeowsCut.App.Services;
+using MeowsCut.App.Timeline;
 using MeowsCut.App.ViewModels;
 using MeowsCut.App.Views;
 using MeowsCut.Core.Abstractions;
@@ -11,6 +12,7 @@ using MeowsCut.Ffmpeg.Planning;
 using MeowsCut.Ffmpeg.Probing;
 using MeowsCut.Ffmpeg.Rendering;
 using MeowsCut.Ffmpeg.Temp;
+using MeowsCut.Ffmpeg.Thumbnails;
 using MeowsCut.Ffmpeg.Toolset;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,6 +40,7 @@ public static class ServiceRegistration
         services.AddSingleton<IMediaToolsetLocator, FfmpegToolsetLocator>();
         services.AddSingleton<IMediaToolsetProvider, MediaToolsetProvider>();
         services.AddSingleton<IMediaProbe, FfprobeMediaProbe>();
+        services.AddSingleton<IThumbnailService, FfmpegThumbnailService>();
         services.AddSingleton<IExportPlanner, FfmpegExportPlanner>();
         services.AddSingleton<ITempWorkspaceFactory, TempWorkspaceFactory>();
         services.AddTransient<IExportEngine, FfmpegExportEngine>();
@@ -52,6 +55,12 @@ public static class ServiceRegistration
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IShellIntegration, ShellIntegration>();
 
+        services.AddSingleton<ThumbnailImageCache>();
+        services.AddSingleton<TimelineThumbnailLoader>();
+
+        services.AddSingleton<TimelineViewModel>();
+        services.AddSingleton<PreviewViewModel>();
+        services.AddSingleton<InspectorViewModel>();
         services.AddSingleton<ExportViewModel>();
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<ShellWindow>();

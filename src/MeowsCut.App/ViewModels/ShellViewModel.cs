@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MeowsCut.App.Localization;
 using MeowsCut.App.Services;
+using MeowsCut.App.Timeline;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Diagnostics;
@@ -24,6 +25,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IAppSettingsStore _settingsStore;
     private readonly IFileDialogService _fileDialogService;
     private readonly IDialogService _dialogService;
+    private readonly TimelineThumbnailLoader _thumbnailLoader;
     private readonly ILogger<ShellViewModel> _logger;
 
     [ObservableProperty]
@@ -50,6 +52,10 @@ public sealed partial class ShellViewModel : ObservableObject
         IFileDialogService fileDialogService,
         IDialogService dialogService,
         ExportViewModel export,
+        TimelineViewModel timeline,
+        PreviewViewModel preview,
+        InspectorViewModel inspector,
+        TimelineThumbnailLoader thumbnailLoader,
         ILogger<ShellViewModel> logger)
     {
         _mediaProbe = mediaProbe;
@@ -58,12 +64,37 @@ public sealed partial class ShellViewModel : ObservableObject
         _settingsStore = settingsStore;
         _fileDialogService = fileDialogService;
         _dialogService = dialogService;
+        _thumbnailLoader = thumbnailLoader;
         Export = export;
+        Timeline = timeline;
+        Preview = preview;
+        Inspector = inspector;
         _logger = logger;
+
+        // Правка на доске меняет проект: сводку экспорта нужно пересчитать сразу.
+        Timeline.SequenceChanged += (_, sequence) =>
+        {
+            if (Project is null)
+            {
+                return;
+            }
+
+            Project = Project.WithSequence(sequence);
+            Export.UpdateProject(Project);
+        };
     }
 
     /// <summary>Панель экспорта. Живёт рядом с проектом и обновляется вместе с ним.</summary>
     public ExportViewModel Export { get; }
+
+    /// <summary>Доска монтажа.</summary>
+    public TimelineViewModel Timeline { get; }
+
+    /// <summary>Кадр под курсором.</summary>
+    public PreviewViewModel Preview { get; }
+
+    /// <summary>Свойства выделенного клипа.</summary>
+    public InspectorViewModel Inspector { get; }
 
     /// <summary>Проект целиком: источники и таймлайн. Доска монтажа появится на следующем этапе.</summary>
     public Project? Project { get; private set; }
@@ -126,6 +157,10 @@ public sealed partial class ShellViewModel : ObservableObject
 
             Media = MediaSummaryViewModel.Create(info);
             Project = Project.FromMedia(info);
+
+            Timeline.Attach(Project);
+            Preview.Attach(Project);
+            _thumbnailLoader.Attach(Timeline);
             Export.Attach(Project);
 
             var settings = _settingsStore.Current.WithRecentFile(path);
@@ -152,6 +187,10 @@ public sealed partial class ShellViewModel : ObservableObject
     {
         Media = null;
         Project = null;
+
+        _thumbnailLoader.Detach();
+        Timeline.Detach();
+        Preview.Detach();
         Export.Detach();
     }
 

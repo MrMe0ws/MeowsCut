@@ -104,9 +104,10 @@ public partial class App : Application
             return;
         }
 
-        // Даём макету отработать, иначе снимок ловит незавершённую отрисовку.
+        // Даём макету отработать и подгрузиться кадрам: иначе снимок ловит
+        // незавершённую отрисовку и пустой предпросмотр.
         await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle);
-        await Task.Delay(TimeSpan.FromMilliseconds(300));
+        await Task.Delay(TimeSpan.FromMilliseconds(1500));
 
         WindowSnapshot.Save(window, path);
         Shutdown();

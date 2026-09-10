@@ -1,0 +1,99 @@
+<UserControl x:Class="MeowsCut.App.Views.Panes.TimelinePaneView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:timeline="clr-namespace:MeowsCut.App.Timeline"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:TimelineViewModel}">
+
+    <Border Background="{StaticResource Brush.Surface}"
+            BorderBrush="{StaticResource Brush.Border}"
+            BorderThickness="0,1,0,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Инструменты доски -->
+            <Grid Grid.Row="0" Margin="12,8">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Content="{loc:Tr ToolSelect}"
+                                 GroupName="Tool"
+                                 IsChecked="{Binding ActiveTool, Mode=TwoWay,
+                                     Converter={StaticResource EnumToBool},
+                                     ConverterParameter={x:Static timeline:TimelineTool.Select}}"
+                                 Style="{StaticResource ToolButton}"
+                                 ToolTip="V" />
+                    <RadioButton Content="{loc:Tr ToolRazor}"
+                                 GroupName="Tool"
+                                 IsChecked="{Binding ActiveTool, Mode=TwoWay,
+                                     Converter={StaticResource EnumToBool},
+                                     ConverterParameter={x:Static timeline:TimelineTool.Razor}}"
+                                 Style="{StaticResource ToolButton}"
+                                 ToolTip="C" />
+                    <RadioButton Content="{loc:Tr ToolHand}"
+                                 GroupName="Tool"
+                                 IsChecked="{Binding ActiveTool, Mode=TwoWay,
+                                     Converter={StaticResource EnumToBool},
+                                     ConverterParameter={x:Static timeline:TimelineTool.Hand}}"
+                                 Style="{StaticResource ToolButton}"
+                                 ToolTip="H" />
+
+                    <Border Width="1"
+                            Margin="10,2"
+                            Background="{StaticResource Brush.Border}" />
+
+                    <Button Command="{Binding SplitAtPlayheadCommand}"
+                            Content="{loc:Tr SplitHere}"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="S" />
+                    <Button Margin="6,0,0,0"
+                            Command="{Binding DeleteSelectedCommand}"
+                            Content="{loc:Tr DeleteClip}"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="Delete" />
+
+                    <Border Width="1"
+                            Margin="10,2"
+                            Background="{StaticResource Brush.Border}" />
+
+                    <Button Command="{Binding UndoCommand}"
+                            Content="↶"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="Ctrl+Z" />
+                    <Button Margin="6,0,0,0"
+                            Command="{Binding RedoCommand}"
+                            Content="↷"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="Ctrl+Shift+Z" />
+                </StackPanel>
+
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <CheckBox VerticalAlignment="Center"
+                              Content="{loc:Tr Snapping}"
+                              IsChecked="{Binding SnapEnabled}" />
+
+                    <Button Margin="12,0,0,0"
+                            Command="{Binding ZoomOutCommand}"
+                            Content="−"
+                            Style="{StaticResource Button.Ghost}" />
+                    <Button Margin="6,0,0,0"
+                            Command="{Binding ZoomInCommand}"
+                            Content="+"
+                            Style="{StaticResource Button.Ghost}" />
+                    <Button Margin="6,0,0,0"
+                            Command="{Binding ZoomToFitCommand}"
+                            Content="{loc:Tr ZoomFit}"
+                            Style="{StaticResource Button.Ghost}" />
+                </StackPanel>
+            </Grid>
+
+            <controls:TimelineControl Grid.Row="1" Margin="0,0,0,0" />
+        </Grid>
+    </Border>
+</UserControl>

@@ -115,5 +115,33 @@ public static class Strings
 
     public static string ExportAgain => Get(nameof(ExportAgain));
 
+    public static string ToolSelect => Get(nameof(ToolSelect));
+
+    public static string ToolRazor => Get(nameof(ToolRazor));
+
+    public static string ToolHand => Get(nameof(ToolHand));
+
+    public static string SplitHere => Get(nameof(SplitHere));
+
+    public static string DeleteClip => Get(nameof(DeleteClip));
+
+    public static string Snapping => Get(nameof(Snapping));
+
+    public static string ZoomFit => Get(nameof(ZoomFit));
+
+    public static string SectionClip => Get(nameof(SectionClip));
+
+    public static string NoClipSelected => Get(nameof(NoClipSelected));
+
+    public static string FieldOnTimeline => Get(nameof(FieldOnTimeline));
+
+    public static string FieldInSource => Get(nameof(FieldInSource));
+
+    public static string FieldSpeed => Get(nameof(FieldSpeed));
+
+    public static string ClipAudioEnabled => Get(nameof(ClipAudioEnabled));
+
+    public static string FieldVolume => Get(nameof(FieldVolume));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

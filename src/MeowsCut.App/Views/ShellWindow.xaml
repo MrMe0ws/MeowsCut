@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:MeowsCut.App.Localization"
         xmlns:panes="clr-namespace:MeowsCut.App.Views.Panes"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        xmlns:timeline="clr-namespace:MeowsCut.App.Timeline"
         xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
         Title="{loc:Tr AppTitle}"
         Icon="../Assets/logo.png"
@@ -20,6 +22,45 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
+
+    <!-- Горячие клавиши доски монтажа -->
+    <Window.InputBindings>
+        <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenFileCommand}" />
+        <KeyBinding Key="E" Modifiers="Control" Command="{Binding Export.StartCommand}" />
+        <KeyBinding Key="Z" Modifiers="Control" Command="{Binding Timeline.UndoCommand}" />
+        <KeyBinding Key="Z" Modifiers="Control+Shift" Command="{Binding Timeline.RedoCommand}" />
+        <KeyBinding Key="Y" Modifiers="Control" Command="{Binding Timeline.RedoCommand}" />
+        <KeyBinding Key="S" Command="{Binding Timeline.SplitAtPlayheadCommand}" />
+        <KeyBinding Key="Delete" Command="{Binding Timeline.DeleteSelectedCommand}" />
+        <KeyBinding Key="D" Modifiers="Control" Command="{Binding Timeline.DuplicateSelectedCommand}" />
+        <KeyBinding Key="I" Command="{Binding Timeline.TrimStartToPlayheadCommand}" />
+        <KeyBinding Key="O" Command="{Binding Timeline.TrimEndToPlayheadCommand}" />
+        <KeyBinding Key="V" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Select}" />
+        <KeyBinding Key="C" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Razor}" />
+        <KeyBinding Key="H" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Hand}" />
+        <KeyBinding Key="Left" Command="{Binding Preview.StepCommand}">
+            <KeyBinding.CommandParameter>
+                <sys:Double>-0.04</sys:Double>
+            </KeyBinding.CommandParameter>
+        </KeyBinding>
+        <KeyBinding Key="Right" Command="{Binding Preview.StepCommand}">
+            <KeyBinding.CommandParameter>
+                <sys:Double>0.04</sys:Double>
+            </KeyBinding.CommandParameter>
+        </KeyBinding>
+        <KeyBinding Key="Left" Modifiers="Shift" Command="{Binding Preview.StepCommand}">
+            <KeyBinding.CommandParameter>
+                <sys:Double>-1</sys:Double>
+            </KeyBinding.CommandParameter>
+        </KeyBinding>
+        <KeyBinding Key="Right" Modifiers="Shift" Command="{Binding Preview.StepCommand}">
+            <KeyBinding.CommandParameter>
+                <sys:Double>1</sys:Double>
+            </KeyBinding.CommandParameter>
+        </KeyBinding>
+        <KeyBinding Key="Home" Command="{Binding Preview.GoToStartCommand}" />
+        <KeyBinding Key="End" Command="{Binding Preview.GoToEndCommand}" />
+    </Window.InputBindings>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -136,78 +177,32 @@
             </StackPanel>
         </Grid>
 
-        <!-- Информация о файле и панель экспорта -->
+        <!-- Рабочий экран: предпросмотр, доска монтажа, инспектор и экспорт -->
         <Grid Grid.Row="1" Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="340" />
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Grid.Column="0"
-                          Padding="24"
-                          HorizontalScrollBarVisibility="Disabled"
-                          VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="{Binding Media.FileName}" />
-                <TextBlock Margin="0,4,0,0"
-                           Style="{StaticResource Text.Muted}"
-                           TextTrimming="CharacterEllipsis"
-                           Text="{Binding Media.FilePath}" />
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="180" />
+                    <RowDefinition Height="240" MinHeight="150" />
+                </Grid.RowDefinitions>
 
-                <ItemsControl Margin="0,14,0,0" ItemsSource="{Binding Media.Warnings}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Margin="0,0,0,8"
-                                    Background="{StaticResource Brush.SurfaceRaised}"
-                                    BorderBrush="{StaticResource Brush.Warning}"
-                                    BorderThickness="1,1,1,1"
-                                    CornerRadius="8"
-                                    Padding="12,8">
-                                <TextBlock Foreground="{StaticResource Brush.Warning}"
-                                           Style="{StaticResource Text.Base}"
-                                           TextWrapping="Wrap"
-                                           Text="{Binding}" />
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <panes:PreviewPaneView Grid.Row="0" DataContext="{Binding Preview}" />
+                <panes:TimelinePaneView Grid.Row="1" DataContext="{Binding Timeline}" />
+            </Grid>
 
-                <UniformGrid Margin="0,10,0,0" Columns="3" Rows="1">
-                    <Border Margin="0,0,10,0" Style="{StaticResource Card}">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr SectionFile}" />
-                            <ItemsControl Margin="0,10,0,0"
-                                          ItemsSource="{Binding Media.FileFields}"
-                                          ItemTemplate="{StaticResource MediaFieldTemplate}" />
-                        </StackPanel>
-                    </Border>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                    <Border Margin="0,0,10,0" Style="{StaticResource Card}">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr SectionVideo}" />
-                            <ItemsControl Margin="0,10,0,0"
-                                          ItemsSource="{Binding Media.VideoFields}"
-                                          ItemTemplate="{StaticResource MediaFieldTemplate}" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr SectionAudio}" />
-                            <ItemsControl Margin="0,10,0,0"
-                                          ItemsSource="{Binding Media.AudioFields}"
-                                          ItemTemplate="{StaticResource MediaFieldTemplate}" />
-                            <TextBlock Margin="0,10,0,0"
-                                       Style="{StaticResource Text.Muted}"
-                                       Text="{loc:Tr NoAudio}"
-                                       Visibility="{Binding Media.HasAudio, Converter={StaticResource InverseBoolToVisibility}}" />
-                        </StackPanel>
-                    </Border>
-                </UniformGrid>
-                </StackPanel>
-            </ScrollViewer>
-
-            <panes:ExportPanelView Grid.Column="1" DataContext="{Binding Export}" />
+                <panes:InspectorView Grid.Row="0" DataContext="{Binding Inspector}" />
+                <panes:ExportPanelView Grid.Row="1" DataContext="{Binding Export}" />
+            </Grid>
         </Grid>
 
         <!-- Статусная строка -->

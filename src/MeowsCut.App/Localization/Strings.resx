@@ -221,4 +221,46 @@
   <data name="ExportAgain" xml:space="preserve">
     <value>Экспортировать ещё раз</value>
   </data>
+  <data name="ToolSelect" xml:space="preserve">
+    <value>Выделение</value>
+  </data>
+  <data name="ToolRazor" xml:space="preserve">
+    <value>Ножницы</value>
+  </data>
+  <data name="ToolHand" xml:space="preserve">
+    <value>Рука</value>
+  </data>
+  <data name="SplitHere" xml:space="preserve">
+    <value>Разрезать</value>
+  </data>
+  <data name="DeleteClip" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Snapping" xml:space="preserve">
+    <value>Прилипание</value>
+  </data>
+  <data name="ZoomFit" xml:space="preserve">
+    <value>Вписать</value>
+  </data>
+  <data name="SectionClip" xml:space="preserve">
+    <value>Клип</value>
+  </data>
+  <data name="NoClipSelected" xml:space="preserve">
+    <value>Выберите клип на таймлайне, чтобы изменить его скорость и звук</value>
+  </data>
+  <data name="FieldOnTimeline" xml:space="preserve">
+    <value>На таймлайне</value>
+  </data>
+  <data name="FieldInSource" xml:space="preserve">
+    <value>В исходнике</value>
+  </data>
+  <data name="FieldSpeed" xml:space="preserve">
+    <value>Скорость</value>
+  </data>
+  <data name="ClipAudioEnabled" xml:space="preserve">
+    <value>Звук клипа</value>
+  </data>
+  <data name="FieldVolume" xml:space="preserve">
+    <value>Громкость</value>
+  </data>
 </root>
