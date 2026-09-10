@@ -8,6 +8,9 @@
     <AssemblyName>MeowsCut</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <!-- Переводы самого .NET на два десятка языков не нужны: интерфейс русский,
+         а в поставке они занимают заметное место. -->
+    <SatelliteResourceLanguages>ru;en</SatelliteResourceLanguages>
     <!-- Минимальная ОС — Windows 10 1809; версия не задаётся через TargetPlatformVersion,
          чтобы не тянуть проекции WinRT: приложению они не нужны. -->
   </PropertyGroup>

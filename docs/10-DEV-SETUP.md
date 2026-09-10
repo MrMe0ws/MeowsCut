@@ -94,7 +94,7 @@ Start-Process $exe -ArgumentList @("--screenshot", '"C:\temp\ui.png"', '"C:\ви
 ./tools/publish-portable.ps1 -Zip
 ```
 
-Получается папка `publish\MeowsCut` (~477 МБ): self-contained сборка под win-x64
+Получается папка `publish\MeowsCut` (~463 МБ): self-contained сборка под win-x64
 плюс FFmpeg рядом с exe. Устанавливать .NET на целевой машине не нужно, папку
 достаточно скопировать. Локатор найдёт FFmpeg вторым шагом — рядом с приложением.
 
@@ -104,6 +104,26 @@ Start-Process $exe -ArgumentList @("--screenshot", '"C:\temp\ui.png"', '"C:\ви
 (16, 24, 32, 48, 64, 128, 256) и подключён свойством `ApplicationIcon`. Если логотип
 меняется, значок надо пересобрать: Windows берёт из файла размер под ситуацию,
 и одной картинки 256×256 в списке файлов мало — она мылится.
+
+## Сборка установщика
+
+```powershell
+./tools/build-installer.ps1 -Version 1.0.0
+```
+
+Нужен Inno Setup — компилятор `ISCC.exe`. Ставится без администратора:
+
+```powershell
+# https://jrsoftware.org/isdl.php, либо релиз с GitHub авторов
+innosetup-7.1.0-x64.exe /VERYSILENT /CURRENTUSER /SP- /NORESTART
+```
+
+На этой машине он стоит в `%LOCALAPPDATA%\Programs\Inno Setup 7`.
+
+Результат — `publish\installer\MeowsCut-<версия>-setup.exe`, около 137 МБ:
+папка на 463 МБ сжимается почти вчетверо, потому что основную её часть
+составляют ffmpeg и ffprobe. Установщик ставит приложение в профиль
+пользователя и не требует прав администратора.
 
 ## Ловушки окружения
 
@@ -120,4 +140,5 @@ Start-Process $exe -ArgumentList @("--screenshot", '"C:\temp\ui.png"', '"C:\ви
 |---|---|---|
 | `tools/get-ffmpeg.ps1` | M1 | скачать и разложить ffmpeg в `%LOCALAPPDATA%\MeowsCut\ffmpeg` |
 | `tools/publish-portable.ps1` | M8 | `dotnet publish` + копирование ffmpeg + сборка zip-архива |
+| `tools/build-installer.ps1` | M10 | portable-папка + Inno Setup = установщик exe |
 | `tools/make-testclips.ps1` | M3 | генерация тестовых клипов (`testsrc`, `sine`) для интеграционных тестов |
