@@ -8,127 +8,135 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:InspectorViewModel}">
 
-    <Border Padding="18,14"
+    <!-- Полоса под доской монтажа, а не колонка сбоку: свойства нужны ровно тогда,
+         когда кусок выбран, и относятся к нему — место им рядом с ним. -->
+    <Border Padding="12,8"
             Background="{StaticResource Brush.Surface}"
             BorderBrush="{StaticResource Brush.Border}"
-            BorderThickness="0,0,0,1">
+            BorderThickness="0,1,0,0">
         <StackPanel>
-            <TextBlock Margin="0,0,0,10"
-                       Style="{StaticResource Text.Section}"
-                       Text="{loc:Tr SectionClip}" />
-
             <TextBlock Style="{StaticResource Text.Muted}"
                        Text="{loc:Tr NoClipSelected}"
-                       TextWrapping="Wrap"
                        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}" />
 
             <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
-                <Grid Margin="0,0,0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldDuration}" />
-                    <TextBlock Grid.Column="1"
-                               HorizontalAlignment="Right"
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Style="{StaticResource Text.Section}"
+                               Text="{loc:Tr SectionClip}" />
+                    <TextBlock Margin="10,0,0,0"
+                               VerticalAlignment="Center"
                                Style="{StaticResource Text.Base}"
                                Text="{Binding DurationText}" />
-                </Grid>
-
-                <Grid Margin="0,0,0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldOnTimeline}" />
-                    <TextBlock Grid.Column="1"
-                               HorizontalAlignment="Right"
-                               Style="{StaticResource Text.Base}"
-                               TextTrimming="CharacterEllipsis">
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Muted}">
                         <Run Text="{Binding StartText, Mode=OneWay}" />
                         <Run Text="→" />
                         <Run Text="{Binding EndText, Mode=OneWay}" />
                     </TextBlock>
-                </Grid>
 
-                <Grid Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldInSource}" />
-                    <TextBlock Grid.Column="1"
-                               HorizontalAlignment="Right"
-                               Style="{StaticResource Text.Base}"
-                               Text="{Binding SourceRangeText}"
-                               TextTrimming="CharacterEllipsis" />
-                </Grid>
+                    <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
 
-                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldSpeed}" />
-                <ItemsControl Margin="0,6,0,10" ItemsSource="{x:Static vm:InspectorViewModel.SpeedPresets}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Margin="0,0,6,6"
-                                    Padding="10,4"
-                                    Command="{Binding DataContext.ApplySpeedCommand,
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"
-                                    Content="{Binding StringFormat={}{0}×}"
-                                    Style="{StaticResource Button.Ghost}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    <TextBlock Margin="0,0,8,0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{loc:Tr FieldSpeed}" />
+                    <ItemsControl VerticalAlignment="Center" ItemsSource="{x:Static vm:InspectorViewModel.SpeedPresets}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Margin="0,0,4,0"
+                                        Padding="9,4"
+                                        Command="{Binding DataContext.ApplySpeedCommand,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Content="{Binding StringFormat={}{0}×}"
+                                        Style="{StaticResource Button.Ghost}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                <CheckBox Margin="0,0,0,8"
-                          Content="{loc:Tr ClipAudioEnabled}"
-                          IsChecked="{Binding AudioEnabled}" />
+                    <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
 
-                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldZoom}" />
-                <Slider Margin="0,4,0,0"
-                        IsSnapToTickEnabled="True"
-                        Maximum="300"
-                        Minimum="50"
-                        TickFrequency="5"
-                        Value="{Binding ZoomPercent}" />
-                <TextBlock HorizontalAlignment="Right"
-                           Style="{StaticResource Text.Muted}"
-                           Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
+                    <CheckBox VerticalAlignment="Center"
+                              Content="{loc:Tr ClipAudioEnabled}"
+                              IsChecked="{Binding AudioEnabled}" />
+                    <Slider Width="90"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding AudioEnabled}"
+                            IsSnapToTickEnabled="True"
+                            Maximum="200"
+                            Minimum="0"
+                            TickFrequency="5"
+                            ToolTip="{loc:Tr FieldVolume}"
+                            Value="{Binding VolumePercent}" />
+                    <TextBlock Width="40"
+                               Margin="6,0,0,0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
 
-                <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldOffsetX}" />
-                <Slider Margin="0,4,0,0"
-                        Maximum="50"
-                        Minimum="-50"
-                        TickFrequency="5"
-                        Value="{Binding OffsetXPercent}" />
+                    <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
 
-                <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldOffsetY}" />
-                <Slider Margin="0,4,0,0"
-                        Maximum="50"
-                        Minimum="-50"
-                        TickFrequency="5"
-                        Value="{Binding OffsetYPercent}" />
+                    <ToggleButton x:Name="FrameToggle"
+                                  Content="{loc:Tr SectionFrame}"
+                                  Style="{StaticResource ToolButton}"
+                                  ToolTip="{loc:Tr SectionFrameHint}" />
+                </StackPanel>
 
-                <Button Margin="0,6,0,10"
-                        HorizontalAlignment="Left"
-                        Command="{Binding ResetTransformCommand}"
-                        Content="{loc:Tr ResetTransform}"
-                        Style="{StaticResource Button.Ghost}" />
+                <!-- Кадрирование прячется: нужно редко, а места занимает как всё остальное -->
+                <StackPanel Margin="0,8,0,0"
+                            Orientation="Horizontal"
+                            Visibility="{Binding IsChecked, ElementName=FrameToggle,
+                                Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldZoom}" />
+                    <Slider Width="110"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            IsSnapToTickEnabled="True"
+                            Maximum="300"
+                            Minimum="50"
+                            TickFrequency="5"
+                            Value="{Binding ZoomPercent}" />
+                    <TextBlock Width="44"
+                               Margin="6,0,0,0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
 
-                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldVolume}" />
-                <Slider Margin="0,4,0,0"
-                        IsSnapToTickEnabled="True"
-                        Maximum="200"
-                        Minimum="0"
-                        TickFrequency="5"
-                        Value="{Binding VolumePercent}" />
-                <TextBlock HorizontalAlignment="Right"
-                           Style="{StaticResource Text.Muted}"
-                           Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
+                    <TextBlock Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{loc:Tr FieldOffsetX}" />
+                    <Slider Width="90"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Maximum="50"
+                            Minimum="-50"
+                            TickFrequency="5"
+                            Value="{Binding OffsetXPercent}" />
+
+                    <TextBlock Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{loc:Tr FieldOffsetY}" />
+                    <Slider Width="90"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Maximum="50"
+                            Minimum="-50"
+                            TickFrequency="5"
+                            Value="{Binding OffsetYPercent}" />
+
+                    <Button Margin="12,0,0,0"
+                            Command="{Binding ResetTransformCommand}"
+                            Content="{loc:Tr ResetTransform}"
+                            Style="{StaticResource Button.Ghost}" />
+                </StackPanel>
             </StackPanel>
         </StackPanel>
     </Border>

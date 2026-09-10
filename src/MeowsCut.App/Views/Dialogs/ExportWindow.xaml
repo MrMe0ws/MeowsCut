@@ -1,0 +1,32 @@
+<Window x:Class="MeowsCut.App.Views.Dialogs.ExportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+        xmlns:panes="clr-namespace:MeowsCut.App.Views.Panes"
+        Title="{loc:Tr ExportStepTitle}"
+        Width="420"
+        Height="820"
+        MinWidth="380"
+        MinHeight="520"
+        Background="{StaticResource Brush.Background}"
+        FontFamily="{StaticResource Font.Ui}"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Пресеты площадок идут первыми: они задают всё остальное разом -->
+        <Border Grid.Row="0"
+                Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="0,0,0,1">
+            <panes:PresetsView x:Name="Presets" />
+        </Border>
+
+        <panes:ExportPanelView x:Name="Export" Grid.Row="1" />
+    </Grid>
+</Window>

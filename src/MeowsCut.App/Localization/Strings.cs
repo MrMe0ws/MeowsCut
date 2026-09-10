@@ -133,6 +133,16 @@ public static class Strings
 
     public static string AddVideoHint => Get(nameof(AddVideoHint));
 
+    public static string OpenExportStep => Get(nameof(OpenExportStep));
+
+    public static string ExportStepTitle => Get(nameof(ExportStepTitle));
+
+    public static string SectionFrame => Get(nameof(SectionFrame));
+
+    public static string SectionFrameHint => Get(nameof(SectionFrameHint));
+
+    public static string TimelineSummary => Get(nameof(TimelineSummary));
+
     public static string ToolSelect => Get(nameof(ToolSelect));
 
     public static string ToolRazor => Get(nameof(ToolRazor));

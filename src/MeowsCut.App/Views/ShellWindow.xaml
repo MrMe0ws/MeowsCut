@@ -184,45 +184,39 @@
             </StackPanel>
         </Grid>
 
-        <!-- Рабочий экран: предпросмотр, доска монтажа, инспектор и экспорт -->
+        <!-- Рабочий экран: предпросмотр, доска монтажа и свойства выбранного куска -->
         <Grid Grid.Row="1" Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="420" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="340" MinWidth="260" MaxWidth="640" />
-            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="180" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="240" MinHeight="150" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" MinHeight="180" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="240" MinHeight="150" />
-                </Grid.RowDefinitions>
+            <panes:PreviewPaneView Grid.Row="0" DataContext="{Binding Preview}" />
+            <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
+            <panes:TimelinePaneView Grid.Row="2" DataContext="{Binding Timeline}" />
+            <panes:InspectorView Grid.Row="3" DataContext="{Binding Inspector}" />
 
-                <panes:PreviewPaneView Grid.Row="0" DataContext="{Binding Preview}" />
-                <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
-                <panes:TimelinePaneView Grid.Row="2" DataContext="{Binding Timeline}" />
-            </Grid>
+            <!-- Финальный шаг. Настройки вывода живут в своём окне: за монтажом
+                 они не нужны, а места занимали треть экрана. -->
+            <Border Grid.Row="4"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="0,1,0,0"
+                    Padding="12,10">
+                <Grid>
+                    <TextBlock VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{Binding Timeline.SummaryLine}" />
 
-            <GridSplitter Grid.Column="1" Style="{StaticResource Splitter.Vertical}" />
-
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" MaxHeight="210" />
-                    <RowDefinition Height="Auto" MaxHeight="270" />
-                    <RowDefinition Height="*" MinHeight="240" />
-                </Grid.RowDefinitions>
-
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <panes:InspectorView DataContext="{Binding Inspector}" />
-                </ScrollViewer>
-
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <panes:PresetsView DataContext="{Binding Presets}" />
-                </ScrollViewer>
-
-                <panes:ExportPanelView Grid.Row="2" DataContext="{Binding Export}" />
-            </Grid>
+                    <Button HorizontalAlignment="Right"
+                            Command="{Binding OpenExportCommand}"
+                            Content="{loc:Tr OpenExportStep}"
+                            Style="{StaticResource Button.Primary}" />
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- Статусная строка -->

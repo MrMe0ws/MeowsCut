@@ -254,6 +254,10 @@ public sealed partial class ShellViewModel : ObservableObject
         }
     }
 
+    /// <summary>Открыть финальный шаг: пресеты и параметры вывода.</summary>
+    [RelayCommand]
+    private void OpenExport() => _dialogService.ShowExport();
+
     [RelayCommand]
     private void OpenSettings() => _dialogService.ShowSettings();
 

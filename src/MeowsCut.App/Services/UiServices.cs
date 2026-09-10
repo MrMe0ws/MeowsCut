@@ -81,6 +81,9 @@ public interface IDialogService
     void ShowError(Core.Diagnostics.AppError error);
 
     void ShowSettings();
+
+    /// <summary>Финальный шаг: пресеты и параметры вывода.</summary>
+    void ShowExport();
 }
 
 /// <summary>
@@ -90,8 +93,11 @@ public interface IDialogService
 public sealed class DialogService(
     Core.Configuration.AppPaths paths,
     Core.Abstractions.IShellIntegration shell,
-    Func<ViewModels.SettingsViewModel> settingsFactory) : IDialogService
+    Func<ViewModels.SettingsViewModel> settingsFactory,
+    Func<ViewModels.PresetsViewModel> presetsFactory,
+    Func<ViewModels.ExportViewModel> exportFactory) : IDialogService
 {
+    private Views.Dialogs.ExportWindow? _export;
     public void ShowError(string title, string message) =>
         ShowError(new Core.Diagnostics.AppError(
             Core.Diagnostics.ErrorCode.Unknown, title, message, null, null));
@@ -104,6 +110,25 @@ public sealed class DialogService(
         };
 
         dialog.ShowDialog();
+    }
+
+    public void ShowExport()
+    {
+        // Окно немодальное и одно на приложение: экспорт длинный, и запирать
+        // из-за него доску монтажа незачем — за это время можно подрезать хвост.
+        if (_export is not null)
+        {
+            _export.Activate();
+            return;
+        }
+
+        _export = new Views.Dialogs.ExportWindow(presetsFactory(), exportFactory())
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        _export.Closed += (_, _) => _export = null;
+        _export.Show();
     }
 
     public void ShowSettings()

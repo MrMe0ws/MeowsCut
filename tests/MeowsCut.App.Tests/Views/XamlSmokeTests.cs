@@ -109,6 +109,13 @@ public class XamlSmokeTests
     });
 
     [Fact]
+    public void Export_window_is_created() => WpfRunner.Run(() =>
+    {
+        // Модели не нужны: проверяется, что все кисти и стили окна на месте.
+        new ExportWindow(null!, null!).Should().NotBeNull();
+    });
+
+    [Fact]
     public void Settings_window_is_created() => WpfRunner.Run(() =>
     {
         // Модель здесь не нужна: проверяется, что все ресурсы разметки на месте.

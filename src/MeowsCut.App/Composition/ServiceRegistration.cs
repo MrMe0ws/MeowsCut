@@ -71,6 +71,8 @@ public static class ServiceRegistration
         services.AddSingleton<InspectorViewModel>();
         services.AddSingleton<ExportViewModel>();
         services.AddSingleton<PresetsViewModel>();
+        services.AddSingleton<Func<PresetsViewModel>>(provider => provider.GetRequiredService<PresetsViewModel>);
+        services.AddSingleton<Func<ExportViewModel>>(provider => provider.GetRequiredService<ExportViewModel>);
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<ShellWindow>();
 

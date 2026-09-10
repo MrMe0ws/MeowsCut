@@ -248,6 +248,21 @@
   <data name="AddVideoHint" xml:space="preserve">
     <value>Добавить файл в конец видеоряда. Файл можно и перетащить на окно</value>
   </data>
+  <data name="OpenExportStep" xml:space="preserve">
+    <value>Экспорт видео  →</value>
+  </data>
+  <data name="ExportStepTitle" xml:space="preserve">
+    <value>Экспорт</value>
+  </data>
+  <data name="SectionFrame" xml:space="preserve">
+    <value>Кадр</value>
+  </data>
+  <data name="SectionFrameHint" xml:space="preserve">
+    <value>Масштаб и сдвиг картинки внутри кадра</value>
+  </data>
+  <data name="TimelineSummary" xml:space="preserve">
+    <value>Клипов: {0} · длительность {1}</value>
+  </data>
   <data name="ToolSelect" xml:space="preserve">
     <value>Выделение</value>
   </data>
