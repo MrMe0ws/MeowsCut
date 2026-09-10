@@ -212,20 +212,30 @@
                         Width="330"
                         BorderBrush="{StaticResource Brush.Border}"
                         BorderThickness="1,0,0,0">
-                    <ScrollViewer controls:SmoothScroll.IsEnabled="True"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  VerticalScrollBarVisibility="Auto">
-                        <Grid>
-                            <panes:InspectorView DataContext="{Binding Inspector}"
-                                                 Visibility="{Binding DataContext.Timeline.HasAudioSelection,
-                                                     RelativeSource={RelativeSource AncestorType=Window},
-                                                     Converter={StaticResource InverseBoolToVisibility}}" />
-                            <panes:AudioInspectorView DataContext="{Binding AudioInspector}"
-                                                      Visibility="{Binding DataContext.Timeline.HasAudioSelection,
-                                                          RelativeSource={RelativeSource AncestorType=Window},
-                                                          Converter={StaticResource BoolToVisibility}}" />
-                        </Grid>
-                    </ScrollViewer>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" MaxHeight="330" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <ScrollViewer Grid.Row="0"
+                                      controls:SmoothScroll.IsEnabled="True"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <Grid>
+                                <panes:InspectorView DataContext="{Binding Inspector}"
+                                                     Visibility="{Binding DataContext.Timeline.HasAudioSelection,
+                                                         RelativeSource={RelativeSource AncestorType=Window},
+                                                         Converter={StaticResource InverseBoolToVisibility}}" />
+                                <panes:AudioInspectorView DataContext="{Binding AudioInspector}"
+                                                          Visibility="{Binding DataContext.Timeline.HasAudioSelection,
+                                                              RelativeSource={RelativeSource AncestorType=Window},
+                                                              Converter={StaticResource BoolToVisibility}}" />
+                            </Grid>
+                        </ScrollViewer>
+
+                        <panes:SourcesView Grid.Row="1" DataContext="{Binding Sources}" />
+                    </Grid>
                 </Border>
             </Grid>
 

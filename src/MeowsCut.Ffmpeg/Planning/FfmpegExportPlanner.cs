@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Timeline;
@@ -37,6 +38,14 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         var partPath = outputPath + ".meowscut.part";
 
         var warnings = new List<PlanWarning>();
+        // Проверяем до всякой работы: без источника нечего подавать на вход ffmpeg,
+        // и без этой проверки падение случилось бы глубоко внутри сборки графа фильтров.
+        if (project.MissingSourceIds() is { Count: > 0 })
+        {
+            throw new EditOperationException(
+                "На доске есть кусок, чей файл в проекте не найден. Добавьте файл заново.");
+        }
+
         var streamCopy = CanStreamCopy(project, settings, warnings);
 
         // Решение о втором проходе принимается по исходным настройкам: ниже целевой
@@ -209,7 +218,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 
         // Демультиплексор concat склеивает части встык и о пустых местах не знает:
         // зазор просто исчез бы, а ролик стал короче задуманного.
-        if (sequence.HasGaps)
+        if (sequence.HasGaps || sequence.HasImages)
         {
             return false;
         }
@@ -349,6 +358,54 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
     }
 
     /// <summary>
+    /// Вход ffmpeg для одного источника.
+    /// </summary>
+    /// <remarks>
+    /// Фотография отдаёт один-единственный кадр, и trim в графе фильтров вырезал бы
+    /// из неё пустоту. Поэтому картинка подаётся зациклённой: -loop 1 повторяет кадр,
+    /// -framerate задаёт темп, а -t ограничивает вход — без него ffmpeg читал бы
+    /// картинку бесконечно и экспорт не закончился бы никогда.
+    /// </remarks>
+    private static void AppendInput(FfmpegArgumentBuilder builder, MediaSource source, Sequence sequence)
+    {
+        if (!source.IsImage)
+        {
+            builder.Input(source.FilePath);
+            return;
+        }
+
+        var frameRate = sequence.Format.FrameRate;
+        var rate = frameRate.IsZero
+            ? "30"
+            : $"{frameRate.Numerator.ToString(CultureInfo.InvariantCulture)}/{frameRate.Denominator.ToString(CultureInfo.InvariantCulture)}";
+
+        // Секунда сверху: точка выхода последнего клипа обязана попасть внутрь входа.
+        var limit = LastSourceMoment(sequence, source.Id) + TimeSpan.FromSeconds(1);
+
+        builder
+            .InputOption("-loop", "1")
+            .InputOption("-framerate", rate)
+            .InputOption("-t", FfmpegArgumentBuilder.FormatTime(limit))
+            .Input(source.FilePath);
+    }
+
+    /// <summary>Самая дальняя точка выхода среди клипов этого источника.</summary>
+    private static TimeSpan LastSourceMoment(Sequence sequence, SourceId sourceId)
+    {
+        var last = TimeSpan.Zero;
+
+        foreach (var clip in sequence.Video.Clips)
+        {
+            if (clip.SourceId == sourceId && clip.SourceRange.End > last)
+            {
+                last = clip.SourceRange.End;
+            }
+        }
+
+        return last;
+    }
+
+    /// <summary>
     /// Копирование потоков возможно, только если ни одна правка не требует пересчёта кадров.
     /// </summary>
     private static bool CanStreamCopy(Project project, ExportSettings settings, List<PlanWarning> warnings)
@@ -365,8 +422,9 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             return false;
         }
 
-        // Чёрная вставка перед клипом существует только после перерисовки кадров.
-        if (sequence.HasGaps)
+        // Чёрная вставка перед клипом и кадры фотографии существуют только
+        // после перерисовки: копировать тут нечего.
+        if (sequence.HasGaps || sequence.HasImages)
         {
             return false;
         }
@@ -509,7 +567,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 
         foreach (var source in sources)
         {
-            builder.Input(source.FilePath);
+            AppendInput(builder, source, sequence);
         }
 
         // Дорожка субтитров — отдельный вход. В первом проходе она не нужна:

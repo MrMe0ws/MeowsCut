@@ -68,6 +68,26 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
     /// </summary>
     public bool HasGaps => Video.HasGaps;
 
+    /// <summary>
+    /// Есть ли на видеоряде фотографии. Быстрые стратегии их не умеют: у картинки
+    /// нет потока, который можно скопировать, — кадры для неё надо создать.
+    /// </summary>
+    public bool HasImages
+    {
+        get
+        {
+            foreach (var clip in Video.Clips)
+            {
+                if (clip.SourceIsImage)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     /// <summary>Есть ли звук у самого видеоряда (без отдельных дорожек).</summary>
     public bool HasAudio => Video.Clips.Any(clip => clip.HasAudio);
 

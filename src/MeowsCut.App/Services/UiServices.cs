@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using MeowsCut.Core.Media;
@@ -57,7 +57,11 @@ public sealed class FileDialogService : IFileDialogService
         var dialog = new OpenFileDialog
         {
             Title = Strings.OpenDialogTitle,
-            Filter = MediaFileTypes.BuildOpenDialogFilter(Strings.FilterVideoFiles, Strings.FilterAllFiles),
+            Filter = MediaFileTypes.BuildOpenDialogFilter(
+                Strings.FilterMediaFiles,
+                Strings.FilterVideoFiles,
+                Strings.FilterImageFiles,
+                Strings.FilterAllFiles),
             CheckFileExists = true,
             Multiselect = true
         };

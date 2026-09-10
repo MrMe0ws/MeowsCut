@@ -28,10 +28,13 @@ public sealed class FilterGraphBuilder
     private const string SilenceLayout = "stereo";
 
     /// <summary>
-    /// Приведение куска к общему виду перед склейкой. Нужно только там, где в ряду
-    /// есть сгенерированные части: у них SAR и формат пикселя свои, и concat
-    /// отказывается работать, даже если картинка на глаз одинаковая.
+    /// Приведение куска к общему виду перед склейкой: формат пикселя и SAR.
     /// </summary>
+    /// <remarks>
+    /// Нужно там, где в ряду есть сгенерированные части — чёрная вставка зазора
+    /// и кадры фотографии. У них SAR и формат пикселя свои, и concat отказывается
+    /// работать, даже если картинка на глаз одинаковая.
+    /// </remarks>
     private const string NormalizeFilters = "format=yuv420p,setsar=1";
 
     private readonly AudioMixBuilder _mixer = new();
@@ -62,10 +65,11 @@ public sealed class FilterGraphBuilder
         var videoLabels = new List<string>(clips.Count);
         var audioLabels = new List<string>(clips.Count);
 
-        // При зазорах все куски приходится приводить к одному знаменателю: concat
-        // требует совпадения размера, формата пикселя и SAR, а чёрная вставка
-        // рождается заново и знать параметры источника не может.
-        var hasGaps = sequence.Video.HasGaps;
+        // Куски приходится приводить к одному знаменателю, как только в ряду
+        // появляется что-то сгенерированное: concat требует совпадения размера,
+        // формата пикселя и SAR, а чёрная вставка и кадр фотографии рождаются
+        // заново и параметров источника знать не могут.
+        var normalize = sequence.Video.HasGaps || sequence.HasImages;
 
         for (var i = 0; i < clips.Count; i++)
         {
@@ -77,7 +81,7 @@ public sealed class FilterGraphBuilder
                 AppendGapChains(builder, sequence, clip.LeadingGap, i, videoLabels, audioLabels, wantsAudio);
             }
 
-            AppendVideoChain(builder, clip, input, i, videoLabels, hasGaps);
+            AppendVideoChain(builder, clip, input, i, videoLabels, normalize, sequence.Format.Size);
 
             if (wantsAudio)
             {
@@ -154,7 +158,8 @@ public sealed class FilterGraphBuilder
         int input,
         int index,
         List<string> labels,
-        bool normalize)
+        bool normalize,
+        FrameSize target)
     {
         var label = "v" + index.ToString(CultureInfo.InvariantCulture);
 
@@ -170,6 +175,9 @@ public sealed class FilterGraphBuilder
 
         if (normalize)
         {
+            // Размер тоже: фотография почти наверняка не совпадает с роликом,
+            // а concat со съехавшим размером просто не соберётся.
+            chain.AddRange(ScaleFilters(target, FitMode.Contain));
             chain.Add(NormalizeFilters);
         }
 

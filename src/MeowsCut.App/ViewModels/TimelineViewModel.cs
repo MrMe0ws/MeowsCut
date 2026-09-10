@@ -209,6 +209,15 @@ public sealed partial class TimelineViewModel : ObservableObject
         _selection.Clear();
         SelectedClip = Clips.LastOrDefault();
         ApplySelectionToClips();
+
+        // И сразу показываем его: добавленный за краем экрана кусок выглядит так,
+        // будто кнопка ничего не сделала.
+        if (SelectedClip is { } added)
+        {
+            Metrics.EnsureVisible(added.Start);
+            Metrics.EnsureVisible(added.End);
+            RequestRedraw();
+        }
     }
 
 

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Media;
@@ -81,6 +81,14 @@ public sealed class FfprobeMediaProbe(
             throw new UnsupportedMediaException(
                 "В файле нет ни видео, ни звука — с ним нечего делать.",
                 filePath);
+        }
+
+        // У фотографии длительности нет и быть не может. Ей назначается условная,
+        // заведомо большая: длину на доске задаёт клип, и растянуть его должно быть
+        // во что. Без этого картинка не проходила проверку ниже и не открывалась вовсе.
+        if (mediaInfo.IsImage)
+        {
+            mediaInfo = mediaInfo with { Duration = MediaInfo.ImageSourceDuration };
         }
 
         if (mediaInfo.Duration <= TimeSpan.Zero)

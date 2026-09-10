@@ -1,4 +1,4 @@
-using MeowsCut.Core.Diagnostics;
+﻿using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Editing.Timeline;
 using MeowsCut.Core.Media;
 
@@ -62,6 +62,29 @@ public sealed record Project(IReadOnlyList<MediaSource> Sources, Sequence Sequen
     /// Звуковые дорожки считаются наравне с видео: подложенная музыка живёт
     /// в своём файле, и без него на входе она бы просто не зазвучала.
     /// </summary>
+    /// <summary>
+    /// Источники, на которые ссылается доска, но которых нет в проекте.
+    /// </summary>
+    /// <remarks>
+    /// Такого быть не должно: источник добавляется в проект раньше, чем клип на доску.
+    /// Но если порядок где-то нарушат, без этой проверки падение случится глубоко
+    /// внутри сборки графа фильтров — по такому исключению причину не найти.
+    /// </remarks>
+    public IReadOnlyList<SourceId> MissingSourceIds()
+    {
+        var missing = new List<SourceId>();
+
+        foreach (var id in UsedSourceIds())
+        {
+            if (Find(id) is null && !missing.Contains(id))
+            {
+                missing.Add(id);
+            }
+        }
+
+        return missing;
+    }
+
     public IReadOnlyList<MediaSource> UsedSources()
     {
         var used = new List<MediaSource>();

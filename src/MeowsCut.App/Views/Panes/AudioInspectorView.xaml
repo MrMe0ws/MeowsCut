@@ -118,9 +118,11 @@
                         Value="{Binding TrackGainPercent}" />
 
                 <TextBlock Margin="16,0,0,0"
+                           MaxWidth="280"
                            VerticalAlignment="Center"
                            Style="{StaticResource Text.Muted}"
-                           Text="{loc:Tr AudioPreviewNote}" />
+                           Text="{loc:Tr AudioPreviewNote}"
+                           TextWrapping="Wrap" />
             </WrapPanel>
         </StackPanel>
     </Border>

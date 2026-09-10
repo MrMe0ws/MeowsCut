@@ -21,11 +21,12 @@
                 <ContentControl Content="{Binding PlayerVisual}"
                                 Visibility="{Binding IsPlayerVisible, Converter={StaticResource BoolToVisibility}}" />
 
-                <!-- Запасной режим: кадры из ffmpeg, если файл не открылся -->
+                <!-- Картинка: кадр из ffmpeg, если файл не открылся, или фотография
+                     из видеоряда — проигрыватель её показать не может -->
                 <Image RenderOptions.BitmapScalingMode="HighQuality"
                        Source="{Binding Frame}"
                        Stretch="Uniform"
-                       Visibility="{Binding UseFallbackFrames, Converter={StaticResource BoolToVisibility}}" />
+                       Visibility="{Binding IsFrameVisible, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
         </Border>
 

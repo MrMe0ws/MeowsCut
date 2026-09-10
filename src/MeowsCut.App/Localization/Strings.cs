@@ -19,6 +19,22 @@ public static class Strings
 
     public static string FilterVideoFiles => Get(nameof(FilterVideoFiles));
 
+    public static string SectionSources => Get(nameof(SectionSources));
+
+    public static string SourceKindVideo => Get(nameof(SourceKindVideo));
+
+    public static string SourceKindAudio => Get(nameof(SourceKindAudio));
+
+    public static string SourceKindImage => Get(nameof(SourceKindImage));
+
+    public static string SourceAddToBoard => Get(nameof(SourceAddToBoard));
+
+    public static string SourceShowInFolder => Get(nameof(SourceShowInFolder));
+
+    public static string FilterMediaFiles => Get(nameof(FilterMediaFiles));
+
+    public static string FilterImageFiles => Get(nameof(FilterImageFiles));
+
     public static string FilterAllFiles => Get(nameof(FilterAllFiles));
 
     public static string RecentFiles => Get(nameof(RecentFiles));

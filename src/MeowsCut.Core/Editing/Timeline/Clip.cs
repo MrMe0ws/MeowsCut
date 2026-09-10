@@ -22,7 +22,8 @@ public sealed record Clip(
     ClipAudio Audio,
     ClipTransform Transform,
     string? Label = null,
-    TimeSpan LeadingGap = default)
+    TimeSpan LeadingGap = default,
+    bool SourceIsImage = false)
 {
     /// <summary>Ниже этого предела клип теряет смысл: примерно один кадр.</summary>
     public static readonly TimeSpan MinSourceDuration = TimeSpan.FromMilliseconds(20);
@@ -31,7 +32,12 @@ public sealed record Clip(
     public const double MaxSpeed = 16d;
 
     public static Clip FromSource(MediaSource source) =>
-        FromSource(source, new TimeRange(TimeSpan.Zero, source.Duration));
+        FromSource(source, new TimeRange(
+            TimeSpan.Zero,
+
+            // Фотография не «длится»: её отрезок задаём сами, а растянуть его
+            // пользователь сможет за край клипа, как у любого другого куска.
+            source.IsImage ? Media.MediaInfo.DefaultImageClipDuration : source.Duration));
 
     public static Clip FromSource(MediaSource source, TimeRange range)
     {
@@ -50,7 +56,8 @@ public sealed record Clip(
             clamped,
             Speed: 1d,
             ClipAudio.Default,
-            ClipTransform.Identity);
+            ClipTransform.Identity,
+            SourceIsImage: source.IsImage);
     }
 
     /// <summary>Сколько места клип занимает на таймлайне с учётом скорости.</summary>

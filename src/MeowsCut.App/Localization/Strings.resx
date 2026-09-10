@@ -77,6 +77,30 @@
   <data name="FilterVideoFiles" xml:space="preserve">
     <value>Видеофайлы</value>
   </data>
+  <data name="SectionSources" xml:space="preserve">
+    <value>Файлы проекта</value>
+  </data>
+  <data name="SourceKindVideo" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="SourceKindAudio" xml:space="preserve">
+    <value>Звук</value>
+  </data>
+  <data name="SourceKindImage" xml:space="preserve">
+    <value>Фото</value>
+  </data>
+  <data name="SourceAddToBoard" xml:space="preserve">
+    <value>Положить на доску</value>
+  </data>
+  <data name="SourceShowInFolder" xml:space="preserve">
+    <value>Показать в папке</value>
+  </data>
+  <data name="FilterMediaFiles" xml:space="preserve">
+    <value>Видео и фото</value>
+  </data>
+  <data name="FilterImageFiles" xml:space="preserve">
+    <value>Фотографии</value>
+  </data>
   <data name="FilterAllFiles" xml:space="preserve">
     <value>Все файлы</value>
   </data>

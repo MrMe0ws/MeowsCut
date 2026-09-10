@@ -1,4 +1,4 @@
-namespace MeowsCut.Core.Media;
+﻿namespace MeowsCut.Core.Media;
 
 /// <summary>
 /// Расширения, которые приложение готово открывать. Список нужен для фильтра диалога
@@ -22,6 +22,19 @@ public static class MediaFileTypes
         ".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg", ".opus", ".wma", ".aiff", ".alac"
     ];
 
+    /// <summary>
+    /// Фотографии. Кладутся в видеоряд как обычные клипы, но длину им задаёт
+    /// пользователь: своей у картинки нет.
+    /// </summary>
+    /// <remarks>
+    /// GIF сюда не входит: он живёт среди видео, потому что бывает анимированным,
+    /// и решать за пользователя, что это «просто картинка», нельзя.
+    /// </remarks>
+    public static readonly IReadOnlyList<string> ImageExtensions =
+    [
+        ".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff", ".heic", ".avif"
+    ];
+
     /// <summary>Файлы субтитров, которые понимает ffmpeg.</summary>
     public static readonly IReadOnlyList<string> SubtitleExtensions = [".srt", ".ass", ".ssa", ".vtt"];
 
@@ -29,16 +42,35 @@ public static class MediaFileTypes
     {
         var extension = Path.GetExtension(path);
         return !string.IsNullOrEmpty(extension) &&
-               VideoExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
+               (VideoExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase) ||
+                ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
+    }
+
+    public static bool IsKnownImageExtension(string path)
+    {
+        var extension = Path.GetExtension(path);
+        return !string.IsNullOrEmpty(extension) &&
+               ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
     /// Фильтр для диалога открытия файла в формате Win32.
     /// </summary>
-    public static string BuildOpenDialogFilter(string videoFilesLabel, string allFilesLabel)
+    public static string BuildOpenDialogFilter(
+        string mediaFilesLabel,
+        string videoFilesLabel,
+        string imageFilesLabel,
+        string allFilesLabel)
     {
-        var patterns = string.Join(";", VideoExtensions.Select(x => "*" + x));
-        return $"{videoFilesLabel}|{patterns}|{allFilesLabel}|*.*";
+        var video = string.Join(";", VideoExtensions.Select(x => "*" + x));
+        var images = string.Join(";", ImageExtensions.Select(x => "*" + x));
+
+        // Первым — общий фильтр: чаще всего в папке лежит и то, и другое,
+        // и заставлять переключать список ради одной фотографии незачем.
+        return $"{mediaFilesLabel}|{video};{images}|" +
+               $"{videoFilesLabel}|{video}|" +
+               $"{imageFilesLabel}|{images}|" +
+               $"{allFilesLabel}|*.*";
     }
 
     public static string BuildSubtitleDialogFilter(string subtitleFilesLabel, string allFilesLabel)

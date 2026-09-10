@@ -66,6 +66,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         };
 
         _playback.PositionChanged += OnPlaybackPositionChanged;
+        _playback.StillImageChanged += (_, path) => _dispatcher.Post(() => ShowStillImage(path));
         _playback.StateChanged += (_, _) => _dispatcher.Post(RefreshPlaybackState);
 
         _timeline.PropertyChanged += (_, e) =>
@@ -95,7 +96,17 @@ public sealed partial class PreviewViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPlayerVisible))]
+    [NotifyPropertyChangedFor(nameof(IsFrameVisible))]
     private bool _useFallbackFrames;
+
+    /// <summary>
+    /// Под курсором фотография. Показываем её саму: системный проигрыватель
+    /// картинку не откроет, а его ошибка увела бы весь предпросмотр в запасной режим.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPlayerVisible))]
+    [NotifyPropertyChangedFor(nameof(IsFrameVisible))]
+    private bool _isStillImage;
 
     [ObservableProperty]
     private bool _isPlaying;
@@ -106,7 +117,10 @@ public sealed partial class PreviewViewModel : ObservableObject
     [ObservableProperty]
     private string _durationText = "00:00.00";
 
-    public bool IsPlayerVisible => !UseFallbackFrames;
+    public bool IsPlayerVisible => !UseFallbackFrames && !IsStillImage;
+
+    /// <summary>Картинку показывают и запасной режим, и фотография в видеоряду.</summary>
+    public bool IsFrameVisible => UseFallbackFrames || IsStillImage;
 
     public void Attach(Project project)
     {
@@ -136,6 +150,7 @@ public sealed partial class PreviewViewModel : ObservableObject
 
         _project = null;
         Frame = null;
+        IsStillImage = false;
         UseFallbackFrames = false;
         IsPlaying = false;
         PositionText = DurationText = "00:00.00";
@@ -197,6 +212,19 @@ public sealed partial class PreviewViewModel : ObservableObject
 
             RefreshTexts();
         });
+
+    /// <summary>Показывает фотографию из видеоряда или возвращает кадр проигрывателю.</summary>
+    private void ShowStillImage(string? path)
+    {
+        if (path is null)
+        {
+            IsStillImage = false;
+            return;
+        }
+
+        IsStillImage = true;
+        Frame = _cache.Load(path);
+    }
 
     private void RefreshPlaybackState()
     {

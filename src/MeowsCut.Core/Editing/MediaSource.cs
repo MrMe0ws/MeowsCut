@@ -1,4 +1,4 @@
-using MeowsCut.Core.Media;
+﻿using MeowsCut.Core.Media;
 
 namespace MeowsCut.Core.Editing;
 
@@ -17,4 +17,7 @@ public sealed record MediaSource(SourceId Id, MediaInfo Info)
     public TimeSpan Duration => Info.Duration;
 
     public bool HasAudio => Info.HasAudio;
+
+    /// <summary>Фотография: у неё нет своей длительности, её задаёт клип на доске.</summary>
+    public bool IsImage => Info.IsImage;
 }

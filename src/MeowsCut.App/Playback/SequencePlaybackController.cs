@@ -1,3 +1,4 @@
+﻿using System.Diagnostics;
 using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Timeline;
 
@@ -26,6 +27,15 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     private bool _playerBroken;
     private bool _awaitingOpen;
 
+    /// <summary>
+    /// Под курсором фотография. Системный проигрыватель её не откроет, поэтому
+    /// картинку показывает интерфейс, а время отсчитывают здесь по часам.
+    /// </summary>
+    private bool _onImage;
+    private string? _lastImagePath;
+
+    private long _lastTickStamp;
+
     public bool IsPlaying { get; private set; }
 
     /// <summary>Позиция на таймлайне.</summary>
@@ -37,6 +47,12 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     public event EventHandler<TimeSpan>? PositionChanged;
 
     public event EventHandler? StateChanged;
+
+    /// <summary>
+    /// Под курсором фотография — вот её файл. null означает обычное видео,
+    /// то есть кадр снова показывает проигрыватель.
+    /// </summary>
+    public event EventHandler<string?>? StillImageChanged;
 
     public void Attach(Project project)
     {
@@ -63,6 +79,8 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         _project = null;
         _sequence = Sequence.Empty;
         _currentClip = null;
+        _onImage = false;
+        _lastImagePath = null;
         Position = TimeSpan.Zero;
     }
 
@@ -114,7 +132,13 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         }
 
         IsPlaying = true;
-        player.Play();
+        _lastTickStamp = Stopwatch.GetTimestamp();
+
+        if (!_onImage)
+        {
+            player.Play();
+        }
+
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -167,6 +191,31 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
             return;
         }
 
+        _currentClip = target.Clip.Id;
+
+        // Фотография: проигрывателю её отдавать нельзя — он сообщит об ошибке,
+        // и предпросмотр целиком уедет на запасной режим с кадрами из ffmpeg.
+        if (target.Clip.SourceIsImage)
+        {
+            if (!_onImage || _lastImagePath != source.FilePath)
+            {
+                _onImage = true;
+                _lastImagePath = source.FilePath;
+                StillImageChanged?.Invoke(this, source.FilePath);
+            }
+
+            player.Pause();
+            _lastTickStamp = Stopwatch.GetTimestamp();
+            return;
+        }
+
+        if (_onImage)
+        {
+            _onImage = false;
+            _lastImagePath = null;
+            StillImageChanged?.Invoke(this, null);
+        }
+
         var offset = clamped - target.Start;
         if (offset < TimeSpan.Zero)
         {
@@ -176,8 +225,6 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         var sourceTime = target.Clip.ToSourceTime(offset);
 
         ApplyClipSettings(target.Clip);
-
-        _currentClip = target.Clip.Id;
 
         var needsOpen = !string.Equals(player.Source, source.FilePath, StringComparison.OrdinalIgnoreCase);
 
@@ -218,6 +265,14 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
             return;
         }
 
+        // Фотография не играет сама: её время идёт по часам, иначе плейхед
+        // застыл бы на месте и ролик никогда не дошёл до следующего клипа.
+        if (_onImage)
+        {
+            AdvanceStillFrame(placed);
+            return;
+        }
+
         var sourcePosition = player.Position;
         var reachedEnd = sourcePosition >= placed.Clip.SourceRange.End - BoundaryTolerance;
 
@@ -236,6 +291,29 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         var timelinePosition = placed.Start + TimeSpan.FromTicks((long)(offsetInSource.Ticks / placed.Clip.Speed));
 
         Position = Clamp(timelinePosition);
+        PositionChanged?.Invoke(this, Position);
+    }
+
+    /// <summary>Ход времени на фотографии: отсчитывается по часам, а не проигрывателем.</summary>
+    private void AdvanceStillFrame(PlacedClip placed)
+    {
+        var now = Stopwatch.GetTimestamp();
+        var elapsed = Stopwatch.GetElapsedTime(_lastTickStamp, now);
+        _lastTickStamp = now;
+
+        // Скорость клипа имеет смысл и здесь: ускоренная фотография просто
+        // короче стоит на экране.
+        var next = Position + (placed.Clip.IsSpeedChanged
+            ? TimeSpan.FromTicks((long)(elapsed.Ticks * placed.Clip.Speed))
+            : elapsed);
+
+        if (next >= placed.End)
+        {
+            AdvanceToNextClip(placed);
+            return;
+        }
+
+        Position = Clamp(next);
         PositionChanged?.Invoke(this, Position);
     }
 
@@ -258,7 +336,12 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         if (wasPlaying)
         {
             IsPlaying = true;
-            player.Play();
+            _lastTickStamp = Stopwatch.GetTimestamp();
+
+            if (!_onImage)
+            {
+                player.Play();
+            }
         }
     }
 

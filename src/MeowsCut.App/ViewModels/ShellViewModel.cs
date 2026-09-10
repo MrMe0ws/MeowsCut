@@ -27,6 +27,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly TimelineThumbnailLoader _thumbnailLoader;
     private readonly IErrorPresenter _errorPresenter;
+    private readonly IShellIntegration _shellIntegration;
     private readonly ILogger<ShellViewModel> _logger;
 
     [ObservableProperty]
@@ -62,6 +63,7 @@ public sealed partial class ShellViewModel : ObservableObject
         PresetsViewModel presets,
         TimelineThumbnailLoader thumbnailLoader,
         IErrorPresenter errorPresenter,
+        IShellIntegration shellIntegration,
         ILogger<ShellViewModel> logger)
     {
         _mediaProbe = mediaProbe;
@@ -72,6 +74,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _dialogService = dialogService;
         _thumbnailLoader = thumbnailLoader;
         _errorPresenter = errorPresenter;
+        _shellIntegration = shellIntegration;
         Export = export;
         Timeline = timeline;
         Preview = preview;
@@ -92,6 +95,9 @@ public sealed partial class ShellViewModel : ObservableObject
             Export.UpdateProject(Project);
             Presets.UpdateProject(Project);
         };
+
+        Sources.AddToBoard = PlaceOnBoard;
+        Sources.ShowInFolder = path => _shellIntegration.RevealInExplorer(path);
     }
 
     /// <summary>Панель экспорта. Живёт рядом с проектом и обновляется вместе с ним.</summary>
@@ -111,6 +117,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
     /// <summary>Пресеты площадок, включая Telegram.</summary>
     public PresetsViewModel Presets { get; }
+
+    /// <summary>Файлы, добавленные в проект.</summary>
+    public SourcesViewModel Sources { get; } = new();
 
     /// <summary>
     /// Видна ли нижняя строка состояния. В обычной работе версия ffmpeg —
@@ -193,6 +202,7 @@ public sealed partial class ShellViewModel : ObservableObject
             _thumbnailLoader.Attach(Timeline);
             Export.Attach(Project);
             Presets.Attach(Project);
+            Sources.Update(Project);
 
             var settings = _settingsStore.Current.WithRecentFile(path);
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(true);
@@ -252,6 +262,7 @@ public sealed partial class ShellViewModel : ObservableObject
             Project = project;
             Preview.UpdateProject(project);
             Timeline.AppendSource(project, source);
+            Sources.Update(project);
 
             var settings = _settingsStore.Current.WithRecentFile(path);
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(true);
@@ -303,6 +314,7 @@ public sealed partial class ShellViewModel : ObservableObject
             Project = project;
             Preview.UpdateProject(project);
             Timeline.AppendAudioSource(project, source);
+            Sources.Update(project);
         }
         catch (OperationCanceledException)
         {
@@ -319,6 +331,31 @@ public sealed partial class ShellViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Кладёт уже добавленный файл на доску ещё раз.
+    /// </summary>
+    /// <remarks>
+    /// Второй раз читать файл не нужно — источник в проекте уже есть. Видео и фото
+    /// идут в конец видеоряда, звук — на дорожку от плейхеда: класть музыку в конец
+    /// ролика бессмысленно, а кадр посреди дорожки звука — некуда.
+    /// </remarks>
+    private void PlaceOnBoard(MediaSource source)
+    {
+        if (Project is not { } project)
+        {
+            return;
+        }
+
+        if (source.Info.HasVideo)
+        {
+            Timeline.AppendSource(project, source);
+        }
+        else
+        {
+            Timeline.AppendAudioSource(project, source);
+        }
+    }
+
     /// <summary>Открыть финальный шаг: пресеты и параметры вывода.</summary>
     [RelayCommand]
     private void OpenExport() => _dialogService.ShowExport();
@@ -331,6 +368,7 @@ public sealed partial class ShellViewModel : ObservableObject
     {
         Media = null;
         Project = null;
+        Sources.Update(null);
 
         _thumbnailLoader.Detach();
         Timeline.Detach();

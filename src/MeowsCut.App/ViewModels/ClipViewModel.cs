@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MeowsCut.App.Formatting;
 using MeowsCut.App.Timeline;
 using MeowsCut.Core.Editing;
@@ -59,7 +59,14 @@ public sealed partial class ClipViewModel : ObservableObject
         IsMuted = !placed.Clip.HasAudio;
     }
 
-    /// <summary>Время внутри исходника для точки таймлайна — нужно для кадров полосы.</summary>
+    /// <summary>Фотография: кадр у неё один, и полоса заполняется им целиком.</summary>
+    public bool IsImage => Clip.SourceIsImage;
+
+    /// <summary>
+    /// Время внутри исходника для точки таймлайна — нужно для кадров полосы.
+    /// У фотографии кадр всегда один: искать в ней десятую секунду бессмысленно,
+    /// а ffmpeg на такую перемотку просто ничего не вернёт.
+    /// </summary>
     public TimeSpan SourceTimeAt(TimeSpan timelineTime) =>
-        Clip.ToSourceTime(timelineTime - Start);
+        IsImage ? TimeSpan.Zero : Clip.ToSourceTime(timelineTime - Start);
 }
