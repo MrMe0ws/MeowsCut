@@ -219,7 +219,8 @@ public sealed class ExportIntegrationTests : IDisposable
     }
 
     private static Core.Processing.ExportPlan CreatePlan(Project project, ExportSettings settings) =>
-        new FfmpegExportPlanner().CreatePlan(new ExportRequest(project, settings), Capabilities());
+        new FfmpegExportPlanner(new Core.Configuration.AppPaths())
+            .CreatePlan(new ExportRequest(project, settings), Capabilities());
 
     private static MediaCapabilities Capabilities() => new(
         new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "libx264", "libvpx-vp9", "libx265", "libsvtav1" },

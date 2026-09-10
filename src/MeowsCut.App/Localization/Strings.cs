@@ -151,5 +151,30 @@ public static class Strings
 
     public static string PlayerUnavailable => Get(nameof(PlayerUnavailable));
 
+
+    public static string FieldQuality => Get(nameof(FieldQuality));
+
+    public static string CrfHint => Get(nameof(CrfHint));
+
+    public static string FieldBitrateKbps => Get(nameof(FieldBitrateKbps));
+
+    public static string FieldTargetSize => Get(nameof(FieldTargetSize));
+
+    public static string TargetSizeHint => Get(nameof(TargetSizeHint));
+
+    public static string FieldAudioCodec => Get(nameof(FieldAudioCodec));
+
+    public static string FieldAudioBitrate => Get(nameof(FieldAudioBitrate));
+
+    public static string FieldMasterVolume => Get(nameof(FieldMasterVolume));
+
+    public static string AdvancedSettings => Get(nameof(AdvancedSettings));
+
+    public static string FieldEncodingSpeed => Get(nameof(FieldEncodingSpeed));
+
+    public static string TwoPass => Get(nameof(TwoPass));
+
+    public static string FieldKeyframeInterval => Get(nameof(FieldKeyframeInterval));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

@@ -18,7 +18,7 @@ public class FfmpegExportPlannerTests
         new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "aac", "libopus", "libmp3lame" },
         new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
-    private static readonly FfmpegExportPlanner Planner = new();
+    private static readonly FfmpegExportPlanner Planner = new(new Core.Configuration.AppPaths());
 
     private static string OutputPath(string name = "результат.mp4") =>
         Path.Combine(Path.GetTempPath(), "meowscut-tests", Guid.NewGuid().ToString("N"), name);

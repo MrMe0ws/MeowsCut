@@ -70,6 +70,11 @@ public sealed class FfmpegExportEngine(
             CleanupPartials(partFiles);
             throw;
         }
+        finally
+        {
+            // Логи двухпроходного кодирования нужны только между стадиями.
+            CleanupPartials(plan.CleanupPaths);
+        }
     }
 
     private async Task RunStageAsync(

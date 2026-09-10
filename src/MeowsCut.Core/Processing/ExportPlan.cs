@@ -41,6 +41,12 @@ public sealed record ExportPlan(
     IReadOnlyList<PlanWarning> Warnings,
     string OutputPath)
 {
+    /// <summary>
+    /// Служебные файлы, которые нужно убрать после работы: логи двухпроходного
+    /// кодирования и прочий мусор, который ffmpeg оставляет рядом.
+    /// </summary>
+    public IReadOnlyList<string> CleanupPaths { get; init; } = [];
+
     public bool IsStreamCopy => Stages.All(stage => stage.Kind == StageKind.Remux);
 
     public string StageDisplayName(int index) =>

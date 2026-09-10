@@ -275,4 +275,40 @@
   <data name="PlayerUnavailable" xml:space="preserve">
     <value>Система не открыла это видео — показываю кадры из FFmpeg</value>
   </data>
+  <data name="FieldQuality" xml:space="preserve">
+    <value>Качество</value>
+  </data>
+  <data name="CrfHint" xml:space="preserve">
+    <value>Меньше — лучше качество и больше файл. 18 почти неотличимо от исходника, 28 заметно хуже.</value>
+  </data>
+  <data name="FieldBitrateKbps" xml:space="preserve">
+    <value>Битрейт видео, кбит/с</value>
+  </data>
+  <data name="FieldTargetSize" xml:space="preserve">
+    <value>Размер файла, МБ</value>
+  </data>
+  <data name="TargetSizeHint" xml:space="preserve">
+    <value>Битрейт подберётся автоматически, кодирование пройдёт в два прохода.</value>
+  </data>
+  <data name="FieldAudioCodec" xml:space="preserve">
+    <value>Аудиокодек</value>
+  </data>
+  <data name="FieldAudioBitrate" xml:space="preserve">
+    <value>Битрейт звука, кбит/с</value>
+  </data>
+  <data name="FieldMasterVolume" xml:space="preserve">
+    <value>Общая громкость</value>
+  </data>
+  <data name="AdvancedSettings" xml:space="preserve">
+    <value>Расширенные настройки</value>
+  </data>
+  <data name="FieldEncodingSpeed" xml:space="preserve">
+    <value>Скорость кодирования</value>
+  </data>
+  <data name="TwoPass" xml:space="preserve">
+    <value>Два прохода (ровнее качество, вдвое дольше)</value>
+  </data>
+  <data name="FieldKeyframeInterval" xml:space="preserve">
+    <value>Интервал ключевых кадров</value>
+  </data>
 </root>

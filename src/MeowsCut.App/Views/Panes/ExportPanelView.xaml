@@ -9,6 +9,17 @@
              d:DataContext="{d:DesignInstance vm:ExportViewModel}"
              Background="{StaticResource Brush.Surface}">
 
+    <UserControl.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <!-- Именованный стиль обязан наследовать тёмный: иначе он заменяет
+             неявный шаблон целиком и список становится системным белым. -->
+        <Style x:Key="FieldBox" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+    </UserControl.Resources>
+
     <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1,0,0,0" Padding="18">
         <Grid>
             <Grid.RowDefinitions>
@@ -27,44 +38,166 @@
 
                     <!-- Настройки -->
                     <StackPanel Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibility}}">
-                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldContainerFormat}" />
-                        <ComboBox Margin="0,4,0,12"
-                                  ItemTemplate="{StaticResource EnumLabelTemplate}"
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldContainerFormat}" />
+                        <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
                                   ItemsSource="{Binding Containers}"
-                                  SelectedItem="{Binding Container}" />
+                                  SelectedItem="{Binding Container}"
+                                  Style="{StaticResource FieldBox}" />
 
-                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldVideoCodec}" />
-                        <ComboBox Margin="0,4,0,12"
-                                  ItemTemplate="{StaticResource EnumLabelTemplate}"
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldVideoCodec}" />
+                        <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
                                   ItemsSource="{Binding VideoCodecs}"
-                                  SelectedItem="{Binding VideoCodec}" />
+                                  SelectedItem="{Binding VideoCodec}"
+                                  Style="{StaticResource FieldBox}" />
 
-                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldResolution}" />
-                        <ComboBox Margin="0,4,0,12"
-                                  ItemsSource="{Binding Resolutions}"
-                                  SelectedItem="{Binding Resolution}" />
+                        <!-- Качество -->
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldQuality}" />
+                        <ComboBox ItemsSource="{Binding QualityModes}"
+                                  SelectedItem="{Binding QualityMode}"
+                                  Style="{StaticResource FieldBox}" />
 
-                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldFrameRate}" />
-                        <ComboBox Margin="0,4,0,12"
-                                  ItemsSource="{Binding FrameRates}"
-                                  SelectedItem="{Binding FrameRate}" />
+                        <StackPanel Margin="0,0,0,12"
+                                    Visibility="{Binding IsQualityVisible, Converter={StaticResource BoolToVisibility}}">
+                            <Grid>
+                                <TextBlock Style="{StaticResource Text.Muted}" Text="CRF" />
+                                <TextBlock HorizontalAlignment="Right"
+                                           Style="{StaticResource Text.Base}"
+                                           Text="{Binding Crf}" />
+                            </Grid>
+                            <Slider Margin="0,4,0,0"
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="51"
+                                    Minimum="0"
+                                    TickFrequency="1"
+                                    Value="{Binding Crf}" />
+                            <TextBlock Style="{StaticResource Text.Muted}"
+                                       Text="{loc:Tr CrfHint}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
 
-                        <CheckBox Margin="0,2,0,6"
+                        <StackPanel Margin="0,0,0,12"
+                                    Visibility="{Binding IsBitrateVisible, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldBitrateKbps}" />
+                            <TextBox Text="{Binding BitrateKbps, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12"
+                                    Visibility="{Binding IsTargetSizeVisible, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldTargetSize}" />
+                            <TextBox Text="{Binding TargetSizeMegabytes, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Margin="0,4,0,0"
+                                       Style="{StaticResource Text.Muted}"
+                                       Text="{loc:Tr TargetSizeHint}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- Разрешение и частота кадров -->
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldResolution}" />
+                        <ComboBox ItemsSource="{Binding Resolutions}"
+                                  SelectedItem="{Binding Resolution}"
+                                  Style="{StaticResource FieldBox}" />
+
+                        <Grid Margin="0,0,0,12"
+                              Visibility="{Binding IsCustomResolution, Converter={StaticResource BoolToVisibility}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding CustomWidth, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Column="1"
+                                       Margin="8,0"
+                                       VerticalAlignment="Center"
+                                       Style="{StaticResource Text.Muted}"
+                                       Text="×" />
+                            <TextBox Grid.Column="2" Text="{Binding CustomHeight, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+
+                        <ComboBox ItemsSource="{Binding FitModes}"
+                                  SelectedItem="{Binding FitMode}"
+                                  Style="{StaticResource FieldBox}"
+                                  Visibility="{Binding IsCustomResolution, Converter={StaticResource BoolToVisibility}}" />
+
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldFrameRate}" />
+                        <ComboBox ItemsSource="{Binding FrameRates}"
+                                  SelectedItem="{Binding FrameRate}"
+                                  Style="{StaticResource FieldBox}" />
+
+                        <TextBox Margin="0,0,0,12"
+                                 Text="{Binding CustomFps, UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{Binding IsCustomFrameRate, Converter={StaticResource BoolToVisibility}}" />
+
+                        <!-- Звук -->
+                        <CheckBox Margin="0,2,0,8"
                                   Content="{loc:Tr KeepAudio}"
-                                  Foreground="{StaticResource Brush.Text}"
                                   IsChecked="{Binding KeepAudio}" />
 
-                        <CheckBox Margin="0,0,0,14"
+                        <StackPanel Visibility="{Binding KeepAudio, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldAudioCodec}" />
+                            <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
+                                      ItemsSource="{Binding AvailableAudioCodecs}"
+                                      SelectedItem="{Binding AudioCodec}"
+                                      Style="{StaticResource FieldBox}" />
+
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldAudioBitrate}" />
+                            <ComboBox ItemsSource="{Binding AudioBitrates}"
+                                      SelectedItem="{Binding AudioBitrateKbps}"
+                                      Style="{StaticResource FieldBox}" />
+
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldSampleRate}" />
+                            <ComboBox ItemsSource="{Binding SampleRates}"
+                                      SelectedItem="{Binding AudioSampleRateHz}"
+                                      Style="{StaticResource FieldBox}" />
+
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldChannels}" />
+                            <ComboBox ItemsSource="{Binding ChannelOptions}"
+                                      SelectedItem="{Binding AudioChannels}"
+                                      Style="{StaticResource FieldBox}" />
+
+                            <Grid>
+                                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldMasterVolume}" />
+                                <TextBlock HorizontalAlignment="Right"
+                                           Style="{StaticResource Text.Base}"
+                                           Text="{Binding MasterVolumePercent, StringFormat={}{0:0}%}" />
+                            </Grid>
+                            <Slider Margin="0,4,0,12"
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="200"
+                                    Minimum="0"
+                                    TickFrequency="5"
+                                    Value="{Binding MasterVolumePercent}" />
+                        </StackPanel>
+
+                        <CheckBox Margin="0,0,0,12"
                                   Content="{loc:Tr FastMode}"
-                                  Foreground="{StaticResource Brush.Text}"
                                   IsChecked="{Binding PreferStreamCopy}" />
 
-                        <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldOutputFile}" />
-                        <TextBox Margin="0,4,0,14"
-                                 Padding="8,6"
-                                 Background="{StaticResource Brush.SurfaceRaised}"
-                                 BorderBrush="{StaticResource Brush.Border}"
-                                 Foreground="{StaticResource Brush.Text}"
+                        <!-- Расширенные -->
+                        <CheckBox Margin="0,0,0,10"
+                                  Content="{loc:Tr AdvancedSettings}"
+                                  IsChecked="{Binding ShowAdvanced}" />
+
+                        <StackPanel Visibility="{Binding ShowAdvanced, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldEncodingSpeed}" />
+                            <ComboBox ItemsSource="{Binding EncodingSpeeds}"
+                                      SelectedItem="{Binding EncodingSpeed}"
+                                      Style="{StaticResource FieldBox}" />
+
+                            <CheckBox Margin="0,0,0,10"
+                                      Content="{loc:Tr TwoPass}"
+                                      IsChecked="{Binding TwoPass}" />
+
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldPixelFormat}" />
+                            <TextBox Margin="0,0,0,12"
+                                     Text="{Binding PixelFormat, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldKeyframeInterval}" />
+                            <TextBox Margin="0,0,0,12"
+                                     Text="{Binding KeyframeIntervalFrames, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldOutputFile}" />
+                        <TextBox Margin="0,0,0,14"
                                  Text="{Binding OutputPath, UpdateSourceTrigger=PropertyChanged}"
                                  TextWrapping="Wrap" />
 
@@ -114,9 +247,6 @@
 
                         <ProgressBar Height="6"
                                      Margin="0,12,0,10"
-                                     Background="{StaticResource Brush.SurfaceRaised}"
-                                     BorderThickness="0"
-                                     Foreground="{StaticResource Brush.Accent}"
                                      Maximum="100"
                                      Value="{Binding Percent, Mode=OneWay}" />
 

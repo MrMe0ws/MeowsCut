@@ -75,6 +75,61 @@ public sealed partial class ExportViewModel : ObservableObject
     private bool _preferStreamCopy;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsQualityVisible), nameof(IsBitrateVisible), nameof(IsTargetSizeVisible))]
+    private QualityModeOption _qualityMode = QualityModeOption.All[0];
+
+    [ObservableProperty]
+    private int _crf = 23;
+
+    [ObservableProperty]
+    private int _bitrateKbps = 4000;
+
+    [ObservableProperty]
+    private double _targetSizeMegabytes = 8d;
+
+    [ObservableProperty]
+    private int _customWidth = 1080;
+
+    [ObservableProperty]
+    private int _customHeight = 1080;
+
+    [ObservableProperty]
+    private FitModeOption _fitMode = FitModeOption.All[0];
+
+    [ObservableProperty]
+    private double _customFps = 30d;
+
+    [ObservableProperty]
+    private AudioCodec _audioCodec = AudioCodec.Aac;
+
+    [ObservableProperty]
+    private int _audioBitrateKbps = 192;
+
+    [ObservableProperty]
+    private int _audioSampleRateHz = 48_000;
+
+    [ObservableProperty]
+    private int _audioChannels = 2;
+
+    [ObservableProperty]
+    private double _masterVolumePercent = 100d;
+
+    [ObservableProperty]
+    private bool _showAdvanced;
+
+    [ObservableProperty]
+    private EncodingSpeedOption _encodingSpeed = EncodingSpeedOption.All[2];
+
+    [ObservableProperty]
+    private bool _twoPass;
+
+    [ObservableProperty]
+    private string _pixelFormat = string.Empty;
+
+    [ObservableProperty]
+    private int _keyframeIntervalFrames;
+
+    [ObservableProperty]
     private double _percent;
 
     [ObservableProperty]
@@ -121,6 +176,30 @@ public sealed partial class ExportViewModel : ObservableObject
     public bool IsRunning => State == ExportState.Running;
 
     public bool IsDone => State == ExportState.Done;
+
+    public bool IsQualityVisible => QualityMode.Mode == ViewModels.QualityMode.ConstantQuality;
+
+    public bool IsBitrateVisible => QualityMode.Mode == ViewModels.QualityMode.Bitrate;
+
+    public bool IsTargetSizeVisible => QualityMode.Mode == ViewModels.QualityMode.TargetSize;
+
+    public bool IsCustomResolution => Resolution.IsCustom;
+
+    public bool IsCustomFrameRate => FrameRate.IsCustom;
+
+    public IReadOnlyList<QualityModeOption> QualityModes { get; } = QualityModeOption.All;
+
+    public IReadOnlyList<EncodingSpeedOption> EncodingSpeeds { get; } = EncodingSpeedOption.All;
+
+    public IReadOnlyList<FitModeOption> FitModes { get; } = FitModeOption.All;
+
+    public ObservableCollection<AudioCodec> AvailableAudioCodecs { get; } = [];
+
+    public IReadOnlyList<int> AudioBitrates { get; } = AudioSettings.BitratePresetsKbps;
+
+    public IReadOnlyList<int> SampleRates { get; } = AudioSettings.SampleRatePresetsHz;
+
+    public IReadOnlyList<int> ChannelOptions { get; } = [1, 2];
 
     public ObservableCollection<SummaryLine> SummaryLines { get; } = [];
 
@@ -207,15 +286,66 @@ public sealed partial class ExportViewModel : ObservableObject
         RefreshSummary();
     }
 
-    partial void OnVideoCodecChanged(VideoCodec value) => RefreshSummary();
+    partial void OnVideoCodecChanged(VideoCodec value)
+    {
+        Crf = RateControlPolicy.CrfRange(value).Default;
+        RefreshSummary();
+    }
 
-    partial void OnResolutionChanged(ResolutionOption value) => RefreshSummary();
+    partial void OnResolutionChanged(ResolutionOption value)
+    {
+        OnPropertyChanged(nameof(IsCustomResolution));
+        RefreshSummary();
+    }
 
-    partial void OnFrameRateChanged(FrameRateOption value) => RefreshSummary();
+    partial void OnFrameRateChanged(FrameRateOption value)
+    {
+        OnPropertyChanged(nameof(IsCustomFrameRate));
+        RefreshSummary();
+    }
 
     partial void OnKeepAudioChanged(bool value) => RefreshSummary();
 
     partial void OnPreferStreamCopyChanged(bool value) => RefreshSummary();
+
+    partial void OnQualityModeChanged(QualityModeOption value)
+    {
+        // Дефолт CRF зависит от кодека: у H.265 и VP9 та же цифра означает другое качество.
+        Crf = RateControlPolicy.CrfRange(VideoCodec).Default;
+        RefreshSummary();
+    }
+
+    partial void OnCrfChanged(int value) => RefreshSummary();
+
+    partial void OnBitrateKbpsChanged(int value) => RefreshSummary();
+
+    partial void OnTargetSizeMegabytesChanged(double value) => RefreshSummary();
+
+    partial void OnCustomWidthChanged(int value) => RefreshSummary();
+
+    partial void OnCustomHeightChanged(int value) => RefreshSummary();
+
+    partial void OnCustomFpsChanged(double value) => RefreshSummary();
+
+    partial void OnFitModeChanged(FitModeOption value) => RefreshSummary();
+
+    partial void OnAudioCodecChanged(AudioCodec value) => RefreshSummary();
+
+    partial void OnAudioBitrateKbpsChanged(int value) => RefreshSummary();
+
+    partial void OnAudioSampleRateHzChanged(int value) => RefreshSummary();
+
+    partial void OnAudioChannelsChanged(int value) => RefreshSummary();
+
+    partial void OnMasterVolumePercentChanged(double value) => RefreshSummary();
+
+    partial void OnEncodingSpeedChanged(EncodingSpeedOption value) => RefreshSummary();
+
+    partial void OnTwoPassChanged(bool value) => RefreshSummary();
+
+    partial void OnPixelFormatChanged(string value) => RefreshSummary();
+
+    partial void OnKeyframeIntervalFramesChanged(int value) => RefreshSummary();
 
     private void RefreshCodecs()
     {
@@ -236,6 +366,20 @@ public sealed partial class ExportViewModel : ObservableObject
         {
             VideoCodec = VideoCodecs.FirstOrDefault(CompatibilityMatrix.DefaultVideoCodec(Container));
         }
+
+        AvailableAudioCodecs.Clear();
+        foreach (var codec in CompatibilityMatrix.AudioCodecsFor(Container))
+        {
+            if (capabilities is null || Ffmpeg.Arguments.EncoderCatalog.IsAvailable(codec, capabilities))
+            {
+                AvailableAudioCodecs.Add(codec);
+            }
+        }
+
+        if (!AvailableAudioCodecs.Contains(AudioCodec))
+        {
+            AudioCodec = AvailableAudioCodecs.FirstOrDefault(CompatibilityMatrix.DefaultAudioCodec(Container));
+        }
     }
 
     public ExportSettings BuildSettings() => new ExportSettings
@@ -246,11 +390,46 @@ public sealed partial class ExportViewModel : ObservableObject
         Video = VideoSettings.Default with
         {
             Codec = VideoCodec,
-            Resolution = Resolution.ToSpec(),
-            FrameRate = FrameRate.ToSpec()
+            RateControl = BuildRateControl(),
+            Speed = EncodingSpeed.Speed,
+            Resolution = Resolution.ToSpec(CustomWidth, CustomHeight, FitMode.Mode),
+            FrameRate = FrameRate.ToSpec(CustomFps),
+            Advanced = BuildAdvanced()
         },
-        Audio = KeepAudio ? AudioSettings.Default : AudioSettings.Disabled
+        Audio = BuildAudio()
     }.Normalized();
+
+    private RateControl BuildRateControl() => QualityMode.Mode switch
+    {
+        ViewModels.QualityMode.ConstantQuality => new RateControl.ConstantQuality(Crf),
+        ViewModels.QualityMode.Bitrate => new RateControl.ConstantBitrate(BitrateKbps),
+        ViewModels.QualityMode.TargetSize => new RateControl.TargetSize((long)(TargetSizeMegabytes * 1024 * 1024)),
+        _ => new RateControl.Auto()
+    };
+
+    private AdvancedVideoSettings BuildAdvanced() => new()
+    {
+        TwoPass = TwoPass,
+        PixelFormat = string.IsNullOrWhiteSpace(PixelFormat) ? null : PixelFormat.Trim(),
+        KeyframeIntervalFrames = KeyframeIntervalFrames > 0 ? KeyframeIntervalFrames : null
+    };
+
+    private AudioSettings BuildAudio()
+    {
+        if (!KeepAudio)
+        {
+            return AudioSettings.Disabled;
+        }
+
+        return AudioSettings.Default with
+        {
+            Codec = AudioCodec,
+            BitrateKbps = AudioBitrateKbps,
+            SampleRateHz = AudioSampleRateHz,
+            Channels = AudioChannels,
+            MasterVolume = MasterVolumePercent / 100d
+        };
+    }
 
     private void RefreshSummary()
     {
@@ -320,11 +499,20 @@ public sealed partial class ExportViewModel : ObservableObject
 
         Directory.CreateDirectory(_paths.PreviewDirectory);
 
-        var settings = BuildSettings() with
+        var baseSettings = BuildSettings();
+
+        var settings = baseSettings with
         {
             OutputPath = previewPath,
             Overwrite = OverwritePolicy.Overwrite,
-            Video = BuildSettings().Video with { Speed = EncodingSpeed.VeryFast }
+
+            // Проверка должна быть быстрой: качество здесь оценивается на глаз,
+            // а ждать медленный пресет ради пяти секунд бессмысленно.
+            Video = baseSettings.Video with
+            {
+                Speed = Core.Export.EncodingSpeed.VeryFast,
+                Advanced = baseSettings.Video.Advanced with { TwoPass = false }
+            }
         };
 
         ExportPlan plan;

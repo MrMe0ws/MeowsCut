@@ -1,4 +1,5 @@
 using System.Globalization;
+using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Timeline;
 using MeowsCut.Core.Export;
@@ -17,7 +18,7 @@ namespace MeowsCut.Ffmpeg.Planning;
 /// применяется, только когда правки этого не запрещают и пользователь сам выбрал
 /// быстрый режим, потому что границы обрезки при копировании прилипают к ключевым кадрам.
 /// </remarks>
-public sealed class FfmpegExportPlanner : IExportPlanner
+public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 {
     private readonly FilterGraphBuilder _graphBuilder = new();
 
@@ -38,24 +39,107 @@ public sealed class FfmpegExportPlanner : IExportPlanner
         var warnings = new List<PlanWarning>();
         var streamCopy = CanStreamCopy(project, settings, warnings);
 
-        var arguments = streamCopy
-            ? BuildStreamCopyArguments(project, settings, partPath)
-            : BuildTranscodeArguments(project, settings, capabilities, partPath);
+        // Решение о втором проходе принимается по исходным настройкам: ниже целевой
+        // размер уже превратится в обычный битрейт и режим станет неотличим.
+        var twoPass = NeedsTwoPasses(settings, streamCopy);
+
+        // Целевой размер разворачивается в конкретный битрейт: дальше по коду
+        // это обычное кодирование с ограничением, а не отдельный режим.
+        var effective = ResolveTargetSize(settings, sequence.Duration);
+
+        var stages = new List<ExportStage>();
+        var cleanup = new List<string>();
+
+        if (streamCopy)
+        {
+            stages.Add(new ExportStage(
+                StageKind.Remux,
+                "Копирование без перекодирования",
+                BuildStreamCopyArguments(project, effective, partPath),
+                Weight: 1d,
+                sequence.Duration,
+                partPath));
+        }
+        else if (twoPass)
+        {
+            // Папку статистики создаём заранее: ffmpeg не создаёт её сам и просто падает.
+            Directory.CreateDirectory(paths.TempDirectory);
+
+            var logPrefix = Path.Combine(paths.TempDirectory, "pass-" + Guid.NewGuid().ToString("N"));
+
+            stages.Add(new ExportStage(
+                StageKind.PassOne,
+                "Анализ видео",
+                BuildTranscodeArguments(project, effective, capabilities, NullOutput, 1, logPrefix),
+                // Первый проход быстрее второго: он не пишет файл и не трогает звук.
+                Weight: 0.45,
+                sequence.Duration,
+                OutputFile: null));
+
+            stages.Add(new ExportStage(
+                StageKind.PassTwo,
+                "Кодирование видео",
+                BuildTranscodeArguments(project, effective, capabilities, partPath, 2, logPrefix),
+                Weight: 0.55,
+                sequence.Duration,
+                partPath));
+
+            cleanup.Add(logPrefix + "-0.log");
+            cleanup.Add(logPrefix + "-0.log.mbtree");
+        }
+        else
+        {
+            stages.Add(new ExportStage(
+                StageKind.Transcode,
+                "Обработка видео",
+                BuildTranscodeArguments(project, effective, capabilities, partPath, pass: null, logPrefix: null),
+                Weight: 1d,
+                sequence.Duration,
+                partPath));
+        }
 
         CollectWarnings(project, settings, streamCopy, warnings);
 
         var summary = BuildSummary(project, settings, streamCopy);
 
-        var stage = new ExportStage(
-            streamCopy ? StageKind.Remux : StageKind.Transcode,
-            streamCopy ? "Копирование без перекодирования" : "Обработка видео",
-            arguments,
-            Weight: 1d,
-            sequence.Duration,
-            partPath);
-
-        return new ExportPlan([stage], sequence.Duration, summary, warnings, outputPath);
+        return new ExportPlan(stages, sequence.Duration, summary, warnings, outputPath)
+        {
+            CleanupPaths = cleanup
+        };
     }
+
+    /// <summary>Пустой вывод первого прохода: файл не пишется, считается только статистика.</summary>
+    private const string NullOutput = "NUL";
+
+    /// <summary>
+    /// Превращает «уложиться в размер» в битрейт. Считается по ожидаемой длительности
+    /// результата, а не исходника — при вырезании и ускорении это разные величины.
+    /// </summary>
+    private static ExportSettings ResolveTargetSize(ExportSettings settings, TimeSpan duration)
+    {
+        if (settings.Video.RateControl is not RateControl.TargetSize target)
+        {
+            return settings;
+        }
+
+        var audioKbps = settings.Audio.Enabled ? settings.Audio.BitrateKbps : 0;
+        var videoKbps = RateControlPolicy.BitrateForTargetSizeKbps(target.Bytes, duration, audioKbps);
+
+        return settings with
+        {
+            Video = settings.Video with { RateControl = new RateControl.ConstantBitrate(videoKbps) }
+        };
+    }
+
+    /// <summary>
+    /// Нужен ли второй проход: он даёт заметно более ровное качество при заданном
+    /// битрейте, но удваивает время, поэтому включается только явно или там,
+    /// где без него не уложиться в размер.
+    /// </summary>
+    private static bool NeedsTwoPasses(ExportSettings settings, bool streamCopy) =>
+        !streamCopy &&
+        (settings.Video.Advanced.TwoPass || settings.Video.RateControl is RateControl.TargetSize) &&
+        settings.Video.Codec != VideoCodec.Copy;
 
     /// <summary>
     /// Копирование потоков возможно, только если ни одна правка не требует пересчёта кадров.
@@ -164,7 +248,9 @@ public sealed class FfmpegExportPlanner : IExportPlanner
         Project project,
         ExportSettings settings,
         MediaCapabilities capabilities,
-        string outputPath)
+        string outputPath,
+        int? pass,
+        string? logPrefix)
     {
         var sequence = project.Sequence;
         var sources = project.UsedSources();
@@ -175,7 +261,13 @@ public sealed class FfmpegExportPlanner : IExportPlanner
             indexBySource[sources[i].Id] = i;
         }
 
-        var graph = _graphBuilder.Build(sequence, indexBySource, settings);
+        // В первом проходе звук не нужен, и цепочку для него строить нельзя:
+        // висящий выход фильтра ffmpeg считает ошибкой, а не мелочью.
+        var graphSettings = pass == 1
+            ? settings with { Audio = AudioSettings.Disabled }
+            : settings;
+
+        var graph = _graphBuilder.Build(sequence, indexBySource, graphSettings);
 
         var builder = FfmpegArgumentBuilder.Create()
             .HideBanner()
@@ -192,20 +284,35 @@ public sealed class FfmpegExportPlanner : IExportPlanner
         builder.FilterComplex(graph.Text);
         builder.Map($"[{graph.VideoLabel}]");
 
-        if (graph.AudioLabel is { } audioLabel)
+        // В первом проходе звук не нужен: он только считает статистику картинки.
+        var withAudio = graph.HasAudio && pass != 1;
+
+        if (withAudio && graph.AudioLabel is { } audioLabel)
         {
             builder.Map($"[{audioLabel}]");
         }
 
         AppendVideoOptions(builder, settings, capabilities);
 
-        if (graph.HasAudio)
+        if (withAudio)
         {
             AppendAudioOptions(builder, settings);
         }
         else
         {
             builder.NoAudio();
+        }
+
+        if (pass is { } passNumber && logPrefix is not null)
+        {
+            builder.Pass(passNumber, logPrefix);
+        }
+
+        if (pass == 1)
+        {
+            // Первый проход ничего не пишет на диск.
+            builder.Format("null");
+            return builder.Output(NullOutput).Build();
         }
 
         foreach (var (key, value) in EncoderCatalog.ContainerOptions(settings.Container, settings.Video.Codec))

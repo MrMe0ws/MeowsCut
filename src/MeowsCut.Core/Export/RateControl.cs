@@ -58,6 +58,26 @@ public static class RateControlPolicy
     }
 
     /// <summary>
+    /// Битрейт видео, при котором результат уложится в заданный размер.
+    /// </summary>
+    /// <remarks>
+    /// Пять процентов запаса и вычет звука — иначе контейнер со служебными данными
+    /// стабильно вылезает за лимит, а именно лимит и есть смысл этого режима.
+    /// </remarks>
+    public static int BitrateForTargetSizeKbps(long targetBytes, TimeSpan duration, int audioBitrateKbps)
+    {
+        if (targetBytes <= 0 || duration <= TimeSpan.Zero)
+        {
+            return 0;
+        }
+
+        var totalKbps = targetBytes * 8d / 1000d / duration.TotalSeconds * 0.95;
+        var videoKbps = totalKbps - audioBitrateKbps;
+
+        return (int)Math.Max(24, Math.Floor(videoKbps));
+    }
+
+    /// <summary>
     /// Оценка битрейта для показа в сводке и расчёта размера. Для режима постоянного
     /// качества это именно оценка — реальный битрейт зависит от содержимого кадра.
     /// </summary>
