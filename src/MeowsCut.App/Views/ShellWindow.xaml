@@ -58,6 +58,7 @@
                 <sys:Double>1</sys:Double>
             </KeyBinding.CommandParameter>
         </KeyBinding>
+        <KeyBinding Key="Space" Command="{Binding Preview.TogglePlayCommand}" />
         <KeyBinding Key="Home" Command="{Binding Preview.GoToStartCommand}" />
         <KeyBinding Key="End" Command="{Binding Preview.GoToEndCommand}" />
     </Window.InputBindings>

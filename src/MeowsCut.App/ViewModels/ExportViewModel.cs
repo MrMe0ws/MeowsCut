@@ -11,6 +11,7 @@ using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Editing;
 using MeowsCut.Core.Export;
 using MeowsCut.Core.Jobs;
+using MeowsCut.Core.Media;
 using MeowsCut.Core.Processing;
 using Microsoft.Extensions.Logging;
 
@@ -37,10 +38,16 @@ public sealed partial class ExportViewModel : ObservableObject
     private readonly IAppSettingsStore _settingsStore;
     private readonly IShellIntegration _shell;
     private readonly IUiDispatcher _dispatcher;
+    private readonly TimelineViewModel _timeline;
+    private readonly AppPaths _paths;
     private readonly ILogger<ExportViewModel> _logger;
+
+    /// <summary>Сколько секунд рендерит кнопка проверки фрагмента.</summary>
+    private static readonly TimeSpan PreviewFragmentLength = TimeSpan.FromSeconds(5);
 
     private Project? _project;
     private JobHandle? _currentJob;
+    private bool _previewMode;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle), nameof(IsRunning), nameof(IsDone))]
@@ -93,8 +100,12 @@ public sealed partial class ExportViewModel : ObservableObject
         IAppSettingsStore settingsStore,
         IShellIntegration shell,
         IUiDispatcher dispatcher,
+        TimelineViewModel timeline,
+        AppPaths paths,
         ILogger<ExportViewModel> logger)
     {
+        _timeline = timeline;
+        _paths = paths;
         _planner = planner;
         _engine = engine;
         _jobQueue = jobQueue;
@@ -139,6 +150,7 @@ public sealed partial class ExportViewModel : ObservableObject
 
         RefreshCodecs();
         RefreshSummary();
+        RefreshCommands();
     }
 
     /// <summary>
@@ -163,7 +175,25 @@ public sealed partial class ExportViewModel : ObservableObject
         SummaryLines.Clear();
         Warnings.Clear();
         State = ExportState.Idle;
+        RefreshCommands();
     }
+
+    /// <summary>
+    /// Пересчёт доступности кнопок. Команды не опрашиваются сами: без этого вызова
+    /// «Экспортировать» осталась бы серой до первого другого действия.
+    /// </summary>
+    private void RefreshCommands()
+    {
+        StartCommand.NotifyCanExecuteChanged();
+        PreviewFragmentCommand.NotifyCanExecuteChanged();
+        CancelCommand.NotifyCanExecuteChanged();
+        OpenResultCommand.NotifyCanExecuteChanged();
+        ShowInFolderCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnOutputPathChanged(string value) => RefreshCommands();
+
+    partial void OnStateChanged(ExportState value) => RefreshCommands();
 
     partial void OnContainerChanged(ContainerFormat value)
     {
@@ -258,10 +288,65 @@ public sealed partial class ExportViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void ChooseOutput()
+    /// <summary>
+    /// Рендерит короткий кусок от курсора теми же настройками и открывает его.
+    /// </summary>
+    /// <remarks>
+    /// Это единственный честный способ увидеть заранее, как настройки скажутся
+    /// на картинке: предпросмотр идёт ровно тем же пайплайном, что и полный экспорт,
+    /// поэтому расхождений между проверкой и результатом не бывает.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(CanStart))]
+    private void PreviewFragment()
     {
-        // Диалог сохранения появится вместе с настройками; пока путь правится в поле.
+        if (_project is null || _toolsetProvider.Current is null)
+        {
+            return;
+        }
+
+        var start = _timeline.Playhead;
+        var range = new TimeRange(start, start + PreviewFragmentLength);
+        var sliced = _project.Sequence.Slice(range);
+
+        if (sliced.IsEmpty)
+        {
+            ErrorMessage = Strings.PreviewFragmentEmpty;
+            return;
+        }
+
+        var previewPath = Path.Combine(
+            _paths.PreviewDirectory,
+            $"фрагмент-{DateTime.Now:HH-mm-ss}{Container.FileExtension()}");
+
+        Directory.CreateDirectory(_paths.PreviewDirectory);
+
+        var settings = BuildSettings() with
+        {
+            OutputPath = previewPath,
+            Overwrite = OverwritePolicy.Overwrite,
+            Video = BuildSettings().Video with { Speed = EncodingSpeed.VeryFast }
+        };
+
+        ExportPlan plan;
+        try
+        {
+            plan = _planner.CreatePlan(
+                new ExportRequest(_project.WithSequence(sliced), settings),
+                _toolsetProvider.Current.Capabilities);
+        }
+        catch (MeowsCutException ex)
+        {
+            ErrorMessage = ex.Message;
+            return;
+        }
+
+        _previewMode = true;
+        State = ExportState.Running;
+        Percent = 0;
+        ErrorMessage = null;
+        ProgressStage = Strings.PreviewFragmentRunning;
+
+        StartJob(plan, Strings.PreviewFragmentRunning);
     }
 
     [RelayCommand(CanExecute = nameof(CanStart))]
@@ -286,14 +371,20 @@ public sealed partial class ExportViewModel : ObservableObject
             return;
         }
 
+        _previewMode = false;
         State = ExportState.Running;
         Percent = 0;
         ErrorMessage = null;
         ProgressStage = plan.StageDisplayName(0);
         OutputPath = plan.OutputPath;
 
+        StartJob(plan, $"Экспорт {Path.GetFileName(plan.OutputPath)}");
+    }
+
+    private void StartJob(ExportPlan plan, string title)
+    {
         var descriptor = new JobDescriptor(
-            $"Экспорт {Path.GetFileName(plan.OutputPath)}",
+            title,
             JobKind.Export,
             (progress, token) => _engine.ExecuteAsync(plan, progress, token));
 
@@ -305,6 +396,7 @@ public sealed partial class ExportViewModel : ObservableObject
 
         CancelCommand.NotifyCanExecuteChanged();
         StartCommand.NotifyCanExecuteChanged();
+        PreviewFragmentCommand.NotifyCanExecuteChanged();
     }
 
     private bool CanStart() =>
@@ -342,6 +434,20 @@ public sealed partial class ExportViewModel : ObservableObject
         {
             switch (result.Status)
             {
+                case JobStatus.Completed when _previewMode:
+                    // Фрагмент не результат работы, а проверка: показываем его и
+                    // возвращаем панель в исходное состояние.
+                    _previewMode = false;
+                    State = ExportState.Idle;
+                    Percent = 0;
+
+                    if (result.OutputPath is { } fragment)
+                    {
+                        _shell.OpenFile(fragment);
+                    }
+
+                    break;
+
                 case JobStatus.Completed:
                     State = ExportState.Done;
                     Percent = 100;
@@ -364,11 +470,13 @@ public sealed partial class ExportViewModel : ObservableObject
                     break;
             }
 
+            _previewMode = false;
             _currentJob?.Dispose();
             _currentJob = null;
 
             StartCommand.NotifyCanExecuteChanged();
             CancelCommand.NotifyCanExecuteChanged();
+            PreviewFragmentCommand.NotifyCanExecuteChanged();
             OpenResultCommand.NotifyCanExecuteChanged();
             ShowInFolderCommand.NotifyCanExecuteChanged();
         });

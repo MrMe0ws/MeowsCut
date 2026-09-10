@@ -143,5 +143,13 @@ public static class Strings
 
     public static string FieldVolume => Get(nameof(FieldVolume));
 
+    public static string PreviewFragment => Get(nameof(PreviewFragment));
+
+    public static string PreviewFragmentRunning => Get(nameof(PreviewFragmentRunning));
+
+    public static string PreviewFragmentEmpty => Get(nameof(PreviewFragmentEmpty));
+
+    public static string PlayerUnavailable => Get(nameof(PlayerUnavailable));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

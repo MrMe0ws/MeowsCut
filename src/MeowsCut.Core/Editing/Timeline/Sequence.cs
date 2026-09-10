@@ -115,6 +115,55 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
     public Sequence WithTrack(VideoTrack track) => this with { Video = track };
 
     /// <summary>
+    /// Кусок последовательности за указанный отрезок времени.
+    /// </summary>
+    /// <remarks>
+    /// Нужен там, где надо отрендерить не всё: предпросмотр фрагмента и ограничение
+    /// длительности в пресетах (три секунды для стикера). Клипы на границах обрезаются,
+    /// остальные выбрасываются, порядок сохраняется.
+    /// </remarks>
+    public Sequence Slice(TimeRange range)
+    {
+        var clamped = range.Clamp(Duration);
+        if (clamped.Duration <= TimeSpan.Zero)
+        {
+            return WithTrack(VideoTrack.Empty);
+        }
+
+        var clips = new List<Clip>();
+
+        foreach (var placed in EnumeratePlaced())
+        {
+            if (placed.End <= clamped.Start || placed.Start >= clamped.End)
+            {
+                continue;
+            }
+
+            var clip = placed.Clip;
+
+            // Обрезаем края только у тех клипов, которые вылезают за отрезок.
+            if (placed.Start < clamped.Start)
+            {
+                clip = clip.TrimStart(clamped.Start - placed.Start);
+            }
+
+            if (placed.End > clamped.End)
+            {
+                // Дельта считается от исходного конца клипа на таймлайне: обрезка
+                // начала не сдвигает его точку выхода в исходнике.
+                clip = clip.TrimEnd(clamped.End - placed.End);
+            }
+
+            if (clip.SourceRange.Duration >= Clip.MinSourceDuration)
+            {
+                clips.Add(clip with { Id = ClipId.New() });
+            }
+        }
+
+        return WithTrack(new VideoTrack(clips));
+    }
+
+    /// <summary>
     /// Разрезает клип, накрывающий указанное время. Если время попадает на стык
     /// или за пределы последовательности, ничего не меняется — это не ошибка.
     /// </summary>

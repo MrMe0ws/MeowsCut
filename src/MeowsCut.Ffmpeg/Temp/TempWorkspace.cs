@@ -57,6 +57,8 @@ public sealed class TempWorkspaceFactory(AppPaths paths, ILogger<TempWorkspaceFa
 
             var threshold = DateTime.UtcNow - olderThan;
 
+            CleanPreviewFragments(threshold);
+
             foreach (var directory in Directory.EnumerateDirectories(paths.TempDirectory, "job-*"))
             {
                 try
@@ -78,6 +80,33 @@ public sealed class TempWorkspaceFactory(AppPaths paths, ILogger<TempWorkspaceFa
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             logger.LogWarning(ex, "Не удалось убрать временные папки");
+        }
+    }
+
+    /// <summary>
+    /// Фрагменты предпросмотра живут дольше своей задачи — пользователь их смотрит,
+    /// поэтому удаляются они не сразу, а при следующем запуске.
+    /// </summary>
+    private void CleanPreviewFragments(DateTime threshold)
+    {
+        if (!Directory.Exists(paths.PreviewDirectory))
+        {
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(paths.PreviewDirectory))
+        {
+            try
+            {
+                if (File.GetLastWriteTimeUtc(file) <= threshold)
+                {
+                    File.Delete(file);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogDebug(ex, "Фрагмент {File} занят, пропускаем", file);
+            }
         }
     }
 }

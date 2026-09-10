@@ -34,6 +34,9 @@ public sealed class AppPaths
 
     public string TempDirectory => Path.Combine(LocalRoot, "temp");
 
+    /// <summary>Короткие фрагменты для проверки настроек перед полным экспортом.</summary>
+    public string PreviewDirectory => Path.Combine(LocalRoot, "temp", "preview");
+
     public string ThumbnailsDirectory => Path.Combine(LocalRoot, "thumbs");
 
     /// <summary>Папка ffmpeg для разработки: бинарники не хранятся в репозитории.</summary>

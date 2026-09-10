@@ -16,13 +16,19 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Margin="18,14,18,8" Background="#FF0B0B0D" CornerRadius="8">
-            <Image Margin="6"
-                   RenderOptions.BitmapScalingMode="HighQuality"
-                   Source="{Binding Frame}"
-                   Stretch="Uniform" />
+            <Grid Margin="6">
+                <!-- Обычный режим: системный проигрыватель -->
+                <ContentControl Content="{Binding PlayerVisual}"
+                                Visibility="{Binding IsPlayerVisible, Converter={StaticResource BoolToVisibility}}" />
+
+                <!-- Запасной режим: кадры из ffmpeg, если файл не открылся -->
+                <Image RenderOptions.BitmapScalingMode="HighQuality"
+                       Source="{Binding Frame}"
+                       Stretch="Uniform"
+                       Visibility="{Binding UseFallbackFrames, Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
         </Border>
 
-        <!-- Транспорт. Воспроизведение появится вместе с плеером последовательности. -->
         <StackPanel Grid.Row="1"
                     Margin="0,0,0,10"
                     HorizontalAlignment="Center"
@@ -38,6 +44,25 @@
                     <sys:Double>-1</sys:Double>
                 </Button.CommandParameter>
             </Button>
+
+            <Button Margin="6,0,0,0"
+                    MinWidth="96"
+                    Command="{Binding TogglePlayCommand}"
+                    Style="{StaticResource Button.Primary}">
+                <TextBlock>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="▶  Играть" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                    <Setter Property="Text" Value="⏸  Пауза" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Button>
+
             <Button Margin="6,0,0,0"
                     Command="{Binding StepCommand}"
                     Content="+1 с"

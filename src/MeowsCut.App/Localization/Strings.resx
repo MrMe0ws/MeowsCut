@@ -263,4 +263,16 @@
   <data name="FieldVolume" xml:space="preserve">
     <value>Громкость</value>
   </data>
+  <data name="PreviewFragment" xml:space="preserve">
+    <value>Проверить 5 секунд</value>
+  </data>
+  <data name="PreviewFragmentRunning" xml:space="preserve">
+    <value>Готовлю фрагмент для проверки…</value>
+  </data>
+  <data name="PreviewFragmentEmpty" xml:space="preserve">
+    <value>В этом месте таймлайна нечего проверять</value>
+  </data>
+  <data name="PlayerUnavailable" xml:space="preserve">
+    <value>Система не открыла это видео — показываю кадры из FFmpeg</value>
+  </data>
 </root>
