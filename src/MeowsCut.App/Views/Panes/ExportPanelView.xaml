@@ -185,6 +185,18 @@
                                   IsChecked="{Binding ShowAdvanced}" />
 
                         <StackPanel Visibility="{Binding ShowAdvanced, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel Visibility="{Binding HasHardwareChoice, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldHardware}" />
+                                <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
+                                          ItemsSource="{Binding HardwareOptions}"
+                                          SelectedItem="{Binding Hardware}"
+                                          Style="{StaticResource FieldBox}" />
+                                <TextBlock Margin="0,-6,0,12"
+                                           Style="{StaticResource Text.Muted}"
+                                           Text="{loc:Tr HardwareHint}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+
                             <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldEncodingSpeed}" />
                             <ComboBox ItemsSource="{Binding EncodingSpeeds}"
                                       SelectedItem="{Binding EncodingSpeed}"

@@ -19,7 +19,10 @@ public enum PlanWarningKind
     SizeEstimateUnavailable,
 
     /// <summary>Наложенный звук существует только внутри графа фильтров.</summary>
-    AudioMixNeedsEncode
+    AudioMixNeedsEncode,
+
+    /// <summary>Просили видеокарту, но пришлось кодировать процессором.</summary>
+    HardwareUnavailable
 }
 
 /// <summary>Предупреждение о последствиях выбранных настроек — показывается до запуска.</summary>

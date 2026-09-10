@@ -41,6 +41,7 @@ public sealed class EnumLabelConverter : IValueConverter
             Core.Export.ContainerFormat.Avi => "AVI",
             _ => container.ToString()
         },
+        Core.Export.HardwareAcceleration hardware => Core.Export.HardwareAccelerationExtensions.DisplayName(hardware),
         Core.Export.VideoCodec codec => Core.Export.CodecNames.DisplayName(codec),
         Core.Export.AudioCodec codec => Core.Export.CodecNames.DisplayName(codec),
         _ => value?.ToString() ?? string.Empty

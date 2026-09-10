@@ -40,7 +40,65 @@ public sealed class EncoderProbe(IProcessRunner processRunner)
             ? ParseFilters(filtersOutput)
             : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        return new MediaCapabilities(video, audio, accelerators) { Filters = filters };
+        var hardware = await ProbeHardwareAsync(ffmpegPath, video, cancellationToken).ConfigureAwait(false);
+
+        return new MediaCapabilities(video, audio, accelerators)
+        {
+            Filters = filters,
+            WorkingHardwareEncoders = hardware
+        };
+    }
+
+    /// <summary>
+    /// Проверяет аппаратные энкодеры пробным кодированием.
+    /// </summary>
+    /// <remarks>
+    /// Единственный надёжный способ: список -encoders показывает, с чем собран ffmpeg,
+    /// а не что заработает на этой машине. Один кадр 64×64 занимает доли секунды,
+    /// зато пользователь не узнаёт об отсутствии драйвера в конце экспорта.
+    /// </remarks>
+    private async Task<HashSet<string>> ProbeHardwareAsync(
+        string ffmpegPath,
+        IReadOnlySet<string> available,
+        CancellationToken cancellationToken)
+    {
+        var working = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        string[] candidates =
+        [
+            "h264_nvenc", "hevc_nvenc", "av1_nvenc",
+            "h264_qsv", "hevc_qsv", "av1_qsv",
+            "h264_amf", "hevc_amf", "av1_amf"
+        ];
+
+        foreach (var encoder in candidates)
+        {
+            if (!available.Contains(encoder))
+            {
+                continue;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var request = new ProcessRequest(ffmpegPath,
+            [
+                "-hide_banner", "-loglevel", "error", "-nostdin",
+                "-f", "lavfi", "-i", "nullsrc=size=64x64:duration=0.04",
+                "-c:v", encoder, "-frames:v", "1",
+                "-f", "null", "-"
+            ]);
+
+            var (result, _) = await processRunner
+                .RunCapturingOutputAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (result.Success)
+            {
+                working.Add(encoder);
+            }
+        }
+
+        return working;
     }
 
     /// <summary>

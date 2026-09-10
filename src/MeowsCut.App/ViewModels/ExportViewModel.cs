@@ -123,6 +123,10 @@ public sealed partial class ExportViewModel : ObservableObject
     [ObservableProperty]
     private bool _twoPass;
 
+    /// <summary>Чем кодировать: процессором или видеокартой.</summary>
+    [ObservableProperty]
+    private HardwareAcceleration _hardware = HardwareAcceleration.None;
+
     [ObservableProperty]
     private string _pixelFormat = string.Empty;
 
@@ -197,6 +201,11 @@ public sealed partial class ExportViewModel : ObservableObject
     public IReadOnlyList<QualityModeOption> QualityModes { get; } = QualityModeOption.All;
 
     public IReadOnlyList<EncodingSpeedOption> EncodingSpeeds { get; } = EncodingSpeedOption.All;
+
+    /// <summary>Доступное железо для выбранного кодека: что нашлось в этой сборке ffmpeg.</summary>
+    public ObservableCollection<HardwareAcceleration> HardwareOptions { get; } = [];
+
+    public bool HasHardwareChoice => HardwareOptions.Count > 1;
 
     public IReadOnlyList<FitModeOption> FitModes { get; } = FitModeOption.All;
 
@@ -354,6 +363,33 @@ public sealed partial class ExportViewModel : ObservableObject
 
     partial void OnKeyframeIntervalFramesChanged(int value) => RefreshSummary();
 
+    partial void OnHardwareChanged(HardwareAcceleration value) => RefreshSummary();
+
+    /// <summary>
+    /// Список железа зависит от кодека: у VP9 аппаратного энкодера нет вовсе,
+    /// а у H.264 их может быть три. Показываем только то, что реально запустится.
+    /// </summary>
+    private void RefreshHardware(MediaCapabilities? capabilities)
+    {
+        HardwareOptions.Clear();
+
+        var available = capabilities is null
+            ? [HardwareAcceleration.None]
+            : Ffmpeg.Arguments.HardwareEncoders.Available(VideoCodec, capabilities);
+
+        foreach (var option in available)
+        {
+            HardwareOptions.Add(option);
+        }
+
+        if (!HardwareOptions.Contains(Hardware))
+        {
+            Hardware = HardwareAcceleration.None;
+        }
+
+        OnPropertyChanged(nameof(HasHardwareChoice));
+    }
+
     private void RefreshCodecs()
     {
         var capabilities = _toolsetProvider.Current?.Capabilities;
@@ -368,6 +404,8 @@ public sealed partial class ExportViewModel : ObservableObject
                 VideoCodecs.Add(codec);
             }
         }
+
+        RefreshHardware(capabilities);
 
         if (!VideoCodecs.Contains(VideoCodec))
         {
@@ -424,6 +462,10 @@ public sealed partial class ExportViewModel : ObservableObject
         PreferStreamCopy = settings.PreferStreamCopy;
         EncodingSpeed = EncodingSpeeds.FirstOrDefault(option => option.Speed == settings.Video.Speed)
                         ?? EncodingSpeed;
+
+        Hardware = HardwareOptions.Contains(settings.Video.Hardware)
+            ? settings.Video.Hardware
+            : HardwareAcceleration.None;
 
         switch (settings.Video.RateControl)
         {
@@ -512,6 +554,7 @@ public sealed partial class ExportViewModel : ObservableObject
             Codec = VideoCodec,
             RateControl = BuildRateControl(),
             Speed = EncodingSpeed.Speed,
+            Hardware = Hardware,
             Resolution = Resolution.ToSpec(CustomWidth, CustomHeight, FitMode.Mode),
             FrameRate = FrameRate.ToSpec(CustomFps),
             Advanced = BuildAdvanced()

@@ -183,6 +183,10 @@ public static class Strings
 
     public static string FileHasNoSound => Get(nameof(FileHasNoSound));
 
+    public static string FieldHardware => Get(nameof(FieldHardware));
+
+    public static string HardwareHint => Get(nameof(HardwareHint));
+
     public static string ToolSelect => Get(nameof(ToolSelect));
 
     public static string ToolRazor => Get(nameof(ToolRazor));

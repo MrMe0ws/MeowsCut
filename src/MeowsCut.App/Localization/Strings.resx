@@ -323,6 +323,12 @@
   <data name="FileHasNoSound" xml:space="preserve">
     <value>В этом файле нет звука — брать нечего.</value>
   </data>
+  <data name="FieldHardware" xml:space="preserve">
+    <value>Аппаратное ускорение</value>
+  </data>
+  <data name="HardwareHint" xml:space="preserve">
+    <value>Видеокарта кодирует в разы быстрее, но при равном размере файла качество ниже. Два прохода и подбор под размер она не умеет.</value>
+  </data>
   <data name="ToolSelect" xml:space="preserve">
     <value>Выделение</value>
   </data>

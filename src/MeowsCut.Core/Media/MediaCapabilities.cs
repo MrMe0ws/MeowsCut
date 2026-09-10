@@ -28,5 +28,19 @@ public sealed record MediaCapabilities(
 
     public bool HasHardwareAcceleration(string name) => HardwareAccelerators.Contains(name);
 
+    /// <summary>
+    /// Аппаратные энкодеры, которые действительно запустились на этой машине.
+    /// </summary>
+    /// <remarks>
+    /// Список <see cref="VideoEncoders"/> говорит лишь о том, с чем ffmpeg собран.
+    /// h264_nvenc там есть всегда, а без драйвера NVIDIA он падает на «Cannot load
+    /// nvcuda.dll» — и падает в конце длинного экспорта. Поэтому железо проверяется
+    /// пробным кодированием одного кадра, а не наличием имени в списке.
+    /// </remarks>
+    public IReadOnlySet<string> WorkingHardwareEncoders { get; init; } =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
     public bool HasFilter(string name) => Filters.Contains(name);
+
+    public bool HasWorkingHardwareEncoder(string name) => WorkingHardwareEncoders.Contains(name);
 }

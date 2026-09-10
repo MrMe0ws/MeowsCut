@@ -47,6 +47,16 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         // это обычное кодирование с ограничением, а не отдельный режим.
         var effective = ResolveTargetSize(settings, sequence.Duration);
 
+        // Отсюда и ниже режим двух проходов уже неотличим от обычного, поэтому
+        // отказ от видеокарты фиксируется здесь: журнал первого прохода она не ведёт.
+        if (twoPass && effective.Video.Hardware != HardwareAcceleration.None)
+        {
+            effective = effective with
+            {
+                Video = effective.Video with { Hardware = HardwareAcceleration.None }
+            };
+        }
+
         var stages = new List<ExportStage>();
         var cleanup = new List<string>();
 
@@ -102,7 +112,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
                 partPath));
         }
 
-        CollectWarnings(project, settings, streamCopy, warnings);
+        CollectWarnings(project, settings, streamCopy, twoPass, capabilities, warnings);
 
         var summary = BuildSummary(project, settings, streamCopy);
 
@@ -140,6 +150,36 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
     /// битрейте, но удваивает время, поэтому включается только явно или там,
     /// где без него не уложиться в размер.
     /// </summary>
+    /// <summary>
+    /// Аппаратное кодирование с оговорками.
+    /// </summary>
+    /// <remarks>
+    /// Отключается молча в трёх случаях: этой пары кодек+железо нет в сборке ffmpeg,
+    /// два прохода (видеокарты не ведут журнал первого прохода) и целевой размер,
+    /// который через два прохода и делается. Лучше выйти медленнее, но с тем файлом,
+    /// который заказывали.
+    /// </remarks>
+    private static HardwareAcceleration ResolveHardware(
+        ExportSettings settings,
+        MediaCapabilities capabilities)
+    {
+        var hardware = settings.Video.Hardware;
+
+        if (hardware == HardwareAcceleration.None)
+        {
+            return HardwareAcceleration.None;
+        }
+
+        if (settings.Video.Advanced.TwoPass || settings.Video.RateControl is RateControl.TargetSize)
+        {
+            return HardwareAcceleration.None;
+        }
+
+        return HardwareEncoders.IsAvailable(settings.Video.Codec, hardware, capabilities)
+            ? hardware
+            : HardwareAcceleration.None;
+    }
+
     private static bool NeedsTwoPasses(ExportSettings settings, bool streamCopy) =>
         !streamCopy &&
         (settings.Video.Advanced.TwoPass || settings.Video.RateControl is RateControl.TargetSize) &&
@@ -503,7 +543,11 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         MediaCapabilities capabilities)
     {
         var codec = settings.Video.Codec;
-        var encoder = EncoderCatalog.ResolveVideoEncoder(codec, capabilities);
+        var hardware = ResolveHardware(settings, capabilities);
+
+        var encoder = hardware == HardwareAcceleration.None
+            ? EncoderCatalog.ResolveVideoEncoder(codec, capabilities)
+            : HardwareEncoders.Name(codec, hardware)!;
 
         builder.VideoCodec(encoder);
 
@@ -511,6 +555,14 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 
         switch (rateControl)
         {
+            case RateControl.ConstantQuality quality when hardware != HardwareAcceleration.None:
+                foreach (var (key, value) in HardwareEncoders.QualityOptions(hardware, quality.Crf))
+                {
+                    builder.Option(key, value);
+                }
+
+                break;
+
             case RateControl.ConstantQuality quality:
                 builder.Crf(quality.Crf);
                 if (codec is VideoCodec.Vp9 or VideoCodec.Av1)
@@ -533,7 +585,11 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
                 break;
         }
 
-        foreach (var (key, value) in EncoderCatalog.SpeedOptions(codec, encoder, settings.Video.Speed))
+        var speedOptions = hardware == HardwareAcceleration.None
+            ? EncoderCatalog.SpeedOptions(codec, encoder, settings.Video.Speed)
+            : HardwareEncoders.SpeedOptions(hardware, settings.Video.Speed);
+
+        foreach (var (key, value) in speedOptions)
         {
             builder.Option(key, value);
         }
@@ -581,9 +637,23 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         Project project,
         ExportSettings settings,
         bool streamCopy,
+        bool twoPass,
+        MediaCapabilities capabilities,
         List<PlanWarning> warnings)
     {
         var sequence = project.Sequence;
+
+        // Молча кодировать процессором вместо видеокарты нельзя: пользователь
+        // ждал минуту вместо десяти и должен понимать, почему вышло иначе.
+        if (settings.Video.Hardware != HardwareAcceleration.None &&
+            (twoPass || ResolveHardware(settings, capabilities) == HardwareAcceleration.None))
+        {
+            warnings.Add(new PlanWarning(
+                PlanWarningKind.HardwareUnavailable,
+                twoPass
+                    ? "Два прохода и подбор под размер видеокарта не умеет — кодирует процессор."
+                    : "Выбранный аппаратный энкодер недоступен — кодирует процессор."));
+        }
 
         if (settings.Video.Resolution.IsUpscale(sequence.Format.Size))
         {

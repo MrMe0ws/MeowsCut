@@ -35,6 +35,12 @@ public sealed record VideoSettings
 
     public EncodingSpeed Speed { get; init; } = EncodingSpeed.Balanced;
 
+    /// <summary>
+    /// Кодировать видеокартой. Выключено по умолчанию: быстрее, но при равном
+    /// размере файла качество заметно хуже — это осознанный выбор пользователя.
+    /// </summary>
+    public HardwareAcceleration Hardware { get; init; } = HardwareAcceleration.None;
+
     public ResolutionSpec Resolution { get; init; } = ResolutionSpec.Default;
 
     public FrameRateSpec FrameRate { get; init; } = FrameRateSpec.Default;
