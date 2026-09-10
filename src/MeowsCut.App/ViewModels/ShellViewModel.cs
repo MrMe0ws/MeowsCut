@@ -133,13 +133,20 @@ public sealed partial class ShellViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenFileAsync(CancellationToken cancellationToken)
     {
-        var path = _fileDialogService.PickVideoFile();
-        if (path is null)
+        var paths = _fileDialogService.PickVideoFiles();
+        if (paths.Count == 0)
         {
             return;
         }
 
-        await OpenAsync(path, cancellationToken).ConfigureAwait(true);
+        // Первый файл открывает проект, остальные встают следом: выбрать сразу
+        // несколько роликов и собрать из них один — обычный сценарий, а не редкость.
+        await OpenAsync(paths[0], cancellationToken).ConfigureAwait(true);
+
+        foreach (var path in paths.Skip(1))
+        {
+            await AddToTimelineAsync(path, cancellationToken).ConfigureAwait(true);
+        }
     }
 
     /// <summary>
@@ -196,13 +203,10 @@ public sealed partial class ShellViewModel : ObservableObject
     [RelayCommand]
     private async Task AddFileAsync(CancellationToken cancellationToken)
     {
-        var path = _fileDialogService.PickVideoFile();
-        if (path is null)
+        foreach (var path in _fileDialogService.PickVideoFiles())
         {
-            return;
+            await AddToTimelineAsync(path, cancellationToken).ConfigureAwait(true);
         }
-
-        await AddToTimelineAsync(path, cancellationToken).ConfigureAwait(true);
     }
 
     /// <summary>

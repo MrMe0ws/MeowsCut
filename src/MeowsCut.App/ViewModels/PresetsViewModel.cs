@@ -37,6 +37,7 @@ public sealed partial class PresetsViewModel : ObservableObject
     private readonly ILogger<PresetsViewModel> _logger;
 
     private Project? _project;
+    private bool _suppressAutoSelect;
 
     public PresetsViewModel(
         IPresetProvider provider,
@@ -58,7 +59,11 @@ public sealed partial class PresetsViewModel : ObservableObject
             Groups.Add(group);
         }
 
+        // При старте пресет не выбран: иначе любое открытое видео сразу получало бы
+        // настройки первого пресета в списке — а это квадратный стикер на три секунды.
+        _suppressAutoSelect = true;
         SelectedGroup = Groups.FirstOrDefault();
+        _suppressAutoSelect = false;
 
         // Настройки могли поменять руками — требования площадки должны продолжать
         // проверяться, а не молчать до самого экспорта.
@@ -101,7 +106,9 @@ public sealed partial class PresetsViewModel : ObservableObject
         Changes.Clear();
         Violations.Clear();
         AppliedPreset = null;
-        RefreshValidation();
+
+        // Пресет могли выбрать до открытия файла — тогда его параметры применяются сейчас.
+        ApplyTemplateOnly(SelectedPreset);
     }
 
     public void Detach()
@@ -134,7 +141,7 @@ public sealed partial class PresetsViewModel : ObservableObject
             Presets.Add(preset);
         }
 
-        SelectedPreset = Presets.FirstOrDefault();
+        SelectedPreset = _suppressAutoSelect ? null : Presets.FirstOrDefault();
     }
 
     partial void OnSelectedPresetChanged(PresetDefinition? value)
@@ -147,6 +154,37 @@ public sealed partial class PresetsViewModel : ObservableObject
         }
 
         ApplyCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(HasSelection));
+
+        // Формат, кодек и размер встают сразу при выборе: видеть «MP4» под надписью
+        // «Видеостикер» бессмысленно. Монтаж при этом не трогаем — за него отвечает
+        // кнопка, где пользователь выбирает, обрезать ролик или ускорить.
+        ApplyTemplateOnly(value);
+    }
+
+    private void ApplyTemplateOnly(PresetDefinition? preset)
+    {
+        if (_project is null || preset is null)
+        {
+            AppliedPreset = null;
+            Changes.Clear();
+            Violations.Clear();
+            OnPropertyChanged(nameof(HasViolations));
+            return;
+        }
+
+        var result = _applier.Apply(preset, _project, _export.BuildSettings(), DurationFitMode.Keep);
+
+        _export.ApplySettings(result.Settings);
+
+        Changes.Clear();
+        foreach (var change in result.Changes)
+        {
+            Changes.Add(change.Description);
+        }
+
+        AppliedPreset = preset;
+        ShowViolations(result.Validation);
     }
 
     [RelayCommand(CanExecute = nameof(CanApply))]

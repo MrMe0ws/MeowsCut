@@ -194,6 +194,11 @@ public sealed class PresetApplier(IPresetValidator validator) : IPresetApplier
         DurationFitMode mode,
         List<PresetChange> changes)
     {
+        if (mode == DurationFitMode.Keep)
+        {
+            return project;
+        }
+
         if (constraints.MaxDuration is not { } limit || project.Sequence.Duration <= limit)
         {
             return project;

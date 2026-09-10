@@ -21,23 +21,26 @@ public partial class ShellWindow : Window
 
     private void OnDragOver(object sender, DragEventArgs e)
     {
-        var file = DragDropFileValidator.ExtractSingleFile(e.Data);
-        e.Effects = file is not null ? DragDropEffects.Copy : DragDropEffects.None;
+        var files = DragDropFileValidator.ExtractFiles(e.Data);
+        e.Effects = files.Count > 0 ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
     }
 
     private async void OnDrop(object sender, DragEventArgs e)
     {
-        var file = DragDropFileValidator.ExtractSingleFile(e.Data);
-        if (file is null)
+        var files = DragDropFileValidator.ExtractFiles(e.Data);
+        if (files.Count == 0)
         {
             return;
         }
 
         e.Handled = true;
 
-        // Файл, брошенный на уже открытый проект, встаёт в конец видеоряда:
+        // Файлы, брошенные на уже открытый проект, встают в конец видеоряда:
         // так собирают ряд из нескольких роликов. Заменить проект — «Открыть».
-        await _viewModel.AddToTimelineAsync(file, CancellationToken.None);
+        foreach (var file in files)
+        {
+            await _viewModel.AddToTimelineAsync(file, CancellationToken.None);
+        }
     }
 }

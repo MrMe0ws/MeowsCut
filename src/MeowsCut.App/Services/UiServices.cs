@@ -38,24 +38,29 @@ public sealed class UiDispatcher(Dispatcher dispatcher) : IUiDispatcher
 /// </summary>
 public interface IFileDialogService
 {
-    string? PickVideoFile();
+    /// <summary>Один или несколько файлов: из них собирается видеоряд.</summary>
+    IReadOnlyList<string> PickVideoFiles();
 
     string? PickFolder(string title);
 }
 
 public sealed class FileDialogService : IFileDialogService
 {
-    public string? PickVideoFile()
+    public IReadOnlyList<string> PickVideoFiles()
     {
         var dialog = new OpenFileDialog
         {
             Title = Strings.OpenDialogTitle,
             Filter = MediaFileTypes.BuildOpenDialogFilter(Strings.FilterVideoFiles, Strings.FilterAllFiles),
             CheckFileExists = true,
-            Multiselect = false
+            Multiselect = true
         };
 
-        return dialog.ShowDialog() == true ? dialog.FileName : null;
+        // Порядок в диалоге зависит от того, как пользователь тыкал мышью, —
+        // на доску роликам разумнее лечь по имени, как в проводнике.
+        return dialog.ShowDialog() == true
+            ? [.. dialog.FileNames.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)]
+            : [];
     }
 
     public string? PickFolder(string title)
@@ -147,20 +152,21 @@ public sealed class DialogService(
 /// </summary>
 public static class DragDropFileValidator
 {
-    public static string? ExtractSingleFile(IDataObject data)
+    public static IReadOnlyList<string> ExtractFiles(IDataObject data)
     {
         if (!data.GetDataPresent(DataFormats.FileDrop))
         {
-            return null;
+            return [];
         }
 
         if (data.GetData(DataFormats.FileDrop) is not string[] { Length: > 0 } files)
         {
-            return null;
+            return [];
         }
 
-        var candidate = files.FirstOrDefault(File.Exists);
-        return candidate;
+        // Порядок перетаскивания задаёт проводник и он произвольный —
+        // на доску ролики ложатся по имени.
+        return [.. files.Where(File.Exists).OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)];
     }
 
     /// <summary>

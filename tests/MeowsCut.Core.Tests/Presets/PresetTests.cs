@@ -87,6 +87,19 @@ public class PresetApplierTests
     private static Project Project(double seconds = 10) => Core.Editing.Project.FromMedia(Info(seconds));
 
     [Fact]
+    public void Choosing_a_preset_sets_the_output_without_touching_the_montage()
+    {
+        var project = Project(10);
+
+        var result = Applier.Apply(Sticker, project, ExportSettings.Default, DurationFitMode.Keep);
+
+        result.Settings.Container.Should().Be(ContainerFormat.WebM, "формат виден сразу при выборе");
+        result.Project.Sequence.Duration.Should().Be(TimeSpan.FromSeconds(10),
+            "резать чужой монтаж от клика по списку нельзя");
+        result.Validation.Violations.Should().NotBeEmpty("но про лимит длительности надо предупредить");
+    }
+
+    [Fact]
     public void Sticker_preset_sets_format_codec_and_square_frame()
     {
         var result = Applier.Apply(Sticker, Project(2), ExportSettings.Default);
