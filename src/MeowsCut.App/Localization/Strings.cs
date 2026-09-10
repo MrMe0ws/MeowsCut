@@ -19,6 +19,14 @@ public static class Strings
 
     public static string FilterVideoFiles => Get(nameof(FilterVideoFiles));
 
+    public static string FieldFadeInHint => Get(nameof(FieldFadeInHint));
+
+    public static string FieldFadeOutHint => Get(nameof(FieldFadeOutHint));
+
+    public static string FieldPitchHint => Get(nameof(FieldPitchHint));
+
+    public static string FieldTrackGainHint => Get(nameof(FieldTrackGainHint));
+
     public static string FieldSpeedCustomHint => Get(nameof(FieldSpeedCustomHint));
 
     public static string SectionSources => Get(nameof(SectionSources));

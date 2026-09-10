@@ -143,6 +143,36 @@ public sealed class AudioMixIntegrationTests : IDisposable
         info.HasVideo.Should().BeTrue("хвост — это чёрный кадр, а не отсутствие картинки");
     }
 
+    [FfmpegFact]
+    public async Task A_fragment_of_the_tail_is_black_with_sound()
+    {
+        var project = await CreateProjectAsync(seconds: 3);
+        var music = await AddAudioSourceAsync(project, "хвост.m4a", seconds: 10, frequency: 220);
+
+        var track = AudioTrack.Empty("Музыка") with
+        {
+            Clips = [AudioClip.FromSource(music.Source, TimeSpan.Zero)]
+        };
+
+        var withMusic = music.Project.WithSequence(music.Project.Sequence.WithTracks([track]));
+
+        // Кусок целиком за видеорядом: видеоклипов в нём нет, но проверить его
+        // пользователь вправе — там чёрный кадр со звуком.
+        var sliced = withMusic.Sequence.Slice(new TimeRange(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(9)));
+
+        sliced.IsEmpty.Should().BeTrue("видеоклипов в этом куске нет");
+
+        var output = Path.Combine(_workDirectory, "кусок хвоста.mp4");
+        var result = await RunAsync(withMusic.WithSequence(sliced), Settings(output));
+
+        result.Status.Should().Be(JobStatus.Completed, result.Error?.Message);
+
+        var info = await ProbeAsync(output);
+        info.HasVideo.Should().BeTrue();
+        info.HasAudio.Should().BeTrue();
+        info.Duration.Should().BeCloseTo(TimeSpan.FromSeconds(4), TimeSpan.FromMilliseconds(600));
+    }
+
     private static ExportSettings Settings(string outputPath) =>
         ExportSettings.Default with { OutputPath = outputPath, PreferStreamCopy = false };
 

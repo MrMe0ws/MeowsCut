@@ -1,4 +1,4 @@
-using MeowsCut.Core.Diagnostics;
+﻿using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.Core.Editing.Commands;
@@ -143,32 +143,63 @@ public sealed class SetAudioClipPropertiesCommand(
 
     public AudioClipId ClipId { get; } = clipId;
 
+    /// <summary>Незаданное свойство не трогается — правится ровно то, что двигал пользователь.</summary>
+    public double? Gain { get; } = gain;
+
+    public int? PitchSemitones { get; } = pitchSemitones;
+
+    public TimeSpan? FadeIn { get; } = fadeIn;
+
+    public TimeSpan? FadeOut { get; } = fadeOut;
+
     public Sequence Apply(Sequence sequence)
     {
         var track = sequence.RequireTrack(TrackId);
         var clip = track.Require(ClipId);
 
-        if (gain is { } newGain)
+        if (Gain is { } newGain)
         {
             clip = clip.WithGain(newGain);
         }
 
-        if (pitchSemitones is { } semitones)
+        if (PitchSemitones is { } semitones)
         {
             clip = clip.WithPitch(semitones);
         }
 
-        if (fadeIn is { } head || fadeOut is { } tail)
+        if (FadeIn is not null || FadeOut is not null)
         {
-            clip = clip.WithFades(fadeIn ?? clip.FadeIn, fadeOut ?? clip.FadeOut);
+            clip = clip.WithFades(FadeIn ?? clip.FadeIn, FadeOut ?? clip.FadeOut);
         }
 
         return sequence.WithTrack(track.Replace(clip));
     }
 
+    /// <summary>
+    /// Склейка соседних правок одного куска.
+    /// </summary>
+    /// <remarks>
+    /// Свойства именно объединяются, а не заменяются. Склеенная команда применяется
+    /// к состоянию до предыдущей правки, поэтому «заменить целиком» означало бы
+    /// потерять всё, чего новая команда не задаёт: покрутив тональность после
+    /// громкости, пользователь видел, как громкость сама возвращается к 100%.
+    /// </remarks>
     public bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
     {
-        merged = this;
-        return previous is SetAudioClipPropertiesCommand other && other.ClipId == ClipId;
+        if (previous is not SetAudioClipPropertiesCommand other || other.ClipId != ClipId)
+        {
+            merged = this;
+            return false;
+        }
+
+        merged = new SetAudioClipPropertiesCommand(
+            TrackId,
+            ClipId,
+            Gain ?? other.Gain,
+            PitchSemitones ?? other.PitchSemitones,
+            FadeIn ?? other.FadeIn,
+            FadeOut ?? other.FadeOut);
+
+        return true;
     }
 }

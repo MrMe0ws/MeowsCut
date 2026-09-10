@@ -218,9 +218,9 @@
                          знает только пользователь. -->
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" MinHeight="90" />
+                            <RowDefinition Height="1.7*" MinHeight="90" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="1.2*" MinHeight="90" />
+                            <RowDefinition Height="1*" MinHeight="90" />
                         </Grid.RowDefinitions>
 
                         <ScrollViewer Grid.Row="0"

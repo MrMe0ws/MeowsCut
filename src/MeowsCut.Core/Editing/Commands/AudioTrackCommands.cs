@@ -1,4 +1,4 @@
-using MeowsCut.Core.Diagnostics;
+﻿using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.Core.Editing.Commands;
@@ -101,21 +101,28 @@ public sealed class SetAudioTrackPropertiesCommand(
 
     public AudioTrackId TrackId { get; } = trackId;
 
+    /// <summary>Незаданное свойство не трогается.</summary>
+    public string? TrackTitle { get; } = title;
+
+    public bool? Muted { get; } = muted;
+
+    public double? Gain { get; } = gain;
+
     public Sequence Apply(Sequence sequence)
     {
         var track = sequence.RequireTrack(TrackId);
 
-        if (title is { Length: > 0 } newTitle)
+        if (TrackTitle is { Length: > 0 } newTitle)
         {
             track = track with { Title = newTitle };
         }
 
-        if (muted is { } isMuted)
+        if (Muted is { } isMuted)
         {
             track = track with { IsMuted = isMuted };
         }
 
-        if (gain is { } newGain)
+        if (Gain is { } newGain)
         {
             track = track.WithGain(newGain);
         }
@@ -123,10 +130,25 @@ public sealed class SetAudioTrackPropertiesCommand(
         return sequence.WithTrack(track);
     }
 
-    /// <summary>Тянут ползунок громкости — в истории это одна правка, а не сорок.</summary>
+    /// <summary>
+    /// Тянут ползунок громкости — в истории это одна правка, а не сорок.
+    /// Свойства объединяются: склеенная команда применяется к состоянию до
+    /// предыдущей правки, и «заменить целиком» стёрло бы всё, чего она не задаёт.
+    /// </summary>
     public bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
     {
-        merged = this;
-        return previous is SetAudioTrackPropertiesCommand other && other.TrackId == TrackId;
+        if (previous is not SetAudioTrackPropertiesCommand other || other.TrackId != TrackId)
+        {
+            merged = this;
+            return false;
+        }
+
+        merged = new SetAudioTrackPropertiesCommand(
+            TrackId,
+            TrackTitle ?? other.TrackTitle,
+            Muted ?? other.Muted,
+            Gain ?? other.Gain);
+
+        return true;
     }
 }

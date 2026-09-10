@@ -14,8 +14,24 @@ namespace MeowsCut.App.Playback;
 /// Кадроточного композитора здесь нет — это второй движок размером со всё приложение,
 /// поэтому на стыках возможен подскок (ADR-14).
 /// </remarks>
-public sealed class SequencePlaybackController(IMediaPlayer player)
+public sealed class SequencePlaybackController
 {
+    /// <summary>
+    /// Ход времени для участков, где проигрывателю нечего играть: фотография,
+    /// зазор между клипами, хвост под музыку. Подставляется в тестах — иначе
+    /// проверить их можно было бы только реальным ожиданием.
+    /// </summary>
+    private static readonly Stopwatch WallClock = Stopwatch.StartNew();
+
+    private readonly IMediaPlayer player;
+    private readonly Func<TimeSpan> _now;
+
+    public SequencePlaybackController(IMediaPlayer player, Func<TimeSpan>? clock = null)
+    {
+        this.player = player;
+        _now = clock ?? (() => WallClock.Elapsed);
+    }
+
     /// <summary>Насколько раньше конца клипа считаем, что пора переходить к следующему.</summary>
     private static readonly TimeSpan BoundaryTolerance = TimeSpan.FromMilliseconds(60);
 
@@ -37,7 +53,7 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     /// <summary>Под курсором пустое место: зазор между клипами или хвост под музыку.</summary>
     private bool _onBlackScreen;
 
-    private long _lastTickStamp;
+    private TimeSpan _lastTickAt;
 
     public bool IsPlaying { get; private set; }
 
@@ -139,7 +155,7 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         }
 
         IsPlaying = true;
-        _lastTickStamp = Stopwatch.GetTimestamp();
+        _lastTickAt = _now();
 
         if (!_onImage && !_onBlackScreen)
         {
@@ -224,7 +240,7 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
             }
 
             player.Pause();
-            _lastTickStamp = Stopwatch.GetTimestamp();
+            _lastTickAt = _now();
             return;
         }
 
@@ -338,7 +354,7 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     private void EnterBlackScreen()
     {
         _currentClip = null;
-        _lastTickStamp = Stopwatch.GetTimestamp();
+        _lastTickAt = _now();
 
         if (_onBlackScreen)
         {
@@ -372,9 +388,9 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     /// <summary>Ход времени в пустоте: как на фотографии, по часам.</summary>
     private void AdvanceBlackScreen()
     {
-        var now = Stopwatch.GetTimestamp();
-        var next = Position + Stopwatch.GetElapsedTime(_lastTickStamp, now);
-        _lastTickStamp = now;
+        var now = _now();
+        var next = Position + (now - _lastTickAt);
+        _lastTickAt = now;
 
         if (next >= _sequence.Duration)
         {
@@ -396,7 +412,7 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
             if (wasPlaying)
             {
                 IsPlaying = true;
-                _lastTickStamp = Stopwatch.GetTimestamp();
+                _lastTickAt = _now();
 
                 if (!_onImage && !_onBlackScreen)
                 {
@@ -409,9 +425,9 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     /// <summary>Ход времени на фотографии: отсчитывается по часам, а не проигрывателем.</summary>
     private void AdvanceStillFrame(PlacedClip placed)
     {
-        var now = Stopwatch.GetTimestamp();
-        var elapsed = Stopwatch.GetElapsedTime(_lastTickStamp, now);
-        _lastTickStamp = now;
+        var now = _now();
+        var elapsed = now - _lastTickAt;
+        _lastTickAt = now;
 
         // Скорость клипа имеет смысл и здесь: ускоренная фотография просто
         // короче стоит на экране.
@@ -429,16 +445,40 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         PositionChanged?.Invoke(this, Position);
     }
 
+    /// <summary>
+    /// Клип доиграл — что дальше.
+    /// </summary>
+    /// <remarks>
+    /// Пустое место не перепрыгивается: и зазор между клипами, и хвост под музыку —
+    /// это часть ролика, и в готовом файле там идёт чёрный кадр. Раньше плеер
+    /// телепортировался к следующему клипу, а в конце видеоряда просто вставал,
+    /// хотя звук ещё шёл.
+    /// </remarks>
     private void AdvanceToNextClip(PlacedClip current)
     {
         var next = _sequence.EnumeratePlaced().FirstOrDefault(p => p.Index == current.Index + 1);
 
+        // Конец видеоряда. Если звук на этом не кончился — досматриваем чёрный экран.
         if (next.Clip is null)
         {
-            // Конец последовательности: останавливаемся ровно на нём.
+            // Смотрим на конец клипа, а не на текущую позицию: в момент перехода
+            // она ещё не сдвинута, и по ней хвост мерещился бы всегда.
+            if (current.End < _sequence.Duration - BoundaryTolerance)
+            {
+                ContinueOnBlack(current.End);
+                return;
+            }
+
             Position = _sequence.Duration;
             PositionChanged?.Invoke(this, Position);
             Pause();
+            return;
+        }
+
+        // Между клипами зазор — проходим его чёрным экраном, а не прыжком.
+        if (next.Start > current.End + BoundaryTolerance)
+        {
+            ContinueOnBlack(current.End);
             return;
         }
 
@@ -448,13 +488,22 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         if (wasPlaying)
         {
             IsPlaying = true;
-            _lastTickStamp = Stopwatch.GetTimestamp();
+            _lastTickAt = _now();
 
-            if (!_onImage)
+            if (!_onImage && !_onBlackScreen)
             {
                 player.Play();
             }
         }
+    }
+
+    /// <summary>Продолжает воспроизведение по пустому месту, начиная с указанной точки.</summary>
+    private void ContinueOnBlack(TimeSpan from)
+    {
+        Position = Clamp(from);
+        PositionChanged?.Invoke(this, Position);
+
+        EnterBlackScreen();
     }
 
     private void ApplyClipSettings(Clip clip)

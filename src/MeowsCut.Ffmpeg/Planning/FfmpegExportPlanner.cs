@@ -29,7 +29,9 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         var project = request.Project;
         var sequence = project.Sequence;
 
-        if (sequence.IsEmpty)
+        // Пусто — это когда нечего показать и нечего послушать. Кусок из одного
+        // звука под чёрным кадром экспортировать можно: именно так проверяют хвост.
+        if (sequence.Duration <= TimeSpan.Zero)
         {
             throw new Core.Diagnostics.EditOperationException("На таймлайне нет клипов — нечего экспортировать.");
         }

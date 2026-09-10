@@ -77,6 +77,18 @@
   <data name="FilterVideoFiles" xml:space="preserve">
     <value>Видеофайлы</value>
   </data>
+  <data name="FieldFadeInHint" xml:space="preserve">
+    <value>Нарастание: звук выходит из тишины за это время</value>
+  </data>
+  <data name="FieldFadeOutHint" xml:space="preserve">
+    <value>Затухание: звук уходит в тишину за это время перед концом куска</value>
+  </data>
+  <data name="FieldPitchHint" xml:space="preserve">
+    <value>Тональность в полутонах, длительность не меняется. Слышно только в экспорте и в проверке фрагмента</value>
+  </data>
+  <data name="FieldTrackGainHint" xml:space="preserve">
+    <value>Громкость всей дорожки — поверх громкости каждого куска</value>
+  </data>
   <data name="FieldSpeedCustomHint" xml:space="preserve">
     <value>Своя скорость: от 0.1 до 16</value>
   </data>
@@ -339,7 +351,7 @@
     <value>Убрать дорожку</value>
   </data>
   <data name="AudioPreviewNote" xml:space="preserve">
-    <value>Тональность и затухания слышны только в экспорте</value>
+    <value>Тональность и затухания слышны в экспорте и в кнопке «Проверить 5 секунд»</value>
   </data>
   <data name="FilterAudioFiles" xml:space="preserve">
     <value>Звук</value>

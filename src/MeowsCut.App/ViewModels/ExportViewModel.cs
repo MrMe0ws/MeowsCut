@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -694,7 +694,9 @@ public sealed partial class ExportViewModel : ObservableObject
         var range = new TimeRange(start, start + PreviewFragmentLength);
         var sliced = _project.Sequence.Slice(range);
 
-        if (sliced.IsEmpty)
+        // Не IsEmpty: кусок хвоста под музыку картинки не содержит, но проверить
+        // его нужно ровно так же — там чёрный кадр со звуком.
+        if (sliced.Duration <= TimeSpan.Zero)
         {
             ErrorMessage = Strings.PreviewFragmentEmpty;
             return;

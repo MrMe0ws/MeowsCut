@@ -1,12 +1,22 @@
 ﻿<UserControl x:Class="MeowsCut.App.Views.Panes.InspectorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
              xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:InspectorViewModel}">
+
+    <UserControl.Resources>
+        <!-- Отпустили ползунок — склейка правок в истории заканчивается. Без этого
+             вся работа со звуком за сеанс становилась одной записью, а Ctrl+Z
+             возвращал кусок к исходному состоянию. -->
+        <Style TargetType="Slider" BasedOn="{StaticResource {x:Type Slider}}">
+            <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+    </UserControl.Resources>
 
     <!-- Годится и полосой под доской монтажа, и колонкой справа: строки переносятся
          по ширине. Полосой поля стоят в ряд, колонкой — складываются в столбик. -->

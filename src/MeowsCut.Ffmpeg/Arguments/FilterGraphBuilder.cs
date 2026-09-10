@@ -52,7 +52,10 @@ public sealed class FilterGraphBuilder
         ExportSettings settings)
     {
         var clips = sequence.Video.Clips;
-        if (clips.Count == 0)
+
+        // Видеоряда может не быть вовсе — например, когда проверяют кусок хвоста,
+        // где идёт только музыка. Тогда весь отрезок и есть чёрный кадр.
+        if (clips.Count == 0 && !sequence.HasVideoTail)
         {
             throw new InvalidOperationException("Последовательность пуста.");
         }
