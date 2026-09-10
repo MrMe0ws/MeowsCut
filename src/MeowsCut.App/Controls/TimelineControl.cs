@@ -24,6 +24,7 @@ public sealed class TimelineControl : Control
     private static readonly Typeface LabelTypeface = new("Segoe UI");
 
     private TimelineViewModel? _model;
+    private Point _lastHoverPosition;
 
     public TimelineControl()
     {
@@ -70,6 +71,8 @@ public sealed class TimelineControl : Control
 
     private void OnVisualInvalidated(object? sender, EventArgs e)
     {
+        UpdateCursor();
+
         // Проект мог открыться уже после того, как контрол получил размер:
         // тогда вписать последовательность в окно надо именно здесь.
         if (_model is not null && ActualWidth > 0)
@@ -308,7 +311,23 @@ public sealed class TimelineControl : Control
             return;
         }
 
-        Cursor = ResolveCursor(_model.HitKindAt(position.X, position.Y));
+        _lastHoverPosition = position;
+        UpdateCursor();
+    }
+
+    /// <summary>
+    /// Форма курсора зависит и от инструмента, и от того, что под ним. Инструмент
+    /// меняют клавишей — мышь при этом не двигается, и без явного обновления
+    /// курсор остался бы от прошлого инструмента до первого движения.
+    /// </summary>
+    private void UpdateCursor()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        Cursor = ResolveCursor(_model.HitKindAt(_lastHoverPosition.X, _lastHoverPosition.Y));
     }
 
     private Cursor ResolveCursor(TimelineHitKind kind)
@@ -320,7 +339,7 @@ public sealed class TimelineControl : Control
 
         if (_model?.ActiveTool == TimelineTool.Razor)
         {
-            return Cursors.Cross;
+            return ToolCursors.Razor;
         }
 
         return kind switch

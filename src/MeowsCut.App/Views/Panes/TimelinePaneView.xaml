@@ -21,59 +21,82 @@
 
             <!-- Инструменты доски -->
             <Grid Grid.Row="0" Margin="12,8">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton Content="{loc:Tr ToolSelect}"
-                                 GroupName="Tool"
-                                 IsChecked="{Binding ActiveTool, Mode=TwoWay,
-                                     Converter={StaticResource EnumToBool},
-                                     ConverterParameter={x:Static timeline:TimelineTool.Select}}"
-                                 Style="{StaticResource ToolButton}"
-                                 ToolTip="V" />
-                    <RadioButton Content="{loc:Tr ToolRazor}"
-                                 GroupName="Tool"
-                                 IsChecked="{Binding ActiveTool, Mode=TwoWay,
-                                     Converter={StaticResource EnumToBool},
-                                     ConverterParameter={x:Static timeline:TimelineTool.Razor}}"
-                                 Style="{StaticResource ToolButton}"
-                                 ToolTip="C" />
-                    <RadioButton Content="{loc:Tr ToolHand}"
-                                 GroupName="Tool"
-                                 IsChecked="{Binding ActiveTool, Mode=TwoWay,
-                                     Converter={StaticResource EnumToBool},
-                                     ConverterParameter={x:Static timeline:TimelineTool.Hand}}"
-                                 Style="{StaticResource ToolButton}"
-                                 ToolTip="H" />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                    <Border Width="1"
-                            Margin="10,2"
-                            Background="{StaticResource Brush.Border}" />
+                <ScrollViewer Grid.Column="0"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton GroupName="Tool"
+                                     IsChecked="{Binding ActiveTool, Mode=TwoWay,
+                                         Converter={StaticResource EnumToBool},
+                                         ConverterParameter={x:Static timeline:TimelineTool.Select}}"
+                                     Style="{StaticResource ToolButton}"
+                                     ToolTip="{loc:Tr ToolSelectHint}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Pointer}" Style="{StaticResource ToolIcon}" />
+                                <TextBlock Text="{loc:Tr ToolSelect}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton GroupName="Tool"
+                                     IsChecked="{Binding ActiveTool, Mode=TwoWay,
+                                         Converter={StaticResource EnumToBool},
+                                         ConverterParameter={x:Static timeline:TimelineTool.Razor}}"
+                                     Style="{StaticResource ToolButton}"
+                                     ToolTip="{loc:Tr ToolRazorHint}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Scissors}" Style="{StaticResource ToolIconStroke}" />
+                                <TextBlock Text="{loc:Tr ToolRazor}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton GroupName="Tool"
+                                     IsChecked="{Binding ActiveTool, Mode=TwoWay,
+                                         Converter={StaticResource EnumToBool},
+                                         ConverterParameter={x:Static timeline:TimelineTool.Hand}}"
+                                     Style="{StaticResource ToolButton}"
+                                     ToolTip="{loc:Tr ToolHandHint}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Hand}" Style="{StaticResource ToolIcon}" />
+                                <TextBlock Text="{loc:Tr ToolHand}" />
+                            </StackPanel>
+                        </RadioButton>
 
-                    <Button Command="{Binding SplitAtPlayheadCommand}"
-                            Content="{loc:Tr SplitHere}"
-                            Style="{StaticResource Button.Ghost}"
-                            ToolTip="S" />
-                    <Button Margin="6,0,0,0"
-                            Command="{Binding DeleteSelectedCommand}"
-                            Content="{loc:Tr DeleteClip}"
-                            Style="{StaticResource Button.Ghost}"
-                            ToolTip="Delete" />
+                        <Border Width="1"
+                                Margin="8,2"
+                                Background="{StaticResource Brush.Border}" />
 
-                    <Border Width="1"
-                            Margin="10,2"
-                            Background="{StaticResource Brush.Border}" />
+                        <Button Command="{Binding SplitAtPlayheadCommand}"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="{loc:Tr SplitHereHint}">
+                            <Path Data="{StaticResource Icon.Split}" Style="{StaticResource ToolIconOnly}" />
+                        </Button>
+                        <Button Margin="6,0,0,0"
+                                Command="{Binding DeleteSelectedCommand}"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="{loc:Tr DeleteClipHint}">
+                            <Path Data="{StaticResource Icon.Trash}" Style="{StaticResource ToolIconOnly}" />
+                        </Button>
 
-                    <Button Command="{Binding UndoCommand}"
-                            Content="↶"
-                            Style="{StaticResource Button.Ghost}"
-                            ToolTip="Ctrl+Z" />
-                    <Button Margin="6,0,0,0"
-                            Command="{Binding RedoCommand}"
-                            Content="↷"
-                            Style="{StaticResource Button.Ghost}"
-                            ToolTip="Ctrl+Shift+Z" />
-                </StackPanel>
+                        <Border Width="1"
+                                Margin="8,2"
+                                Background="{StaticResource Brush.Border}" />
 
-                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                        <Button Command="{Binding UndoCommand}"
+                                Content="↶"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="Ctrl+Z" />
+                        <Button Margin="6,0,0,0"
+                                Command="{Binding RedoCommand}"
+                                Content="↷"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="Ctrl+Shift+Z" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" Orientation="Horizontal">
                     <CheckBox VerticalAlignment="Center"
                               Content="{loc:Tr Snapping}"
                               IsChecked="{Binding SnapEnabled}" />

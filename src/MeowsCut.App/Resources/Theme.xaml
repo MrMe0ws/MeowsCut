@@ -8,6 +8,8 @@
     <Color x:Key="Color.Border">#FF2E2E33</Color>
     <Color x:Key="Color.Text">#FFEDEDF0</Color>
     <Color x:Key="Color.TextMuted">#FF9A9AA3</Color>
+    <!-- Недоступный элемент: заметно тише обычного текста, но всё ещё читается -->
+    <Color x:Key="Color.TextDisabled">#FF61616B</Color>
     <Color x:Key="Color.Accent">#FF5FE06B</Color>
     <Color x:Key="Color.AccentHover">#FF7BEA85</Color>
     <Color x:Key="Color.Warning">#FFE0B341</Color>
@@ -19,6 +21,7 @@
     <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
     <SolidColorBrush x:Key="Brush.Text" Color="{StaticResource Color.Text}" />
     <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}" />
+    <SolidColorBrush x:Key="Brush.TextDisabled" Color="{StaticResource Color.TextDisabled}" />
     <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
     <!-- Текст на акцентной кнопке: на ярко-зелёном читается только тёмный -->
     <SolidColorBrush x:Key="Brush.OnAccent" Color="{StaticResource Color.Background}" />
@@ -71,8 +74,11 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.AccentHover}" />
                         </Trigger>
+                        <!-- Выключенная кнопка: гасить только фон. Прозрачность целиком
+                             оставляла тёмную надпись на тусклом зелёном, и текст пропадал. -->
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.SurfaceRaised}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -100,7 +106,7 @@
                             <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.SurfaceRaised}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.TextDisabled}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

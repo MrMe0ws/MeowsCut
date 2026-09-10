@@ -69,6 +69,60 @@ public class TimelineViewModelTests
     }
 
     [Fact]
+    public void Any_tool_selects_the_clip_under_the_pointer()
+    {
+        var timeline = Attached();
+        timeline.ActiveTool = TimelineTool.Hand;
+
+        timeline.PointerDown(X(10), 60);
+        timeline.PointerUp();
+
+        timeline.SelectedClip.Should().NotBeNull(
+            "менять инструмент только ради того, чтобы указать клип, — лишний шаг");
+    }
+
+    [Fact]
+    public void The_hand_still_pans_the_board()
+    {
+        var timeline = Attached();
+        timeline.ActiveTool = TimelineTool.Hand;
+        timeline.Metrics.Scroll = TimeSpan.FromSeconds(5);
+
+        timeline.PointerDown(X(10), 60);
+        timeline.PointerMove(X(10) - 100, 60);
+        timeline.PointerUp();
+
+        timeline.Metrics.Scroll.Should().Be(TimeSpan.FromSeconds(7), "сто пикселей — это две секунды");
+    }
+
+    [Fact]
+    public void The_hand_moves_the_playhead_along_the_ruler()
+    {
+        var timeline = Attached();
+        timeline.ActiveTool = TimelineTool.Hand;
+
+        timeline.PointerDown(X(6), 5);   // линейка
+        timeline.PointerUp();
+
+        timeline.Playhead.Should().Be(TimeSpan.FromSeconds(6));
+        timeline.Metrics.Scroll.Should().Be(TimeSpan.Zero, "по линейке доску не тянут");
+    }
+
+    [Fact]
+    public void Razor_selects_the_tail_it_has_just_cut_off()
+    {
+        var timeline = Attached();
+        timeline.ActiveTool = TimelineTool.Razor;
+
+        timeline.PointerDown(X(8), 60);
+        timeline.PointerUp();
+
+        timeline.SelectedClip.Should().NotBeNull();
+        timeline.SelectedClip!.Start.Should().Be(TimeSpan.FromSeconds(8),
+            "режут обычно чтобы сразу что-то сделать с хвостом");
+    }
+
+    [Fact]
     public void Split_at_playhead_needs_room_on_both_sides()
     {
         var timeline = Attached();

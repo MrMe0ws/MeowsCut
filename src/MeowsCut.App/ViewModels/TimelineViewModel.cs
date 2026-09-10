@@ -335,16 +335,31 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         if (ActiveTool == TimelineTool.Hand)
         {
+            // По линейке рукой удобнее вести плейхед, а не тащить всю доску.
+            if (hit.Kind == TimelineHitKind.Ruler)
+            {
+                _drag = DragState.Playhead;
+                MovePlayheadTo(hit.Time);
+                return;
+            }
+
+            // Щелчок по клипу выделяет его любым инструментом: менять инструмент
+            // только ради того, чтобы указать, с чем работать, — лишний шаг.
+            Select(hit.Clip);
             _drag = DragState.Pan;
             return;
         }
 
         if (ActiveTool == TimelineTool.Razor)
         {
-            if (hit.Clip is { } target)
+            if (hit.Clip is not null)
             {
                 Execute(new SplitClipCommand(hit.Time));
                 _history?.EndMergeGroup();
+
+                // После разреза выделяем правую половину: обычно режут, чтобы
+                // сразу что-то сделать с хвостом — удалить или ускорить.
+                SelectClipStartingAt(hit.Time);
             }
 
             return;
@@ -484,6 +499,17 @@ public sealed partial class TimelineViewModel : ObservableObject
         SelectedClip = placed is { } value
             ? Clips.FirstOrDefault(clip => clip.Id == value.Clip.Id)
             : null;
+    }
+
+    /// <summary>Выделяет клип, начинающийся в указанной точке, — половину после разреза.</summary>
+    private void SelectClipStartingAt(TimeSpan start)
+    {
+        var found = Clips.FirstOrDefault(clip => clip.Start == start);
+
+        if (found is not null)
+        {
+            SelectedClip = found;
+        }
     }
 
     /// <summary>Просит контрол перерисоваться — например, когда догрузились кадры.</summary>

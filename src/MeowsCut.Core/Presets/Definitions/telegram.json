@@ -47,7 +47,7 @@
       "template": {
         "container": "WebM",
         "videoCodec": "Vp9",
-        "targetSizeBytes": 64000,
+        "targetSizeBytes": 71680,
         "width": 100,
         "height": 100,
         "fit": "Cover",
@@ -57,7 +57,7 @@
       },
       "constraints": {
         "maxDurationSeconds": 3,
-        "maxFileSizeBytes": 64000,
+        "maxFileSizeBytes": 71680,
         "maxWidth": 100,
         "maxHeight": 100,
         "requireSquare": true,

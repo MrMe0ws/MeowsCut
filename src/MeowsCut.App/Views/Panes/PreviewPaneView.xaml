@@ -52,10 +52,10 @@
                 <TextBlock>
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Text" Value="▶  Играть" />
+                            <Setter Property="Text" Value="{loc:Tr Play}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsPlaying}" Value="True">
-                                    <Setter Property="Text" Value="⏸  Пауза" />
+                                    <Setter Property="Text" Value="{loc:Tr Pause}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

@@ -115,6 +115,22 @@ public static class Strings
 
     public static string ExportAgain => Get(nameof(ExportAgain));
 
+    public static string ToolSelectHint => Get(nameof(ToolSelectHint));
+
+    public static string ToolRazorHint => Get(nameof(ToolRazorHint));
+
+    public static string ToolHandHint => Get(nameof(ToolHandHint));
+
+    public static string Play => Get(nameof(Play));
+
+    public static string Pause => Get(nameof(Pause));
+
+    public static string OpenResultFolder => Get(nameof(OpenResultFolder));
+
+    public static string SplitHereHint => Get(nameof(SplitHereHint));
+
+    public static string DeleteClipHint => Get(nameof(DeleteClipHint));
+
     public static string ToolSelect => Get(nameof(ToolSelect));
 
     public static string ToolRazor => Get(nameof(ToolRazor));

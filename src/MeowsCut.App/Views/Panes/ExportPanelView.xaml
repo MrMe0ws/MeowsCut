@@ -287,15 +287,6 @@
                                    Style="{StaticResource Text.Muted}"
                                    Text="{Binding OutputPath}"
                                    TextWrapping="Wrap" />
-
-                        <Button Margin="0,14,0,0"
-                                Command="{Binding OpenResultCommand}"
-                                Content="{loc:Tr OpenResultFile}"
-                                Style="{StaticResource Button.Primary}" />
-                        <Button Margin="0,8,0,0"
-                                Command="{Binding ShowInFolderCommand}"
-                                Content="{loc:Tr ShowInFolder}"
-                                Style="{StaticResource Button.Ghost}" />
                     </StackPanel>
 
                     <TextBlock Margin="0,12,0,0"
@@ -307,16 +298,35 @@
             </ScrollViewer>
 
             <StackPanel Grid.Row="2" Margin="0,14,0,0">
-                <Button Margin="0,0,0,8"
-                        Command="{Binding PreviewFragmentCommand}"
-                        Content="{loc:Tr PreviewFragment}"
-                        Style="{StaticResource Button.Ghost}"
-                        Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibility}}" />
+                <!-- Готовый файл: кнопки закреплены внизу панели, а не в прокрутке —
+                     иначе после экспорта до них надо листать через все настройки. -->
+                <StackPanel Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}">
+                    <Button Command="{Binding ShowInFolderCommand}" Style="{StaticResource Button.Primary}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Folder}" Style="{StaticResource ToolIcon}" />
+                            <TextBlock Text="{loc:Tr OpenResultFolder}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Margin="0,8,0,0"
+                            Command="{Binding OpenResultCommand}"
+                            Content="{loc:Tr OpenResultFile}"
+                            Style="{StaticResource Button.Ghost}" />
+                    <Button Margin="0,8,0,0"
+                            Command="{Binding StartCommand}"
+                            Content="{loc:Tr ExportAgain}"
+                            Style="{StaticResource Button.Ghost}" />
+                </StackPanel>
 
-                <Button Command="{Binding StartCommand}"
-                        Content="{loc:Tr StartExport}"
-                        Style="{StaticResource Button.Primary}"
-                        Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibility}}" />
+                <StackPanel Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisibility}}">
+                    <Button Margin="0,0,0,8"
+                            Command="{Binding PreviewFragmentCommand}"
+                            Content="{loc:Tr PreviewFragment}"
+                            Style="{StaticResource Button.Ghost}" />
+
+                    <Button Command="{Binding StartCommand}"
+                            Content="{loc:Tr StartExport}"
+                            Style="{StaticResource Button.Primary}" />
+                </StackPanel>
 
                 <Button Command="{Binding CancelCommand}"
                         Content="{loc:Tr CancelExport}"

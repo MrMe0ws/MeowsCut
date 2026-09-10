@@ -49,6 +49,17 @@ public class JsonPresetProviderTests
     }
 
     [Fact]
+    public void Video_emoji_keeps_its_own_size_limit()
+    {
+        var emoji = Provider().Find("telegram.video-emoji");
+
+        emoji.Should().NotBeNull();
+        emoji!.Constraints.MaxFileSizeBytes.Should().Be(71_680, "у видеоэмодзи предел 70 КБ");
+        emoji.Template.TargetSizeBytes.Should().Be(71_680, "цель кодирования не должна упираться в предел");
+        emoji.Template.Width.Should().Be(100);
+    }
+
+    [Fact]
     public void Presets_are_ordered_for_display()
     {
         var presets = Provider().GetPresets("telegram");

@@ -221,6 +221,30 @@
   <data name="ExportAgain" xml:space="preserve">
     <value>Экспортировать ещё раз</value>
   </data>
+  <data name="ToolSelectHint" xml:space="preserve">
+    <value>Выделение (V): перенести клип, потянуть за край — подрезать</value>
+  </data>
+  <data name="ToolRazorHint" xml:space="preserve">
+    <value>Ножницы (C): щелчок разрезает клип в этой точке</value>
+  </data>
+  <data name="ToolHandHint" xml:space="preserve">
+    <value>Рука (H): протянуть доску. Щелчок по клипу всё равно его выделяет</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>▶  Играть</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>⏸  Пауза</value>
+  </data>
+  <data name="OpenResultFolder" xml:space="preserve">
+    <value>Открыть папку с файлом</value>
+  </data>
+  <data name="SplitHereHint" xml:space="preserve">
+    <value>Разрезать по плейхеду (S)</value>
+  </data>
+  <data name="DeleteClipHint" xml:space="preserve">
+    <value>Удалить выбранный клип (Delete)</value>
+  </data>
   <data name="ToolSelect" xml:space="preserve">
     <value>Выделение</value>
   </data>

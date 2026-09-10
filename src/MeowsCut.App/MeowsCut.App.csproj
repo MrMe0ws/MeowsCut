@@ -7,6 +7,7 @@
     <RootNamespace>MeowsCut.App</RootNamespace>
     <AssemblyName>MeowsCut</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- Минимальная ОС — Windows 10 1809; версия не задаётся через TargetPlatformVersion,
          чтобы не тянуть проекции WinRT: приложению они не нужны. -->
   </PropertyGroup>
@@ -21,6 +22,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
   <ItemGroup>

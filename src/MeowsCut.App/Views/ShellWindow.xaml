@@ -7,7 +7,7 @@
         xmlns:timeline="clr-namespace:MeowsCut.App.Timeline"
         xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
         Title="{loc:Tr AppTitle}"
-        Icon="../Assets/logo.png"
+        Icon="../Assets/app.ico"
         Width="1180"
         Height="760"
         MinWidth="900"
@@ -187,21 +187,26 @@
         <!-- Рабочий экран: предпросмотр, доска монтажа, инспектор и экспорт -->
         <Grid Grid.Row="1" Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="340" />
+                <ColumnDefinition Width="*" MinWidth="420" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="340" MinWidth="260" MaxWidth="640" />
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" MinHeight="180" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="240" MinHeight="150" />
                 </Grid.RowDefinitions>
 
                 <panes:PreviewPaneView Grid.Row="0" DataContext="{Binding Preview}" />
-                <panes:TimelinePaneView Grid.Row="1" DataContext="{Binding Timeline}" />
+                <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
+                <panes:TimelinePaneView Grid.Row="2" DataContext="{Binding Timeline}" />
             </Grid>
 
-            <Grid Grid.Column="1">
+            <GridSplitter Grid.Column="1" Style="{StaticResource Splitter.Vertical}" />
+
+            <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" MaxHeight="210" />
                     <RowDefinition Height="Auto" MaxHeight="270" />

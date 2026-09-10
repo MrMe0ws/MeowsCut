@@ -165,6 +165,33 @@
         </Setter>
     </Style>
 
+    <!-- Значок на кнопке. Цвет берётся у самой кнопки: у нажатого инструмента
+         фон акцентный, и значок обязан потемнеть вместе с подписью. -->
+    <Style x:Key="ToolIcon" TargetType="Path">
+        <Setter Property="Width" Value="15" />
+        <Setter Property="Height" Value="15" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Fill" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}" />
+    </Style>
+
+    <!-- Тот же значок обводкой: ножницы заливкой превращаются в пятно -->
+    <Style x:Key="ToolIconStroke" TargetType="Path" BasedOn="{StaticResource ToolIcon}">
+        <Setter Property="Fill" Value="{x:Null}" />
+        <Setter Property="Stroke" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}" />
+        <Setter Property="StrokeThickness" Value="1.8" />
+        <Setter Property="StrokeStartLineCap" Value="Round" />
+        <Setter Property="StrokeEndLineCap" Value="Round" />
+    </Style>
+
+    <!-- Кнопка из одного значка: подпись заменяет всплывающая подсказка -->
+    <Style x:Key="ToolIconOnly" TargetType="Path" BasedOn="{StaticResource ToolIconStroke}">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="16" />
+    </Style>
+
     <!-- Кнопка инструмента доски: нажатое состояние показывается акцентом -->
     <Style x:Key="ToolButton" TargetType="RadioButton">
         <Setter Property="FontFamily" Value="{StaticResource Font.Ui}" />
@@ -180,7 +207,7 @@
                             BorderBrush="{StaticResource Brush.Border}"
                             BorderThickness="1"
                             CornerRadius="6"
-                            Padding="12,6">
+                            Padding="10,6">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -192,6 +219,60 @@
                             <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
                             <Setter Property="Foreground" Value="{StaticResource Brush.OnAccent}" />
                             <Setter Property="FontWeight" Value="SemiBold" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Разделители панелей. Полоса захвата шире видимой линии: в шесть пикселей
+         попасть мышью легко, а рисовать такую толстую границу незачем. -->
+    <Style x:Key="Splitter.Vertical" TargetType="GridSplitter">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="SizeWE" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GridSplitter">
+                    <Border Background="Transparent">
+                        <Rectangle x:Name="Line"
+                                   Width="1"
+                                   HorizontalAlignment="Center"
+                                   Fill="{StaticResource Brush.Border}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Line" Property="Width" Value="2" />
+                            <Setter TargetName="Line" Property="Fill" Value="{StaticResource Brush.Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Splitter.Horizontal" TargetType="GridSplitter">
+        <Setter Property="Height" Value="6" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="SizeNS" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GridSplitter">
+                    <Border Background="Transparent">
+                        <Rectangle x:Name="Line"
+                                   Height="1"
+                                   VerticalAlignment="Center"
+                                   Fill="{StaticResource Brush.Border}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Line" Property="Height" Value="2" />
+                            <Setter TargetName="Line" Property="Fill" Value="{StaticResource Brush.Accent}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
