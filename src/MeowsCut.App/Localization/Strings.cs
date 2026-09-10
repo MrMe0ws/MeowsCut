@@ -200,5 +200,42 @@ public static class Strings
 
     public static string ResetTransform => Get(nameof(ResetTransform));
 
+
+    public static string ErrorDetails => Get(nameof(ErrorDetails));
+
+    public static string CopyDetails => Get(nameof(CopyDetails));
+
+    public static string OpenLogs => Get(nameof(OpenLogs));
+
+    public static string SectionOutput => Get(nameof(SectionOutput));
+
+    public static string SectionMaintenance => Get(nameof(SectionMaintenance));
+
+    public static string OutputFolderTitle => Get(nameof(OutputFolderTitle));
+
+    public static string OutputFolderHint => Get(nameof(OutputFolderHint));
+
+    public static string FfmpegPathHint => Get(nameof(FfmpegPathHint));
+
+    public static string NameTemplate => Get(nameof(NameTemplate));
+
+    public static string NameTemplateHint => Get(nameof(NameTemplateHint));
+
+    public static string VerboseLogging => Get(nameof(VerboseLogging));
+
+    public static string SaveSettings => Get(nameof(SaveSettings));
+
+    public static string SettingsSaved => Get(nameof(SettingsSaved));
+
+    public static string PresetsReloaded => Get(nameof(PresetsReloaded));
+
+    public static string CacheCleared => Get(nameof(CacheCleared));
+
+    public static string OpenPresetsFolder => Get(nameof(OpenPresetsFolder));
+
+    public static string ReloadPresets => Get(nameof(ReloadPresets));
+
+    public static string ClearCache => Get(nameof(ClearCache));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

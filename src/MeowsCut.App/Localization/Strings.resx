@@ -344,4 +344,58 @@
   <data name="ResetTransform" xml:space="preserve">
     <value>Сбросить кадрирование</value>
   </data>
+  <data name="ErrorDetails" xml:space="preserve">
+    <value>Подробности</value>
+  </data>
+  <data name="CopyDetails" xml:space="preserve">
+    <value>Скопировать детали</value>
+  </data>
+  <data name="OpenLogs" xml:space="preserve">
+    <value>Открыть папку логов</value>
+  </data>
+  <data name="SectionOutput" xml:space="preserve">
+    <value>Результаты</value>
+  </data>
+  <data name="SectionMaintenance" xml:space="preserve">
+    <value>Обслуживание</value>
+  </data>
+  <data name="OutputFolderTitle" xml:space="preserve">
+    <value>Папка для готовых видео</value>
+  </data>
+  <data name="OutputFolderHint" xml:space="preserve">
+    <value>Пусто — сохранять рядом с исходным файлом</value>
+  </data>
+  <data name="FfmpegPathHint" xml:space="preserve">
+    <value>Пусто — искать автоматически: рядом с приложением, затем в системе</value>
+  </data>
+  <data name="NameTemplate" xml:space="preserve">
+    <value>Шаблон имени файла</value>
+  </data>
+  <data name="NameTemplateHint" xml:space="preserve">
+    <value>{name} — имя исходника, {ext} — расширение выбранного формата</value>
+  </data>
+  <data name="VerboseLogging" xml:space="preserve">
+    <value>Подробные логи (пригодятся при разборе ошибок)</value>
+  </data>
+  <data name="SaveSettings" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>Настройки сохранены</value>
+  </data>
+  <data name="PresetsReloaded" xml:space="preserve">
+    <value>Пресеты перечитаны</value>
+  </data>
+  <data name="CacheCleared" xml:space="preserve">
+    <value>Кэш кадров очищен</value>
+  </data>
+  <data name="OpenPresetsFolder" xml:space="preserve">
+    <value>Папка пресетов</value>
+  </data>
+  <data name="ReloadPresets" xml:space="preserve">
+    <value>Перечитать пресеты</value>
+  </data>
+  <data name="ClearCache" xml:space="preserve">
+    <value>Очистить кэш кадров</value>
+  </data>
 </root>

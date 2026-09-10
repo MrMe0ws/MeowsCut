@@ -101,11 +101,17 @@
                            TextTrimming="CharacterEllipsis"
                            Text="{Binding Media.HeaderLine}" />
 
-                <Button Grid.Column="2"
-                        Command="{Binding CloseMediaCommand}"
-                        Content="{loc:Tr CloseFile}"
-                        Style="{StaticResource Button.Ghost}"
-                        Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Command="{Binding CloseMediaCommand}"
+                            Content="{loc:Tr CloseFile}"
+                            Style="{StaticResource Button.Ghost}"
+                            Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}" />
+                    <Button Margin="8,0,0,0"
+                            Command="{Binding OpenSettingsCommand}"
+                            Content="⚙"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="{loc:Tr Settings}" />
+                </StackPanel>
             </Grid>
         </Border>
 

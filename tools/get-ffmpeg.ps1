@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Скачивает ffmpeg.exe и ffprobe.exe для разработки.
 

@@ -71,18 +71,50 @@ public sealed class FileDialogService : IFileDialogService
 }
 
 /// <summary>
-/// Показ сообщений пользователю. На этапе 1 — системные окна; на этапе полировки
-/// заменяется на собственный диалог с деталями и копированием лога.
+/// Показ сообщений пользователю.
 /// </summary>
 public interface IDialogService
 {
     void ShowError(string title, string message);
+
+    /// <summary>Показывает разобранную ошибку с подробностями и доступом к логам.</summary>
+    void ShowError(Core.Diagnostics.AppError error);
+
+    void ShowSettings();
 }
 
-public sealed class DialogService : IDialogService
+/// <summary>
+/// Собственные окна вместо системных: тёмная тема, подробности под раскрытием
+/// и кнопки, которых хватает для внятного сообщения об ошибке.
+/// </summary>
+public sealed class DialogService(
+    Core.Configuration.AppPaths paths,
+    Core.Abstractions.IShellIntegration shell,
+    Func<ViewModels.SettingsViewModel> settingsFactory) : IDialogService
 {
     public void ShowError(string title, string message) =>
-        MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+        ShowError(new Core.Diagnostics.AppError(
+            Core.Diagnostics.ErrorCode.Unknown, title, message, null, null));
+
+    public void ShowError(Core.Diagnostics.AppError error)
+    {
+        var dialog = new Views.Dialogs.ErrorDialog(error, paths, shell)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        dialog.ShowDialog();
+    }
+
+    public void ShowSettings()
+    {
+        var window = new Views.Dialogs.SettingsWindow(settingsFactory())
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        window.ShowDialog();
+    }
 }
 
 /// <summary>

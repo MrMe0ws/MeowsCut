@@ -5,6 +5,7 @@ using MeowsCut.App.ViewModels;
 using MeowsCut.App.Views;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
+using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Jobs;
 using MeowsCut.Core.Presets;
 using MeowsCut.Core.Processing;
@@ -33,6 +34,7 @@ public static class ServiceRegistration
         services.AddSingleton<IPresetProvider, JsonPresetProvider>();
         services.AddSingleton<IPresetValidator, PresetValidator>();
         services.AddSingleton<IPresetApplier, PresetApplier>();
+        services.AddSingleton<IErrorPresenter, ErrorPresenter>();
 
         return services;
     }
@@ -57,6 +59,8 @@ public static class ServiceRegistration
         services.AddSingleton<IUiDispatcher>(_ => new UiDispatcher(Application.Current.Dispatcher));
         services.AddSingleton<IFileDialogService, FileDialogService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddSingleton<Func<SettingsViewModel>>(provider => provider.GetRequiredService<SettingsViewModel>);
         services.AddSingleton<IShellIntegration, ShellIntegration>();
 
         services.AddSingleton<ThumbnailImageCache>();

@@ -26,6 +26,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IFileDialogService _fileDialogService;
     private readonly IDialogService _dialogService;
     private readonly TimelineThumbnailLoader _thumbnailLoader;
+    private readonly IErrorPresenter _errorPresenter;
     private readonly ILogger<ShellViewModel> _logger;
 
     [ObservableProperty]
@@ -57,6 +58,7 @@ public sealed partial class ShellViewModel : ObservableObject
         InspectorViewModel inspector,
         PresetsViewModel presets,
         TimelineThumbnailLoader thumbnailLoader,
+        IErrorPresenter errorPresenter,
         ILogger<ShellViewModel> logger)
     {
         _mediaProbe = mediaProbe;
@@ -66,6 +68,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _fileDialogService = fileDialogService;
         _dialogService = dialogService;
         _thumbnailLoader = thumbnailLoader;
+        _errorPresenter = errorPresenter;
         Export = export;
         Timeline = timeline;
         Preview = preview;
@@ -181,13 +184,16 @@ public sealed partial class ShellViewModel : ObservableObject
         catch (MeowsCutException ex)
         {
             _logger.LogWarning(ex, "Не удалось открыть {Path}", path);
-            _dialogService.ShowError(Strings.ErrorTitle, ex.Message);
+            _dialogService.ShowError(_errorPresenter.Present(ex));
         }
         finally
         {
             IsBusy = false;
         }
     }
+
+    [RelayCommand]
+    private void OpenSettings() => _dialogService.ShowSettings();
 
     [RelayCommand]
     private void CloseMedia()
