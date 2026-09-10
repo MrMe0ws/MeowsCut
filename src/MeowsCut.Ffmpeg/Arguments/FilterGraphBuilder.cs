@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Timeline;
@@ -26,6 +26,13 @@ public sealed class FilterGraphBuilder
 {
     private const int SilenceSampleRate = 48_000;
     private const string SilenceLayout = "stereo";
+
+    /// <summary>
+    /// Приведение куска к общему виду перед склейкой. Нужно только там, где в ряду
+    /// есть сгенерированные части: у них SAR и формат пикселя свои, и concat
+    /// отказывается работать, даже если картинка на глаз одинаковая.
+    /// </summary>
+    private const string NormalizeFilters = "format=yuv420p,setsar=1";
 
     private readonly AudioMixBuilder _mixer = new();
 
@@ -55,12 +62,22 @@ public sealed class FilterGraphBuilder
         var videoLabels = new List<string>(clips.Count);
         var audioLabels = new List<string>(clips.Count);
 
+        // При зазорах все куски приходится приводить к одному знаменателю: concat
+        // требует совпадения размера, формата пикселя и SAR, а чёрная вставка
+        // рождается заново и знать параметры источника не может.
+        var hasGaps = sequence.Video.HasGaps;
+
         for (var i = 0; i < clips.Count; i++)
         {
             var clip = clips[i];
             var input = inputIndexBySource[clip.SourceId];
 
-            AppendVideoChain(builder, clip, input, i, videoLabels);
+            if (clip.HasLeadingGap)
+            {
+                AppendGapChains(builder, sequence, clip.LeadingGap, i, videoLabels, audioLabels, wantsAudio);
+            }
+
+            AppendVideoChain(builder, clip, input, i, videoLabels, hasGaps);
 
             if (wantsAudio)
             {
@@ -82,12 +99,62 @@ public sealed class FilterGraphBuilder
         return new FilterGraph(builder.ToString().TrimEnd(';'), videoOut, wantsAudio ? audioOut : null);
     }
 
+    /// <summary>
+    /// Пустое место на дорожке: чёрный кадр и тишина ровно на длину зазора.
+    /// </summary>
+    /// <remarks>
+    /// Зазор — такой же участок ролика, как клип, и concat обязан получить его
+    /// отдельной частью. Размер и частота кадров берутся у последовательности:
+    /// у пустоты своего источника нет, а разъехавшийся размер ломает склейку.
+    /// </remarks>
+    private static void AppendGapChains(
+        StringBuilder builder,
+        Sequence sequence,
+        TimeSpan gap,
+        int index,
+        List<string> videoLabels,
+        List<string> audioLabels,
+        bool wantsAudio)
+    {
+        var label = "g" + index.ToString(CultureInfo.InvariantCulture);
+        var size = sequence.Format.Size;
+        var frameRate = sequence.Format.FrameRate;
+
+        // Дробью, а не числом: 30000/1001 в виде 29.97 даёт дрейф на длинном зазоре.
+        var rate = frameRate.IsZero
+            ? "30"
+            : $"{frameRate.Numerator.ToString(CultureInfo.InvariantCulture)}/{frameRate.Denominator.ToString(CultureInfo.InvariantCulture)}";
+
+        builder
+            .Append($"color=c=black:s={size.Width}x{size.Height}:r={rate}:d={Time(gap)}")
+            .Append($",{NormalizeFilters}")
+            .Append($"[{label}];");
+
+        videoLabels.Add(label);
+
+        if (!wantsAudio)
+        {
+            return;
+        }
+
+        var audioLabel = "ga" + index.ToString(CultureInfo.InvariantCulture);
+
+        builder
+            .Append($"anullsrc=channel_layout={SilenceLayout}:sample_rate={SilenceSampleRate}")
+            .Append($",atrim=duration={Time(gap)}")
+            .Append(",asetpts=PTS-STARTPTS")
+            .Append($"[{audioLabel}];");
+
+        audioLabels.Add(audioLabel);
+    }
+
     private static void AppendVideoChain(
         StringBuilder builder,
         Clip clip,
         int input,
         int index,
-        List<string> labels)
+        List<string> labels,
+        bool normalize)
     {
         var label = "v" + index.ToString(CultureInfo.InvariantCulture);
 
@@ -100,6 +167,11 @@ public sealed class FilterGraphBuilder
         };
 
         AppendTransform(chain, clip.Transform);
+
+        if (normalize)
+        {
+            chain.Add(NormalizeFilters);
+        }
 
         builder.Append($"[{input}:v]").Append(string.Join(',', chain)).Append($"[{label}];");
         labels.Add(label);

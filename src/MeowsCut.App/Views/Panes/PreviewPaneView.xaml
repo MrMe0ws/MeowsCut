@@ -1,4 +1,4 @@
-<UserControl x:Class="MeowsCut.App.Views.Panes.PreviewPaneView"
+﻿<UserControl x:Class="MeowsCut.App.Views.Panes.PreviewPaneView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
@@ -26,6 +26,13 @@
                        Source="{Binding Frame}"
                        Stretch="Uniform"
                        Visibility="{Binding UseFallbackFrames, Converter={StaticResource BoolToVisibility}}" />
+
+                <!-- Наложенный звук. Картинки не даёт, но обязан быть в разметке:
+                     вне визуального дерева MediaElement молчит. -->
+                <ContentControl HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Content="{Binding AudioVisual}"
+                                IsHitTestVisible="False" />
             </Grid>
         </Border>
 

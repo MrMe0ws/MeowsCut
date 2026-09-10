@@ -1,4 +1,4 @@
-using MeowsCut.Core.Media;
+﻿using MeowsCut.Core.Media;
 
 namespace MeowsCut.Core.Editing.Timeline;
 
@@ -18,8 +18,8 @@ public readonly record struct AudioClipId(Guid Value)
 /// </summary>
 /// <remarks>
 /// В отличие от видеоклипа, положение хранится явно: звук кладут в конкретное
-/// место — реплику под кадр, удар под монтажную склейку, — и между кусками
-/// нормальны паузы. Видеоряд же обязан быть плотным, иначе получится чёрный экран.
+/// место — реплику под кадр, удар под монтажную склейку. Видеоклип же знает лишь
+/// свой отступ от предыдущего, потому что его место задаёт в первую очередь порядок.
 /// </remarks>
 public sealed record AudioClip(
     AudioClipId Id,
@@ -76,6 +76,26 @@ public sealed record AudioClip(
             SourceDuration = source.Duration,
             Title = Path.GetFileNameWithoutExtension(source.FilePath)
         };
+
+    /// <summary>
+    /// Время внутри исходного файла, соответствующее точке таймлайна.
+    /// Нужно предпросмотру: он крутит сам файл и должен попасть в нужное место.
+    /// </summary>
+    public TimeSpan SourceTimeAt(TimeSpan timelinePosition)
+    {
+        var offset = timelinePosition - TimelineStart;
+
+        if (offset < TimeSpan.Zero)
+        {
+            offset = TimeSpan.Zero;
+        }
+        else if (offset > Duration)
+        {
+            offset = Duration;
+        }
+
+        return SourceRange.Start + ToSource(offset);
+    }
 
     public AudioClip MoveTo(TimeSpan start) =>
         this with { TimelineStart = start < TimeSpan.Zero ? TimeSpan.Zero : start };

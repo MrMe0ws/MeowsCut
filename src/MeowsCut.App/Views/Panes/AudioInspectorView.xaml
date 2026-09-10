@@ -1,4 +1,4 @@
-<UserControl x:Class="MeowsCut.App.Views.Panes.AudioInspectorView"
+﻿<UserControl x:Class="MeowsCut.App.Views.Panes.AudioInspectorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
@@ -13,7 +13,7 @@
             BorderBrush="{StaticResource Brush.Border}"
             BorderThickness="0,1,0,0">
         <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
-            <StackPanel Orientation="Horizontal">
+            <WrapPanel Orientation="Horizontal">
                 <TextBlock VerticalAlignment="Center"
                            Style="{StaticResource Text.Section}"
                            Text="{loc:Tr SectionSound}" />
@@ -77,9 +77,9 @@
                         Command="{Binding RemoveTrackCommand}"
                         Content="{loc:Tr RemoveTrack}"
                         Style="{StaticResource Button.Ghost}" />
-            </StackPanel>
+            </WrapPanel>
 
-            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+            <WrapPanel Margin="0,8,0,0" Orientation="Horizontal">
                 <TextBlock VerticalAlignment="Center"
                            Style="{StaticResource Text.Muted}"
                            Text="{loc:Tr FieldFadeIn}" />
@@ -121,7 +121,7 @@
                            VerticalAlignment="Center"
                            Style="{StaticResource Text.Muted}"
                            Text="{loc:Tr AudioPreviewNote}" />
-            </StackPanel>
+            </WrapPanel>
         </StackPanel>
     </Border>
 </UserControl>

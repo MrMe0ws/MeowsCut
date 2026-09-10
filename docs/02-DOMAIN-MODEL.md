@@ -97,20 +97,21 @@ sealed record SequenceFormat(FrameSize Size, Rational FrameRate)
     static SequenceFormat FromFirstClip(MediaInfo info);   // формат задаётся первым клипом
 }
 
-sealed record VideoTrack(IReadOnlyList<Clip> Clips)        // упорядочены, встык, без зазоров
+sealed record VideoTrack(IReadOnlyList<Clip> Clips)        // упорядочены; между ними бывают зазоры
 {
     int IndexOf(ClipId id);
     VideoTrack Replace(ClipId id, Clip clip);
     VideoTrack Insert(int index, Clip clip);
     VideoTrack RemoveAt(int index);
     VideoTrack Move(int from, int to);
+    VideoTrack MoveInTime(ClipId id, TimeSpan start);      // сдвиг по ленте: меняет зазор
 }
 ```
 
-**Решение по зазорам:** в v1 клипы лежат встык, позиция клипа вычисляется из порядка.
-Это модель «нарезал — склеил», ровно то, для чего нужен этот редактор; она исключает целый
-класс состояний «чёрная дыра посреди видео». Абсолютные позиции и зазоры добавляются позже
-(поле `StartOnTimeline` появится в `Clip`, `Resolve` уже инкапсулирует эту логику).
+**Решение по зазорам:** позиция клипа складывается из порядка и собственного отступа
+`Clip.LeadingGap`. Абсолютная позиция не хранится: вставка клипа в середину не заставляет
+пересчитывать все остальные, а перестановка остаётся дешёвой. В зазоре при экспорте
+рисуется чёрный кадр с тишиной — отдельной частью `concat` (см. ADR-18).
 
 ### Клип — единица монтажа
 

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -110,6 +110,19 @@ public sealed partial class ShellViewModel : ObservableObject
     /// <summary>Пресеты площадок, включая Telegram.</summary>
     public PresetsViewModel Presets { get; }
 
+    /// <summary>
+    /// Где висит панель свойств. Справа от предпросмотра всё равно пустует место,
+    /// а полосой снизу она ближе к доске монтажа — выбирает пользователь.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsInspectorAtBottom))]
+    [NotifyPropertyChangedFor(nameof(IsInspectorAtRight))]
+    private InspectorDock _inspectorDock = InspectorDock.Bottom;
+
+    public bool IsInspectorAtBottom => InspectorDock == InspectorDock.Bottom;
+
+    public bool IsInspectorAtRight => InspectorDock == InspectorDock.Right;
+
     /// <summary>Проект целиком: источники и таймлайн. Доска монтажа появится на следующем этапе.</summary>
     public Project? Project { get; private set; }
 
@@ -124,6 +137,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public async Task InitializeAsync(string? initialFile, CancellationToken cancellationToken)
     {
         await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(true);
+        InspectorDock = _settingsStore.Current.InspectorDock;
         RefreshRecentFiles();
 
         var result = await _toolsetLocator.LocateAsync(cancellationToken).ConfigureAwait(true);
@@ -308,6 +322,18 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>Перенести панель свойств: полосой снизу или колонкой справа.</summary>
+    [RelayCommand]
+    private async Task ToggleInspectorDockAsync()
+    {
+        InspectorDock = InspectorDock == InspectorDock.Bottom
+            ? InspectorDock.Right
+            : InspectorDock.Bottom;
+
+        var settings = _settingsStore.Current with { InspectorDock = InspectorDock };
+        await _settingsStore.SaveAsync(settings, CancellationToken.None).ConfigureAwait(true);
     }
 
     /// <summary>Открыть финальный шаг: пресеты и параметры вывода.</summary>

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MeowsCut.App.Timeline;
 using MeowsCut.App.ViewModels;
 using MeowsCut.App.Tests.Support;
@@ -129,6 +129,27 @@ public class AudioEditingTests
     }
 
     [Fact]
+    public void Clicking_the_same_piece_again_drops_the_selection()
+    {
+        var timeline = Attached(soundStart: 2);
+        var y = AudioY(timeline);
+
+        // Первый клик выбирает...
+        timeline.PointerDown(X(5), 60);
+        timeline.PointerUp();
+        timeline.PointerDown(X(3), y);
+        timeline.PointerUp();
+        timeline.HasAudioSelection.Should().BeTrue();
+
+        // ...повторный снимает выделение, не сдвинув кусок.
+        timeline.PointerDown(X(3), y);
+        timeline.PointerUp();
+
+        timeline.HasAudioSelection.Should().BeFalse();
+        timeline.AudioTracks[0].Clips[0].TimelineStart.Should().Be(TimeSpan.FromSeconds(2));
+    }
+
+    [Fact]
     public void Dragging_a_sound_moves_it_in_time()
     {
         var timeline = Attached(soundStart: 2);
@@ -176,6 +197,11 @@ public class AudioEditingTests
     public void Deleting_removes_the_selected_sound_not_the_video()
     {
         var timeline = Attached(soundStart: 2);
+
+        // Сбрасываем выделение видеоклипом: добавленный звук выбран сразу,
+        // и повторный клик по нему теперь снял бы выделение.
+        timeline.PointerDown(X(5), 60);
+        timeline.PointerUp();
 
         timeline.PointerDown(X(3), AudioY(timeline));
         timeline.PointerUp();

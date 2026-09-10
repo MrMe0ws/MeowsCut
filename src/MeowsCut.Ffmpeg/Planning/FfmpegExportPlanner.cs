@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Timeline;
@@ -207,6 +207,13 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             return false;
         }
 
+        // Демультиплексор concat склеивает части встык и о пустых местах не знает:
+        // зазор просто исчез бы, а ролик стал короче задуманного.
+        if (sequence.HasGaps)
+        {
+            return false;
+        }
+
         if (settings.Video.Resolution is not ResolutionSpec.Original ||
             settings.Video.FrameRate is not FrameRateSpec.Original)
         {
@@ -354,6 +361,12 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         var sequence = project.Sequence;
 
         if (sequence.ClipCount != 1)
+        {
+            return false;
+        }
+
+        // Чёрная вставка перед клипом существует только после перерисовки кадров.
+        if (sequence.HasGaps)
         {
             return false;
         }

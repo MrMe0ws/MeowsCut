@@ -1,4 +1,4 @@
-<Window x:Class="MeowsCut.App.Views.ShellWindow"
+﻿<Window x:Class="MeowsCut.App.Views.ShellWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:MeowsCut.App.Localization"
@@ -38,6 +38,9 @@
         <KeyBinding Key="V" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Select}" />
         <KeyBinding Key="C" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Razor}" />
         <KeyBinding Key="A" Modifiers="Control" Command="{Binding Timeline.SelectAllCommand}" />
+        <KeyBinding Key="C" Modifiers="Control" Command="{Binding Timeline.CopySelectedCommand}" />
+        <KeyBinding Key="X" Modifiers="Control" Command="{Binding Timeline.CutSelectedCommand}" />
+        <KeyBinding Key="V" Modifiers="Control" Command="{Binding Timeline.PasteCommand}" />
         <KeyBinding Key="Left" Command="{Binding Preview.StepCommand}">
             <KeyBinding.CommandParameter>
                 <sys:Double>-0.04</sys:Double>
@@ -105,6 +108,12 @@
                     <Button Command="{Binding CloseMediaCommand}"
                             Content="{loc:Tr CloseFile}"
                             Style="{StaticResource Button.Ghost}"
+                            Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}" />
+                    <Button Margin="8,0,0,0"
+                            Command="{Binding ToggleInspectorDockCommand}"
+                            Content="{loc:Tr InspectorDockToggle}"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="{loc:Tr InspectorDockHint}"
                             Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}" />
                     <Button Margin="8,0,0,0"
                             Command="{Binding OpenSettingsCommand}"
@@ -194,10 +203,40 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <panes:PreviewPaneView Grid.Row="0" DataContext="{Binding Preview}" />
+            <!-- Предпросмотр и, по желанию, колонка свойств справа от него:
+                 по бокам кадра всё равно пустует место. -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <panes:PreviewPaneView Grid.Column="0" DataContext="{Binding Preview}" />
+
+                <Border Grid.Column="1"
+                        Width="330"
+                        BorderBrush="{StaticResource Brush.Border}"
+                        BorderThickness="1,0,0,0"
+                        Visibility="{Binding IsInspectorAtRight, Converter={StaticResource BoolToVisibility}}">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <panes:InspectorView DataContext="{Binding Inspector}"
+                                                 Visibility="{Binding DataContext.Timeline.HasAudioSelection,
+                                                     RelativeSource={RelativeSource AncestorType=Window},
+                                                     Converter={StaticResource InverseBoolToVisibility}}" />
+                            <panes:AudioInspectorView DataContext="{Binding AudioInspector}"
+                                                      Visibility="{Binding DataContext.Timeline.HasAudioSelection,
+                                                          RelativeSource={RelativeSource AncestorType=Window},
+                                                          Converter={StaticResource BoolToVisibility}}" />
+                        </Grid>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
             <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
             <panes:TimelinePaneView Grid.Row="2" DataContext="{Binding Timeline}" />
-            <Grid Grid.Row="3">
+
+            <Grid Grid.Row="3" Visibility="{Binding IsInspectorAtBottom, Converter={StaticResource BoolToVisibility}}">
                 <panes:InspectorView DataContext="{Binding Inspector}"
                                      Visibility="{Binding DataContext.Timeline.HasAudioSelection,
                                          RelativeSource={RelativeSource AncestorType=Window},

@@ -1,4 +1,4 @@
-namespace MeowsCut.App.Localization;
+﻿namespace MeowsCut.App.Localization;
 
 /// <summary>
 /// Типизированный доступ к строкам из Strings.resx. Написан руками, а не генератором:
@@ -176,6 +176,10 @@ public static class Strings
     public static string RemoveTrack => Get(nameof(RemoveTrack));
 
     public static string AudioPreviewNote => Get(nameof(AudioPreviewNote));
+
+    public static string InspectorDockToggle => Get(nameof(InspectorDockToggle));
+
+    public static string InspectorDockHint => Get(nameof(InspectorDockHint));
 
     public static string FilterAudioFiles => Get(nameof(FilterAudioFiles));
 

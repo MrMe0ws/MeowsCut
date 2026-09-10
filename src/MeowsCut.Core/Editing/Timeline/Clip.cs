@@ -1,4 +1,4 @@
-using MeowsCut.Core.Diagnostics;
+﻿using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Media;
 
 namespace MeowsCut.Core.Editing.Timeline;
@@ -21,7 +21,8 @@ public sealed record Clip(
     double Speed,
     ClipAudio Audio,
     ClipTransform Transform,
-    string? Label = null)
+    string? Label = null,
+    TimeSpan LeadingGap = default)
 {
     /// <summary>Ниже этого предела клип теряет смысл: примерно один кадр.</summary>
     public static readonly TimeSpan MinSourceDuration = TimeSpan.FromMilliseconds(20);
@@ -54,6 +55,22 @@ public sealed record Clip(
 
     /// <summary>Сколько места клип занимает на таймлайне с учётом скорости.</summary>
     public TimeSpan TimelineDuration => TimeSpan.FromTicks((long)(SourceRange.Duration.Ticks / Speed));
+
+    /// <summary>
+    /// Место, которое клип занимает вместе со своим отступом от предыдущего.
+    /// </summary>
+    /// <remarks>
+    /// Отступ хранится у клипа, а не позиция: положение по-прежнему вычисляется из
+    /// порядка, и вставка клипа в середину не требует пересчитывать все остальные.
+    /// В зазоре при экспорте рисуется чёрный кадр с тишиной.
+    /// </remarks>
+    public TimeSpan TotalTimelineSpan => LeadingGap + TimelineDuration;
+
+    public bool HasLeadingGap => LeadingGap > TimeSpan.Zero;
+
+    /// <summary>Ставит отступ перед клипом. Отрицательный отступ невозможен: клипы не накладываются.</summary>
+    public Clip WithLeadingGap(TimeSpan gap) =>
+        this with { LeadingGap = gap < TimeSpan.Zero ? TimeSpan.Zero : gap };
 
     public bool HasAudio => SourceHasAudio && Audio.Enabled;
 
@@ -141,7 +158,10 @@ public sealed record Clip(
         var right = this with
         {
             Id = ClipId.New(),
-            SourceRange = new TimeRange(splitSourceTime, SourceRange.End)
+            SourceRange = new TimeRange(splitSourceTime, SourceRange.End),
+
+            // Отступ достаётся левой половине: он был перед клипом, а не внутри него.
+            LeadingGap = TimeSpan.Zero
         };
 
         return (left, right);

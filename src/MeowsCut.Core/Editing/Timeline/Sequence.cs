@@ -1,4 +1,4 @@
-using MeowsCut.Core.Diagnostics;
+﻿using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Media;
 
 namespace MeowsCut.Core.Editing.Timeline;
@@ -62,6 +62,12 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
 
     public int ClipCount => Video.Count;
 
+    /// <summary>
+    /// Есть ли на видеоряде пустые места. Быстрые стратегии экспорта их не умеют:
+    /// копирование потоков отдало бы склейку без чёрных вставок, будто зазора и не было.
+    /// </summary>
+    public bool HasGaps => Video.HasGaps;
+
     /// <summary>Есть ли звук у самого видеоряда (без отдельных дорожек).</summary>
     public bool HasAudio => Video.Clips.Any(clip => clip.HasAudio);
 
@@ -103,6 +109,9 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
         for (var i = 0; i < Video.Count; i++)
         {
             var clip = Video.Clips[i];
+
+            // Отступ идёт перед клипом: пустое место принадлежит зазору, а не кадру.
+            start += clip.LeadingGap;
             yield return new PlacedClip(clip, i, start);
             start += clip.TimelineDuration;
         }
@@ -132,6 +141,13 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
 
         foreach (var placed in EnumeratePlaced())
         {
+            // Попали в зазор перед клипом: там пусто, и это не ошибка. Клипы идут
+            // по возрастанию, поэтому дальше искать нечего.
+            if (timelineTime < placed.Start)
+            {
+                return null;
+            }
+
             if (timelineTime < placed.End)
             {
                 return placed;
@@ -174,6 +190,11 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
 
         var clips = new List<Clip>();
 
+        // Курсор — конец последнего попавшего в отрезок клипа уже в новых координатах.
+        // Через него пересчитываются отступы: зазор между клипами обязан пережить
+        // нарезку, иначе проверка фрагмента показывала бы не тот монтаж.
+        var cursor = TimeSpan.Zero;
+
         foreach (var placed in EnumeratePlaced())
         {
             if (placed.End <= clamped.Start || placed.Start >= clamped.End)
@@ -182,11 +203,13 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
             }
 
             var clip = placed.Clip;
+            var start = placed.Start;
 
             // Обрезаем края только у тех клипов, которые вылезают за отрезок.
             if (placed.Start < clamped.Start)
             {
                 clip = clip.TrimStart(clamped.Start - placed.Start);
+                start = clamped.Start;
             }
 
             if (placed.End > clamped.End)
@@ -196,10 +219,15 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
                 clip = clip.TrimEnd(clamped.End - placed.End);
             }
 
-            if (clip.SourceRange.Duration >= Clip.MinSourceDuration)
+            if (clip.SourceRange.Duration < Clip.MinSourceDuration)
             {
-                clips.Add(clip with { Id = ClipId.New() });
+                continue;
             }
+
+            var gap = start - clamped.Start - cursor;
+
+            clips.Add(clip with { Id = ClipId.New(), LeadingGap = gap < TimeSpan.Zero ? TimeSpan.Zero : gap });
+            cursor = start - clamped.Start + clip.TimelineDuration;
         }
 
         return WithTrack(new VideoTrack(clips)) with { AudioTracks = SliceAudio(clamped) };

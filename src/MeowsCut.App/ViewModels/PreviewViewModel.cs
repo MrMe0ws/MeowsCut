@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -31,6 +31,7 @@ public sealed partial class PreviewViewModel : ObservableObject
     private readonly TimelineViewModel _timeline;
     private readonly MediaElementPlayer _player;
     private readonly SequencePlaybackController _playback;
+    private readonly AudioMixPreview _audio = new();
     private readonly DispatcherTimer _timer;
 
     private CancellationTokenSource? _cancellation;
@@ -58,7 +59,11 @@ public sealed partial class PreviewViewModel : ObservableObject
             Interval = TimeSpan.FromMilliseconds(33)
         };
 
-        _timer.Tick += (_, _) => _playback.Tick();
+        _timer.Tick += (_, _) =>
+        {
+            _playback.Tick();
+            _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: false);
+        };
 
         _playback.PositionChanged += OnPlaybackPositionChanged;
         _playback.StateChanged += (_, _) => _dispatcher.Post(RefreshPlaybackState);
@@ -74,6 +79,9 @@ public sealed partial class PreviewViewModel : ObservableObject
         _timeline.SequenceChanged += (_, sequence) =>
         {
             _playback.UpdateSequence(sequence);
+            _audio.UpdateSequence(sequence);
+            _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: true);
+
             RefreshTexts();
             RequestFrame();
         };
@@ -81,6 +89,12 @@ public sealed partial class PreviewViewModel : ObservableObject
 
     /// <summary>Визуальный элемент проигрывателя для размещения в разметке.</summary>
     public FrameworkElement PlayerVisual => _player.Visual;
+
+    /// <summary>
+    /// Проигрыватели наложенного звука. Картинки не показывают, но обязаны лежать
+    /// в разметке: вне визуального дерева MediaElement молчит.
+    /// </summary>
+    public FrameworkElement AudioVisual => _audio.Visual;
 
     [ObservableProperty]
     private BitmapSource? _frame;
@@ -104,6 +118,7 @@ public sealed partial class PreviewViewModel : ObservableObject
     {
         _project = project;
         _playback.Attach(project);
+        _audio.Attach(project);
         _timer.Start();
 
         RefreshTexts();
@@ -115,6 +130,7 @@ public sealed partial class PreviewViewModel : ObservableObject
     {
         _project = project;
         _playback.UpdateProject(project);
+        _audio.UpdateProject(project);
     }
 
     public void Detach()
@@ -122,6 +138,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         _timer.Stop();
         _cancellation?.Cancel();
         _playback.Detach();
+        _audio.Detach();
 
         _project = null;
         Frame = null;
@@ -139,6 +156,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         }
 
         _playback.TogglePlay();
+        _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: true);
         RefreshPlaybackState();
     }
 
@@ -146,6 +164,7 @@ public sealed partial class PreviewViewModel : ObservableObject
     private void Step(double seconds)
     {
         _playback.Pause();
+        _audio.Sync(_playback.Position, playing: false, seeked: true);
 
         var target = _timeline.Playhead + TimeSpan.FromSeconds(seconds);
         _timeline.Playhead = target < TimeSpan.Zero
@@ -170,6 +189,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         }
 
         _playback.Seek(_timeline.Playhead);
+        _audio.Sync(_timeline.Playhead, _playback.IsPlaying, seeked: true);
         RequestFrame();
     }
 

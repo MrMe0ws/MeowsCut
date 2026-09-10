@@ -1,4 +1,4 @@
-<UserControl x:Class="MeowsCut.App.Views.Panes.InspectorView"
+﻿<UserControl x:Class="MeowsCut.App.Views.Panes.InspectorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
@@ -8,8 +8,8 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:InspectorViewModel}">
 
-    <!-- Полоса под доской монтажа, а не колонка сбоку: свойства нужны ровно тогда,
-         когда кусок выбран, и относятся к нему — место им рядом с ним. -->
+    <!-- Годится и полосой под доской монтажа, и колонкой справа: строки переносятся
+         по ширине. Полосой поля стоят в ряд, колонкой — складываются в столбик. -->
     <Border Padding="12,8"
             Background="{StaticResource Brush.Surface}"
             BorderBrush="{StaticResource Brush.Border}"
@@ -17,10 +17,11 @@
         <StackPanel>
             <TextBlock Style="{StaticResource Text.Muted}"
                        Text="{loc:Tr NoClipSelected}"
+                       TextWrapping="Wrap"
                        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}" />
 
             <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
-                <StackPanel Orientation="Horizontal">
+                <WrapPanel Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center"
                                Style="{StaticResource Text.Section}"
                                Text="{loc:Tr SectionClip}" />
@@ -43,7 +44,9 @@
                     <ItemsControl VerticalAlignment="Center" ItemsSource="{x:Static vm:InspectorViewModel.SpeedPresets}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
+                                <!-- Тоже с переносом: в узкой колонке справа восемь кнопок
+                                     подряд не помещаются и последняя уезжает за край. -->
+                                <WrapPanel Orientation="Horizontal" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -86,13 +89,13 @@
                                   Content="{loc:Tr SectionFrame}"
                                   Style="{StaticResource ToolButton}"
                                   ToolTip="{loc:Tr SectionFrameHint}" />
-                </StackPanel>
+                </WrapPanel>
 
                 <!-- Кадрирование прячется: нужно редко, а места занимает как всё остальное -->
-                <StackPanel Margin="0,8,0,0"
-                            Orientation="Horizontal"
-                            Visibility="{Binding IsChecked, ElementName=FrameToggle,
-                                Converter={StaticResource BoolToVisibility}}">
+                <WrapPanel Margin="0,8,0,0"
+                           Orientation="Horizontal"
+                           Visibility="{Binding IsChecked, ElementName=FrameToggle,
+                               Converter={StaticResource BoolToVisibility}}">
                     <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldZoom}" />
                     <Slider Width="110"
                             Margin="8,0,0,0"
@@ -136,7 +139,7 @@
                             Command="{Binding ResetTransformCommand}"
                             Content="{loc:Tr ResetTransform}"
                             Style="{StaticResource Button.Ghost}" />
-                </StackPanel>
+                </WrapPanel>
             </StackPanel>
         </StackPanel>
     </Border>

@@ -1,4 +1,4 @@
-using MeowsCut.Core.Editing;
+﻿using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.App.Timeline;
@@ -152,31 +152,5 @@ public sealed class TimelineHitTester
         }
 
         return miss;
-    }
-
-    /// <summary>Индекс, на который встанет перетаскиваемый клип при отпускании в точке x.</summary>
-    public int ResolveDropIndex(double x, Sequence sequence, TimelineMetrics metrics, ClipId draggedClip)
-    {
-        var time = metrics.XToTime(x);
-        var index = 0;
-
-        foreach (var placed in sequence.EnumeratePlaced())
-        {
-            if (placed.Clip.Id == draggedClip)
-            {
-                continue;
-            }
-
-            // Клип встаёт перед соседом, если курсор левее его середины.
-            var middle = placed.Start + TimeSpan.FromTicks(placed.Clip.TimelineDuration.Ticks / 2);
-            if (time < middle)
-            {
-                break;
-            }
-
-            index++;
-        }
-
-        return Math.Clamp(index, 0, Math.Max(0, sequence.ClipCount - 1));
     }
 }

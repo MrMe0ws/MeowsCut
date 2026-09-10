@@ -1,4 +1,4 @@
-using MeowsCut.Core.Editing.Timeline;
+﻿using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.Core.Editing.Commands;
 
@@ -76,5 +76,41 @@ public sealed class DuplicateClipCommand(ClipId clipId) : IEditCommand
 
         var copy = sequence.Video.Clips[index] with { Id = ClipId.New() };
         return sequence.WithTrack(sequence.Video.Insert(index + 1, copy));
+    }
+}
+
+/// <summary>
+/// Вставка готовых клипов в указанное место дорожки — то, что делает Ctrl+V.
+/// </summary>
+/// <remarks>
+/// Все клипы вставляются одной правкой: вставив три куска, пользователь ждёт,
+/// что Ctrl+Z уберёт их разом, а не будет отматывать по одному.
+/// Идентификаторы им выдаёт вызывающая сторона — команда обязана быть
+/// повторяемой, иначе повтор после отмены дал бы другие клипы.
+/// </remarks>
+public sealed class InsertClipsCommand(int index, IReadOnlyList<Clip> clips) : IEditCommand
+{
+    public string Title => "Вставить клипы";
+
+    public int Index { get; } = index;
+
+    public IReadOnlyList<Clip> Clips { get; } = clips;
+
+    public Sequence Apply(Sequence sequence)
+    {
+        if (Clips.Count == 0)
+        {
+            return sequence;
+        }
+
+        var track = sequence.Video;
+        var at = Math.Clamp(Index, 0, track.Count);
+
+        for (var i = 0; i < Clips.Count; i++)
+        {
+            track = track.Insert(at + i, Clips[i]);
+        }
+
+        return sequence.WithTrack(track);
     }
 }

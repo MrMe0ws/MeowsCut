@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MeowsCut.App.Timeline;
 using MeowsCut.App.Tests.Support;
 using MeowsCut.Core.Editing.Commands;
@@ -132,15 +132,4 @@ public class TimelineHitTesterTests
         hit.Clip.Should().BeNull();
     }
 
-    [Fact]
-    public void Drop_index_depends_on_the_middle_of_the_neighbour()
-    {
-        var sequence = TwoClips();
-        var tester = new TimelineHitTester();
-        var dragged = sequence.Video.Clips[0];
-
-        // Левее середины второго клипа — остаёмся первыми, правее — уходим за него.
-        tester.ResolveDropIndex(300, sequence, Metrics, dragged.Id).Should().Be(0);
-        tester.ResolveDropIndex(900, sequence, Metrics, dragged.Id).Should().Be(1);
-    }
 }
