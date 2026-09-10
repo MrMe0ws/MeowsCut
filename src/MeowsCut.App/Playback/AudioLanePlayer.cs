@@ -1,5 +1,4 @@
-using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Media;
 using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.App.Playback;
@@ -8,17 +7,19 @@ namespace MeowsCut.App.Playback;
 /// Одна звуковая дорожка в предпросмотре.
 /// </summary>
 /// <remarks>
-/// Каждой дорожке — свой <see cref="MediaElement"/>: смешивать звук самим значило бы
-/// написать микшер с ресемплером, а система уже умеет играть несколько файлов разом.
-/// Тональность здесь не сдвигается — <see cref="MediaElement"/> этого не умеет,
-/// и в предпросмотре звук идёт как есть; в экспорте сдвиг применяется полностью.
+/// Здесь <see cref="MediaPlayer"/>, а не <see cref="System.Windows.Controls.MediaElement"/>:
+/// второй — элемент интерфейса и требует места в визуальном дереве, а звуковой дорожке
+/// показывать нечего. Спрятанный элемент нулевого размера молчит, и звук не шёл.
+///
+/// Тональность здесь не сдвигается и затухания не применяются — системный
+/// проигрыватель этого не умеет. В экспорте всё это применяется полностью.
 /// </remarks>
 public sealed class AudioLanePlayer
 {
     /// <summary>Расхождение, после которого дорожку подтягивают к общей позиции.</summary>
     private static readonly TimeSpan DriftTolerance = TimeSpan.FromMilliseconds(180);
 
-    private readonly MediaElement _element;
+    private readonly MediaPlayer _player = new();
 
     private AudioClipId? _currentClip;
     private TimeSpan? _pendingSeek;
@@ -27,34 +28,23 @@ public sealed class AudioLanePlayer
 
     public AudioLanePlayer()
     {
-        // Нулевая высота, а не Collapsed: вне визуального дерева и со свёрнутым
-        // размещением MediaElement молча не играет.
-        _element = new MediaElement
-        {
-            LoadedBehavior = MediaState.Manual,
-            UnloadedBehavior = MediaState.Manual,
-            Width = 0,
-            Height = 0,
-            Volume = 1d
-        };
-
-        _element.MediaOpened += (_, _) =>
+        _player.MediaOpened += (_, _) =>
         {
             _isOpened = true;
 
             if (_pendingSeek is { } seek)
             {
-                _element.Position = seek;
+                _player.Position = seek;
                 _pendingSeek = null;
             }
 
             if (_wantsPlay)
             {
-                _element.Play();
+                _player.Play();
             }
         };
 
-        _element.MediaFailed += (_, _) =>
+        _player.MediaFailed += (_, _) =>
         {
             // Файл не по зубам системе. Молчим: ронять предпросмотр из-за
             // подложенного звука нельзя, в экспорте его возьмёт ffmpeg.
@@ -62,8 +52,6 @@ public sealed class AudioLanePlayer
             _currentClip = null;
         };
     }
-
-    public UIElement Visual => _element;
 
     /// <summary>Ставит дорожку в нужную точку таймлайна и решает, звучать ей или молчать.</summary>
     public void Sync(AudioTrack track, string? filePath, TimeSpan position, bool playing, bool seeked)
@@ -77,11 +65,10 @@ public sealed class AudioLanePlayer
         }
 
         var sourceTime = clip.SourceTimeAt(position);
-        var changed = _currentClip != clip.Id ||
-                      !string.Equals(_element.Source?.LocalPath, filePath, StringComparison.OrdinalIgnoreCase);
+        var changed = _currentClip != clip.Id || !SameFile(filePath);
 
-        _element.Volume = Math.Clamp(track.Gain * clip.Gain, 0d, 1d);
-        _element.SpeedRatio = Math.Clamp(clip.Speed, 0.05, 16d);
+        _player.Volume = Math.Clamp(track.Gain * clip.Gain, 0d, 1d);
+        _player.SpeedRatio = Math.Clamp(clip.Speed, 0.05, 16d);
         _wantsPlay = playing;
 
         if (changed)
@@ -89,7 +76,7 @@ public sealed class AudioLanePlayer
             _currentClip = clip.Id;
             _isOpened = false;
             _pendingSeek = sourceTime;
-            _element.Source = new Uri(filePath);
+            _player.Open(new Uri(filePath));
             return;
         }
 
@@ -101,18 +88,18 @@ public sealed class AudioLanePlayer
 
         // При воспроизведении дорожку не дёргают на каждом кадре: подтягивают,
         // только если она заметно уехала, иначе звук превратился бы в заикание.
-        if (seeked || !playing || (_element.Position - sourceTime).Duration() > DriftTolerance)
+        if (seeked || !playing || (_player.Position - sourceTime).Duration() > DriftTolerance)
         {
-            _element.Position = sourceTime;
+            _player.Position = sourceTime;
         }
 
         if (playing)
         {
-            _element.Play();
+            _player.Play();
         }
         else
         {
-            _element.Pause();
+            _player.Pause();
         }
     }
 
@@ -120,7 +107,7 @@ public sealed class AudioLanePlayer
     {
         _wantsPlay = false;
         _currentClip = null;
-        _element.Pause();
+        _player.Pause();
     }
 
     public void Close()
@@ -128,7 +115,10 @@ public sealed class AudioLanePlayer
         Silence();
         _isOpened = false;
         _pendingSeek = null;
-        _element.Stop();
-        _element.Source = null;
+        _player.Close();
     }
+
+    private bool SameFile(string filePath) =>
+        _player.Source is { } source &&
+        string.Equals(source.LocalPath, filePath, StringComparison.OrdinalIgnoreCase);
 }

@@ -177,10 +177,6 @@ public static class Strings
 
     public static string AudioPreviewNote => Get(nameof(AudioPreviewNote));
 
-    public static string InspectorDockToggle => Get(nameof(InspectorDockToggle));
-
-    public static string InspectorDockHint => Get(nameof(InspectorDockHint));
-
     public static string FilterAudioFiles => Get(nameof(FilterAudioFiles));
 
     public static string OpenAudioDialogTitle => Get(nameof(OpenAudioDialogTitle));

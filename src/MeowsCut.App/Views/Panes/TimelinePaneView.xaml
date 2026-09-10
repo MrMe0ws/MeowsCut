@@ -1,4 +1,4 @@
-<UserControl x:Class="MeowsCut.App.Views.Panes.TimelinePaneView"
+﻿<UserControl x:Class="MeowsCut.App.Views.Panes.TimelinePaneView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:MeowsCut.App.Controls"
@@ -82,7 +82,10 @@
                                 Command="{Binding AddAudioTrackCommand}"
                                 Style="{StaticResource Button.Ghost}"
                                 ToolTip="{loc:Tr AddAudioTrackHint}">
-                            <Path Data="{StaticResource Icon.Layers}" Style="{StaticResource ToolIconOnly}" />
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Layers}" Style="{StaticResource ToolIconStroke}" />
+                                <TextBlock Text="{loc:Tr AddAudioTrack}" />
+                            </StackPanel>
                         </Button>
 
                         <Border Width="1"

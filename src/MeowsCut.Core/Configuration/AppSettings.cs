@@ -11,16 +11,6 @@ public enum AppTheme
 /// Пользовательские настройки. Иммутабельны: изменение — это создание новой записи
 /// через <c>with</c> и сохранение через <see cref="IAppSettingsStore"/>.
 /// </summary>
-/// <summary>Где висит панель свойств выбранного куска.</summary>
-public enum InspectorDock
-{
-    /// <summary>Полосой под доской монтажа — рядом с тем, к чему относится.</summary>
-    Bottom = 0,
-
-    /// <summary>Колонкой справа от предпросмотра — там всё равно пустует место.</summary>
-    Right
-}
-
 public sealed record AppSettings
 {
     public static readonly AppSettings Default = new();
@@ -44,9 +34,6 @@ public sealed record AppSettings
     public long ThumbnailCacheLimitBytes { get; init; } = 500L * 1024 * 1024;
 
     public IReadOnlyList<string> RecentFiles { get; init; } = [];
-
-    /// <summary>Расположение панели свойств. Переживает перезапуск: это привычка, а не режим.</summary>
-    public InspectorDock InspectorDock { get; init; } = InspectorDock.Bottom;
 
     public AppSettings WithRecentFile(string path, int limit = 10)
     {

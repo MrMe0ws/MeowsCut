@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="MeowsCut.App.Views.Panes.ExportPanelView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
              xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -33,7 +34,10 @@
                        Style="{StaticResource Text.Section}"
                        Text="{loc:Tr SectionExport}" />
 
-            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1"
+                          controls:SmoothScroll.IsEnabled="True"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
                 <StackPanel>
 
                     <!-- Настройки в две колонки: одной лентой они не помещались ни в одно

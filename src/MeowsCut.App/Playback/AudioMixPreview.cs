@@ -1,6 +1,4 @@
-using System.Windows;
-using System.Windows.Controls;
-using MeowsCut.Core.Editing;
+﻿using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.App.Playback;
@@ -9,7 +7,7 @@ namespace MeowsCut.App.Playback;
 /// Наложенный звук в предпросмотре: отдельные дорожки поверх звука видеоряда.
 /// </summary>
 /// <remarks>
-/// Своего микшера здесь нет — каждая дорожка играет своим системным проигрывателем,
+/// Своего микшера здесь нет — каждая дорожка играет своим MediaPlayer,
 /// а сводит их звуковая подсистема Windows. Точность стыков поэтому такая же,
 /// как у самого предпросмотра (ADR-14): на перемотке дорожки подтягиваются к общей
 /// позиции, а расхождение внутри воспроизведения выправляется по порогу.
@@ -18,14 +16,10 @@ namespace MeowsCut.App.Playback;
 /// </remarks>
 public sealed class AudioMixPreview
 {
-    private readonly Grid _host = new();
     private readonly List<AudioLanePlayer> _lanes = [];
 
     private Sequence _sequence = Sequence.Empty;
     private Project? _project;
-
-    /// <summary>Носитель проигрывателей: должен лежать в разметке, иначе звука не будет.</summary>
-    public FrameworkElement Visual => _host;
 
     public void Attach(Project project)
     {
@@ -83,9 +77,7 @@ public sealed class AudioMixPreview
     {
         while (_lanes.Count < count)
         {
-            var lane = new AudioLanePlayer();
-            _lanes.Add(lane);
-            _host.Children.Add(lane.Visual);
+            _lanes.Add(new AudioLanePlayer());
         }
     }
 }

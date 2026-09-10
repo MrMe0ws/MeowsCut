@@ -34,6 +34,12 @@ public enum PointerMode
 
 public sealed partial class TimelineViewModel : ObservableObject
 {
+    /// <summary>
+    /// Волны звука для полосы дорожек. Необязательна: тесты доски работают
+    /// без ffmpeg, и рисовать им нечего.
+    /// </summary>
+    private readonly AudioWaveformCache? _waveforms;
+
     private readonly TimelineHitTester _hitTester = new();
     private readonly List<ClipViewModel> _clipPool = [];
     private readonly HashSet<ClipId> _selection = [];
@@ -72,6 +78,16 @@ public sealed partial class TimelineViewModel : ObservableObject
     [ObservableProperty]
     private AudioTrackId _selectedAudioTrack;
 
+    public TimelineViewModel(AudioWaveformCache? waveforms = null)
+    {
+        _waveforms = waveforms;
+
+        if (_waveforms is not null)
+        {
+            _waveforms.Ready += (_, _) => VisualInvalidated?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
     public TimelineMetrics Metrics { get; } = new();
 
     /// <summary>
@@ -108,6 +124,29 @@ public sealed partial class TimelineViewModel : ObservableObject
     public bool HasMultipleSelected => _selection.Count > 1;
 
     public bool HasAudioSelection => SelectedAudioClip is not null;
+
+    /// <summary>
+    /// Кисть с волной для куска звука. null — волна ещё считается или её нет.
+    /// Отрисовка спрашивает и рисует то, что есть: ждать на доске нельзя.
+    /// </summary>
+    public System.Windows.Media.Brush? WaveformFor(AudioClip clip)
+    {
+        if (_waveforms is null || _project?.Find(clip.SourceId) is not { } source)
+        {
+            return null;
+        }
+
+        var duration = clip.SourceDuration > TimeSpan.Zero ? clip.SourceDuration : source.Duration;
+        if (duration <= TimeSpan.Zero)
+        {
+            return null;
+        }
+
+        return _waveforms.Brush(
+            source.FilePath,
+            clip.SourceRange.Start / duration,
+            clip.SourceRange.End / duration);
+    }
 
     /// <summary>Дорожки звука для отрисовки и панели свойств.</summary>
     public IReadOnlyList<AudioTrack> AudioTracks => Sequence.AudioTracks;

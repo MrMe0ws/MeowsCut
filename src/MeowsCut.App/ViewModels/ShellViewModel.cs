@@ -34,12 +34,14 @@ public sealed partial class ShellViewModel : ObservableObject
     private MediaSummaryViewModel? _media;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStatusBarVisible))]
     private bool _isBusy;
 
     [ObservableProperty]
     private string _toolsetStatus = Strings.FfmpegSearching;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStatusBarVisible))]
     private bool _isToolsetReady;
 
     [ObservableProperty]
@@ -111,17 +113,11 @@ public sealed partial class ShellViewModel : ObservableObject
     public PresetsViewModel Presets { get; }
 
     /// <summary>
-    /// Где висит панель свойств. Справа от предпросмотра всё равно пустует место,
-    /// а полосой снизу она ближе к доске монтажа — выбирает пользователь.
+    /// Видна ли нижняя строка состояния. В обычной работе версия ffmpeg —
+    /// техническая подробность, отъедающая высоту у доски монтажа; она нужна,
+    /// только пока идёт чтение файла или пока ffmpeg не найден.
     /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsInspectorAtBottom))]
-    [NotifyPropertyChangedFor(nameof(IsInspectorAtRight))]
-    private InspectorDock _inspectorDock = InspectorDock.Bottom;
-
-    public bool IsInspectorAtBottom => InspectorDock == InspectorDock.Bottom;
-
-    public bool IsInspectorAtRight => InspectorDock == InspectorDock.Right;
+    public bool IsStatusBarVisible => !IsToolsetReady || IsBusy;
 
     /// <summary>Проект целиком: источники и таймлайн. Доска монтажа появится на следующем этапе.</summary>
     public Project? Project { get; private set; }
@@ -137,7 +133,6 @@ public sealed partial class ShellViewModel : ObservableObject
     public async Task InitializeAsync(string? initialFile, CancellationToken cancellationToken)
     {
         await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(true);
-        InspectorDock = _settingsStore.Current.InspectorDock;
         RefreshRecentFiles();
 
         var result = await _toolsetLocator.LocateAsync(cancellationToken).ConfigureAwait(true);
@@ -322,18 +317,6 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             IsBusy = false;
         }
-    }
-
-    /// <summary>Перенести панель свойств: полосой снизу или колонкой справа.</summary>
-    [RelayCommand]
-    private async Task ToggleInspectorDockAsync()
-    {
-        InspectorDock = InspectorDock == InspectorDock.Bottom
-            ? InspectorDock.Right
-            : InspectorDock.Bottom;
-
-        var settings = _settingsStore.Current with { InspectorDock = InspectorDock };
-        await _settingsStore.SaveAsync(settings, CancellationToken.None).ConfigureAwait(true);
     }
 
     /// <summary>Открыть финальный шаг: пресеты и параметры вывода.</summary>

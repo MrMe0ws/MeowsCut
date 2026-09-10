@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -147,9 +147,9 @@ public sealed class TimelineControl : Control
     /// Полоса звука: подложка, подпись дорожки и её куски.
     /// </summary>
     /// <remarks>
-    /// Волны нет намеренно — её расчёт требует отдельного прохода ffmpeg по всему
-    /// файлу. Пока вместо неё длительность, громкость и сдвиг тональности текстом:
-    /// этого хватает, чтобы понять, что именно лежит на дорожке.
+    /// Волна берётся готовой картинкой на весь файл, из которой вырезается кусок
+    /// по точкам входа и выхода. Пока она считается, кусок рисуется без неё —
+    /// ждать на перерисовке нельзя.
     /// </remarks>
     private void DrawAudioLane(DrawingContext context, TimelineMetrics metrics, AudioTrack track, TimelineLane lane)
     {
@@ -174,6 +174,7 @@ public sealed class TimelineControl : Control
             var pen = new Pen(selected ? Accent : ClipBorder, selected ? 2 : 1);
             context.DrawRoundedRectangle(muted ? MutedAudioFill : AudioFill, pen, rect, 4, 4);
 
+            DrawWaveform(context, clip, rect, muted);
             DrawAudioCaption(context, clip, track, rect);
         }
 
@@ -191,6 +192,30 @@ public sealed class TimelineControl : Control
         var badge = new Rect(4, lane.Top + 2, title.Width + 10, title.Height + 3);
         context.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(210, 10, 10, 12)), null, badge, 3, 3);
         context.DrawText(title, new Point(9, lane.Top + 3));
+    }
+
+    /// <summary>
+    /// Волна внутри куска звука.
+    /// </summary>
+    /// <remarks>
+    /// Рисуется под подписью и с отступом сверху: подпись обязана оставаться
+    /// читаемой, а волна на всю высоту перечёркивала бы её.
+    /// Кисть скругления не знает, поэтому прямоугольник обрезается по форме куска.
+    /// </remarks>
+    private void DrawWaveform(DrawingContext context, AudioClip clip, Rect rect, bool muted)
+    {
+        if (rect.Width < 4 || rect.Height < 10 || _model?.WaveformFor(clip) is not { } brush)
+        {
+            return;
+        }
+
+        brush.Opacity = muted ? 0.25 : 0.75;
+
+        var area = new Rect(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2);
+
+        context.PushClip(new RectangleGeometry(area, 3, 3));
+        context.DrawRectangle(brush, null, area);
+        context.Pop();
     }
 
     private void DrawAudioCaption(DrawingContext context, AudioClip clip, AudioTrack track, Rect rect)

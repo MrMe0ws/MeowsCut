@@ -1,4 +1,4 @@
-using MeowsCut.Core.Editing.Timeline;
+﻿using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.App.Timeline;
 
@@ -32,7 +32,7 @@ public sealed class TimelineLayout
     public const double LaneGap = 4d;
 
     /// <summary>Высота полосы звука: волны нет, нужно место под подпись и ручки.</summary>
-    public const double AudioLaneHeight = 40d;
+    public const double AudioLaneHeight = 54d;
 
     /// <summary>Ниже этого видеоряд перестаёт показывать кадры.</summary>
     public const double MinVideoLaneHeight = 44d;

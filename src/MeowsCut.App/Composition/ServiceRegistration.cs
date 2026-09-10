@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MeowsCut.App.Services;
 using MeowsCut.App.Timeline;
 using MeowsCut.App.ViewModels;
@@ -47,6 +47,7 @@ public static class ServiceRegistration
         services.AddSingleton<IMediaToolsetProvider, MediaToolsetProvider>();
         services.AddSingleton<IMediaProbe, FfprobeMediaProbe>();
         services.AddSingleton<IThumbnailService, FfmpegThumbnailService>();
+        services.AddSingleton<IWaveformService, FfmpegWaveformService>();
         services.AddSingleton<IExportPlanner, FfmpegExportPlanner>();
         services.AddSingleton<ITempWorkspaceFactory, TempWorkspaceFactory>();
         services.AddTransient<IExportEngine, FfmpegExportEngine>();
@@ -65,6 +66,7 @@ public static class ServiceRegistration
 
         services.AddSingleton<ThumbnailImageCache>();
         services.AddSingleton<TimelineThumbnailLoader>();
+        services.AddSingleton<AudioWaveformCache>();
 
         services.AddSingleton<TimelineViewModel>();
         services.AddSingleton<PreviewViewModel>();

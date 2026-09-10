@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="MeowsCut.App.Views.Panes.PresetsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
              xmlns:presets="clr-namespace:MeowsCut.Core.Presets;assembly=MeowsCut.Core"
              xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
@@ -16,7 +17,9 @@
             Background="{StaticResource Brush.Surface}"
             BorderBrush="{StaticResource Brush.Border}"
             BorderThickness="0,0,1,0">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer controls:SmoothScroll.IsEnabled="True"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
         <StackPanel>
             <TextBlock Margin="0,0,0,10"
                        Style="{StaticResource Text.Section}"

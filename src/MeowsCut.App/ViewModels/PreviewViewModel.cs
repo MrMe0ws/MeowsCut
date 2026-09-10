@@ -90,12 +90,6 @@ public sealed partial class PreviewViewModel : ObservableObject
     /// <summary>Визуальный элемент проигрывателя для размещения в разметке.</summary>
     public FrameworkElement PlayerVisual => _player.Visual;
 
-    /// <summary>
-    /// Проигрыватели наложенного звука. Картинки не показывают, но обязаны лежать
-    /// в разметке: вне визуального дерева MediaElement молчит.
-    /// </summary>
-    public FrameworkElement AudioVisual => _audio.Visual;
-
     [ObservableProperty]
     private BitmapSource? _frame;
 

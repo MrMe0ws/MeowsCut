@@ -314,12 +314,6 @@
   <data name="AudioPreviewNote" xml:space="preserve">
     <value>Тональность и затухания слышны только в экспорте</value>
   </data>
-  <data name="InspectorDockToggle" xml:space="preserve">
-    <value>Перенести свойства</value>
-  </data>
-  <data name="InspectorDockHint" xml:space="preserve">
-    <value>Панель свойств: полосой снизу или колонкой справа</value>
-  </data>
   <data name="FilterAudioFiles" xml:space="preserve">
     <value>Звук</value>
   </data>

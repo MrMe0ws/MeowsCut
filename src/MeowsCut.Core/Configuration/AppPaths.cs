@@ -1,4 +1,4 @@
-namespace MeowsCut.Core.Configuration;
+﻿namespace MeowsCut.Core.Configuration;
 
 /// <summary>
 /// Единственное место, где вычисляются пути приложения. Никаких
@@ -39,6 +39,9 @@ public sealed class AppPaths
 
     public string ThumbnailsDirectory => Path.Combine(LocalRoot, "thumbs");
 
+    /// <summary>Картинки звуковых волн. Отдельно от кадров: чистятся они по-разному.</summary>
+    public string WaveformsDirectory => Path.Combine(LocalRoot, "waveforms");
+
     /// <summary>Папка ffmpeg для разработки: бинарники не хранятся в репозитории.</summary>
     public string LocalFfmpegDirectory => Path.Combine(LocalRoot, "ffmpeg");
 
@@ -57,6 +60,7 @@ public sealed class AppPaths
         Directory.CreateDirectory(LogsDirectory);
         Directory.CreateDirectory(TempDirectory);
         Directory.CreateDirectory(ThumbnailsDirectory);
+        Directory.CreateDirectory(WaveformsDirectory);
         Directory.CreateDirectory(RoamingRoot);
     }
 }

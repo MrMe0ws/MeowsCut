@@ -19,14 +19,22 @@
 .PARAMETER Zip
     Дополнительно упаковать результат в zip-архив.
 
+.PARAMETER StopRunning
+    Закрыть запущенную из папки сборки Meows Cut вместо остановки с ошибкой.
+    Без этого ключа скрипт чужие процессы не трогает.
+
 .EXAMPLE
     ./tools/publish-portable.ps1 -Zip
+
+.EXAMPLE
+    ./tools/publish-portable.ps1 -StopRunning
 #>
 [CmdletBinding()]
 param(
     [string] $Output,
     [string] $FfmpegDirectory = (Join-Path $env:LOCALAPPDATA 'MeowsCut\ffmpeg'),
-    [switch] $Zip
+    [switch] $Zip,
+    [switch] $StopRunning
 )
 
 $ErrorActionPreference = 'Stop'
@@ -46,9 +54,35 @@ if (-not (Test-Path $ffmpeg) -or -not (Test-Path $ffprobe)) {
     throw "В $FfmpegDirectory нет ffmpeg.exe и ffprobe.exe. Запустите tools/get-ffmpeg.ps1"
 }
 
+# Запущенная из этой же папки сборка держит свои файлы, и удалить их нельзя.
+# Без явной проверки это выглядело отказом в доступе к случайной библиотеке
+# вроде PresentationCore.resources.dll — по такому сообщению причину не найти.
+$running = @(Get-Process -Name 'MeowsCut' -ErrorAction SilentlyContinue | Where-Object {
+    $_.Path -and $_.Path.StartsWith($Output, [System.StringComparison]::OrdinalIgnoreCase)
+})
+
+if ($running.Count -gt 0) {
+    if (-not $StopRunning) {
+        $list = ($running | ForEach-Object { "PID $($_.Id)" }) -join ', '
+        throw "Meows Cut запущен из $Output ($list) и держит свои файлы. Закройте приложение и повторите — или запустите скрипт с ключом -StopRunning."
+    }
+
+    Write-Host "Закрываю запущенную сборку в $Output"
+    $running | Stop-Process -Force
+    $running | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
+}
+
 if (Test-Path $Output) {
     Write-Host "Очищаю $Output"
-    Remove-Item -Recurse -Force $Output
+
+    try {
+        Remove-Item -Recurse -Force $Output -ErrorAction Stop
+    }
+    catch [System.UnauthorizedAccessException] {
+        # Держит не сам MeowsCut: проводник с открытым предпросмотром, антивирус,
+        # синхронизация OneDrive. Имя файла из исключения — единственная зацепка.
+        throw "Не удалось очистить $Output — файл занят другой программой: $($_.Exception.Message)"
+    }
 }
 
 Write-Host 'Собираю приложение (self-contained, win-x64)…'
