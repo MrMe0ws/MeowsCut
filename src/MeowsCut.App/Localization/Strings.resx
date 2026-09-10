@@ -329,6 +329,30 @@
   <data name="HardwareHint" xml:space="preserve">
     <value>Видеокарта кодирует в разы быстрее, но при равном размере файла качество ниже. Два прохода и подбор под размер она не умеет.</value>
   </data>
+  <data name="OpenSubtitleDialogTitle" xml:space="preserve">
+    <value>Выберите файл субтитров</value>
+  </data>
+  <data name="FilterSubtitleFiles" xml:space="preserve">
+    <value>Субтитры</value>
+  </data>
+  <data name="SectionSubtitles" xml:space="preserve">
+    <value>Субтитры</value>
+  </data>
+  <data name="ChooseSubtitles" xml:space="preserve">
+    <value>Выбрать файл…</value>
+  </data>
+  <data name="ClearSubtitles" xml:space="preserve">
+    <value>Убрать</value>
+  </data>
+  <data name="SubtitleModeBurn" xml:space="preserve">
+    <value>Вшить в кадр</value>
+  </data>
+  <data name="SubtitleModeEmbed" xml:space="preserve">
+    <value>Отдельной дорожкой</value>
+  </data>
+  <data name="SubtitleBurnHint" xml:space="preserve">
+    <value>Вшитые видны везде, но выключить их нельзя. Дорожку зритель включает сам, но её показывает не всякий плеер.</value>
+  </data>
   <data name="ToolSelect" xml:space="preserve">
     <value>Выделение</value>
   </data>

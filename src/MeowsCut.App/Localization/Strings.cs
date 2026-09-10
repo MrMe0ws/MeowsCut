@@ -187,6 +187,22 @@ public static class Strings
 
     public static string HardwareHint => Get(nameof(HardwareHint));
 
+    public static string OpenSubtitleDialogTitle => Get(nameof(OpenSubtitleDialogTitle));
+
+    public static string FilterSubtitleFiles => Get(nameof(FilterSubtitleFiles));
+
+    public static string SectionSubtitles => Get(nameof(SectionSubtitles));
+
+    public static string ChooseSubtitles => Get(nameof(ChooseSubtitles));
+
+    public static string ClearSubtitles => Get(nameof(ClearSubtitles));
+
+    public static string SubtitleModeBurn => Get(nameof(SubtitleModeBurn));
+
+    public static string SubtitleModeEmbed => Get(nameof(SubtitleModeEmbed));
+
+    public static string SubtitleBurnHint => Get(nameof(SubtitleBurnHint));
+
     public static string ToolSelect => Get(nameof(ToolSelect));
 
     public static string ToolRazor => Get(nameof(ToolRazor));

@@ -175,6 +175,48 @@
                                     Value="{Binding MasterVolumePercent}" />
                         </StackPanel>
 
+                        <!-- Субтитры -->
+                        <TextBlock Margin="0,4,0,6"
+                                   Style="{StaticResource Text.Section}"
+                                   Text="{loc:Tr SectionSubtitles}" />
+
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Style="{StaticResource Text.Base}"
+                                       Text="{Binding SubtitleFileName}"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding SubtitlePath}"
+                                       Visibility="{Binding HasSubtitles, Converter={StaticResource BoolToVisibility}}" />
+
+                            <Button Grid.Column="1"
+                                    Command="{Binding ChooseSubtitlesCommand}"
+                                    Content="{loc:Tr ChooseSubtitles}"
+                                    Style="{StaticResource Button.Ghost}"
+                                    Visibility="{Binding HasSubtitles, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                            <Button Grid.Column="1"
+                                    Command="{Binding ClearSubtitlesCommand}"
+                                    Content="{loc:Tr ClearSubtitles}"
+                                    Style="{StaticResource Button.Ghost}"
+                                    Visibility="{Binding HasSubtitles, Converter={StaticResource BoolToVisibility}}" />
+                        </Grid>
+
+                        <StackPanel Visibility="{Binding HasSubtitles, Converter={StaticResource BoolToVisibility}}">
+                            <ComboBox ItemsSource="{Binding SubtitleModes}"
+                                      SelectedItem="{Binding SubtitleMode}"
+                                      Style="{StaticResource FieldBox}" />
+                            <TextBlock Margin="0,-6,0,12"
+                                       Style="{StaticResource Text.Muted}"
+                                       Text="{loc:Tr SubtitleBurnHint}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
                         <CheckBox Margin="0,0,0,12"
                                   Content="{loc:Tr FastMode}"
                                   IsChecked="{Binding PreferStreamCopy}" />

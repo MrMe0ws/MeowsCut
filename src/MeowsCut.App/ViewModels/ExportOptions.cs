@@ -103,6 +103,17 @@ public sealed record EncodingSpeedOption(EncodingSpeed Speed, string Title)
     public override string ToString() => Title;
 }
 
+public sealed record SubtitleModeOption(SubtitleMode Mode, string Title)
+{
+    public static readonly IReadOnlyList<SubtitleModeOption> All =
+    [
+        new(SubtitleMode.Burn, Localization.Strings.SubtitleModeBurn),
+        new(SubtitleMode.Embed, Localization.Strings.SubtitleModeEmbed)
+    ];
+
+    public override string ToString() => Title;
+}
+
 public sealed record FitModeOption(FitMode Mode, string Title)
 {
     public static readonly IReadOnlyList<FitModeOption> All =

@@ -238,6 +238,13 @@ public sealed class FilterGraphBuilder
             chain.Add($"fps={SpeedFilter.FormatFactor(fixedFps)}");
         }
 
+        // Субтитры вшиваются после масштабирования: иначе текст масштабировался бы
+        // вместе с кадром и на маленьком выходе превращался в кашу.
+        if (settings.Subtitles.IsBurnedIn)
+        {
+            chain.Add(SubtitleFilter.Build(settings.Subtitles));
+        }
+
         if (!string.IsNullOrWhiteSpace(pixelFormat))
         {
             chain.Add($"format={pixelFormat}");

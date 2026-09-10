@@ -44,6 +44,9 @@ public interface IFileDialogService
     /// <summary>Файл со звуком: музыка, запись голоса или видео, из которого нужен звук.</summary>
     string? PickAudioFile();
 
+    /// <summary>Готовый файл субтитров: SRT или ASS.</summary>
+    string? PickSubtitleFile();
+
     string? PickFolder(string title);
 }
 
@@ -75,6 +78,19 @@ public sealed class FileDialogService : IFileDialogService
                 Strings.FilterAudioFiles,
                 Strings.FilterVideoFiles,
                 Strings.FilterAllFiles),
+            CheckFileExists = true,
+            Multiselect = false
+        };
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public string? PickSubtitleFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.OpenSubtitleDialogTitle,
+            Filter = MediaFileTypes.BuildSubtitleDialogFilter(Strings.FilterSubtitleFiles, Strings.FilterAllFiles),
             CheckFileExists = true,
             Multiselect = false
         };

@@ -22,7 +22,10 @@ public enum PlanWarningKind
     AudioMixNeedsEncode,
 
     /// <summary>Просили видеокарту, но пришлось кодировать процессором.</summary>
-    HardwareUnavailable
+    HardwareUnavailable,
+
+    /// <summary>Контейнер не носит дорожку субтитров.</summary>
+    SubtitlesDropped
 }
 
 /// <summary>Предупреждение о последствиях выбранных настроек — показывается до запуска.</summary>

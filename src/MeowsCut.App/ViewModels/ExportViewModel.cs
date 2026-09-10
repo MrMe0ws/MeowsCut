@@ -37,6 +37,7 @@ public sealed partial class ExportViewModel : ObservableObject
     private readonly IMediaToolsetProvider _toolsetProvider;
     private readonly IAppSettingsStore _settingsStore;
     private readonly IShellIntegration _shell;
+    private readonly Services.IFileDialogService _fileDialogService;
     private readonly IUiDispatcher _dispatcher;
     private readonly TimelineViewModel _timeline;
     private readonly AppPaths _paths;
@@ -128,6 +129,13 @@ public sealed partial class ExportViewModel : ObservableObject
     private HardwareAcceleration _hardware = HardwareAcceleration.None;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSubtitles), nameof(SubtitleFileName))]
+    private string? _subtitlePath;
+
+    [ObservableProperty]
+    private SubtitleModeOption _subtitleMode = SubtitleModeOption.All[0];
+
+    [ObservableProperty]
     private string _pixelFormat = string.Empty;
 
     [ObservableProperty]
@@ -165,6 +173,7 @@ public sealed partial class ExportViewModel : ObservableObject
         IMediaToolsetProvider toolsetProvider,
         IAppSettingsStore settingsStore,
         IShellIntegration shell,
+        Services.IFileDialogService fileDialogService,
         IUiDispatcher dispatcher,
         TimelineViewModel timeline,
         AppPaths paths,
@@ -178,6 +187,7 @@ public sealed partial class ExportViewModel : ObservableObject
         _toolsetProvider = toolsetProvider;
         _settingsStore = settingsStore;
         _shell = shell;
+        _fileDialogService = fileDialogService;
         _dispatcher = dispatcher;
         _logger = logger;
     }
@@ -201,6 +211,14 @@ public sealed partial class ExportViewModel : ObservableObject
     public IReadOnlyList<QualityModeOption> QualityModes { get; } = QualityModeOption.All;
 
     public IReadOnlyList<EncodingSpeedOption> EncodingSpeeds { get; } = EncodingSpeedOption.All;
+
+    public IReadOnlyList<SubtitleModeOption> SubtitleModes { get; } = SubtitleModeOption.All;
+
+    public bool HasSubtitles => !string.IsNullOrWhiteSpace(SubtitlePath);
+
+    /// <summary>Только имя файла: полный путь в узкой панели всё равно не помещается.</summary>
+    public string SubtitleFileName =>
+        string.IsNullOrWhiteSpace(SubtitlePath) ? string.Empty : Path.GetFileName(SubtitlePath);
 
     /// <summary>Доступное железо для выбранного кодека: что нашлось в этой сборке ffmpeg.</summary>
     public ObservableCollection<HardwareAcceleration> HardwareOptions { get; } = [];
@@ -364,6 +382,10 @@ public sealed partial class ExportViewModel : ObservableObject
     partial void OnKeyframeIntervalFramesChanged(int value) => RefreshSummary();
 
     partial void OnHardwareChanged(HardwareAcceleration value) => RefreshSummary();
+
+    partial void OnSubtitlePathChanged(string? value) => RefreshSummary();
+
+    partial void OnSubtitleModeChanged(SubtitleModeOption value) => RefreshSummary();
 
     /// <summary>
     /// Список железа зависит от кодека: у VP9 аппаратного энкодера нет вовсе,
@@ -559,8 +581,30 @@ public sealed partial class ExportViewModel : ObservableObject
             FrameRate = FrameRate.ToSpec(CustomFps),
             Advanced = BuildAdvanced()
         },
-        Audio = BuildAudio()
+        Audio = BuildAudio(),
+        Subtitles = BuildSubtitles()
     }.Normalized();
+
+    private SubtitleSettings BuildSubtitles() => string.IsNullOrWhiteSpace(SubtitlePath)
+        ? SubtitleSettings.None
+        : new SubtitleSettings
+        {
+            FilePath = SubtitlePath,
+            Mode = SubtitleMode.Mode,
+            ForceStyle = SubtitleFormats.DefaultStyle
+        };
+
+    [RelayCommand]
+    private void ChooseSubtitles()
+    {
+        if (_fileDialogService.PickSubtitleFile() is { } path)
+        {
+            SubtitlePath = path;
+        }
+    }
+
+    [RelayCommand]
+    private void ClearSubtitles() => SubtitlePath = null;
 
     private RateControl BuildRateControl() => QualityMode.Mode switch
     {

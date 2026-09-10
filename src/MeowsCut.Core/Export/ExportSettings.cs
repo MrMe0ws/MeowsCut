@@ -86,6 +86,9 @@ public sealed record ExportSettings
 
     public AudioSettings Audio { get; init; } = AudioSettings.Default;
 
+    /// <summary>Субтитры к результату: вшить в кадр или положить дорожкой.</summary>
+    public SubtitleSettings Subtitles { get; init; } = SubtitleSettings.None;
+
     public string OutputPath { get; init; } = string.Empty;
 
     public OverwritePolicy Overwrite { get; init; } = OverwritePolicy.AutoRename;

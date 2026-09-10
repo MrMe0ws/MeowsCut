@@ -22,6 +22,9 @@ public static class MediaFileTypes
         ".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg", ".opus", ".wma", ".aiff", ".alac"
     ];
 
+    /// <summary>Файлы субтитров, которые понимает ffmpeg.</summary>
+    public static readonly IReadOnlyList<string> SubtitleExtensions = [".srt", ".ass", ".ssa", ".vtt"];
+
     public static bool IsKnownVideoExtension(string path)
     {
         var extension = Path.GetExtension(path);
@@ -36,6 +39,12 @@ public static class MediaFileTypes
     {
         var patterns = string.Join(";", VideoExtensions.Select(x => "*" + x));
         return $"{videoFilesLabel}|{patterns}|{allFilesLabel}|*.*";
+    }
+
+    public static string BuildSubtitleDialogFilter(string subtitleFilesLabel, string allFilesLabel)
+    {
+        var patterns = string.Join(";", SubtitleExtensions.Select(x => "*" + x));
+        return $"{subtitleFilesLabel}|{patterns}|{allFilesLabel}|*.*";
     }
 
     /// <summary>Фильтр для выбора звука: сначала звуковые файлы, потом видео.</summary>

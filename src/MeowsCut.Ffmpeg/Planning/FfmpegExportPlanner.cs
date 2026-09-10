@@ -358,6 +358,12 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             return false;
         }
 
+        // Вшитые субтитры существуют только после перерисовки кадра.
+        if (settings.Subtitles.IsBurnedIn)
+        {
+            return false;
+        }
+
         // Подмешанный звук существует только внутри графа фильтров: копирование
         // потоков отдало бы исходную дорожку, будто наложения и не было.
         if (sequence.HasAudioTracks)
@@ -493,6 +499,17 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             builder.Input(source.FilePath);
         }
 
+        // Дорожка субтитров — отдельный вход. В первом проходе она не нужна:
+        // он считает статистику картинки и ничего не пишет.
+        var embedSubtitles = settings.Subtitles.IsEmbedded &&
+                             SubtitleFormats.SupportsEmbedded(settings.Container) &&
+                             pass != 1;
+
+        if (embedSubtitles)
+        {
+            builder.Input(settings.Subtitles.FilePath!);
+        }
+
         builder.FilterComplex(graph.Text);
         builder.Map($"[{graph.VideoLabel}]");
 
@@ -502,6 +519,12 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         if (withAudio && graph.AudioLabel is { } audioLabel)
         {
             builder.Map($"[{audioLabel}]");
+        }
+
+        if (embedSubtitles)
+        {
+            builder.Map($"{sources.Count}:s:0");
+            builder.Option("-c:s", SubtitleFormats.SubtitleCodec(settings.Container)!);
         }
 
         AppendVideoOptions(builder, settings, capabilities);
@@ -675,6 +698,13 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             warnings.Add(new PlanWarning(
                 PlanWarningKind.StreamCopyKeyframeSnap,
                 "Без перекодирования границы обрезки сместятся к ближайшему ключевому кадру."));
+        }
+
+        if (settings.Subtitles.IsEmbedded && !SubtitleFormats.SupportsEmbedded(settings.Container))
+        {
+            warnings.Add(new PlanWarning(
+                PlanWarningKind.SubtitlesDropped,
+                "Этот контейнер не носит дорожку субтитров — выберите MP4, MKV или вшейте их в кадр."));
         }
 
         if (!settings.Audio.Enabled && sequence.HasAudio)
