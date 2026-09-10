@@ -192,6 +192,68 @@ public sealed partial class ShellViewModel : ObservableObject
         }
     }
 
+    /// <summary>Добавить ещё один файл в конец видеоряда.</summary>
+    [RelayCommand]
+    private async Task AddFileAsync(CancellationToken cancellationToken)
+    {
+        var path = _fileDialogService.PickVideoFile();
+        if (path is null)
+        {
+            return;
+        }
+
+        await AddToTimelineAsync(path, cancellationToken).ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Кладёт файл в конец видеоряда, не трогая уже собранное.
+    /// </summary>
+    /// <remarks>
+    /// Если проекта ещё нет, это обычное открытие: отдельная ветка нужна только
+    /// для второго и последующих файлов, из которых и собирается видеоряд.
+    /// </remarks>
+    public async Task AddToTimelineAsync(string path, CancellationToken cancellationToken)
+    {
+        if (Project is null)
+        {
+            await OpenAsync(path, cancellationToken).ConfigureAwait(true);
+            return;
+        }
+
+        if (IsBusy || !IsToolsetReady)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var info = await _mediaProbe.ProbeAsync(path, cancellationToken).ConfigureAwait(true);
+            var (project, source) = Project.WithSource(info);
+
+            Project = project;
+            Preview.UpdateProject(project);
+            Timeline.AppendSource(project, source);
+
+            var settings = _settingsStore.Current.WithRecentFile(path);
+            await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(true);
+            RefreshRecentFiles();
+        }
+        catch (OperationCanceledException)
+        {
+            // Отмена — не ошибка.
+        }
+        catch (MeowsCutException ex)
+        {
+            _logger.LogWarning(ex, "Не удалось добавить {Path}", path);
+            _dialogService.ShowError(_errorPresenter.Present(ex));
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     [RelayCommand]
     private void OpenSettings() => _dialogService.ShowSettings();
 

@@ -52,17 +52,20 @@
                                 <TextBlock Text="{loc:Tr ToolRazor}" />
                             </StackPanel>
                         </RadioButton>
-                        <RadioButton GroupName="Tool"
-                                     IsChecked="{Binding ActiveTool, Mode=TwoWay,
-                                         Converter={StaticResource EnumToBool},
-                                         ConverterParameter={x:Static timeline:TimelineTool.Hand}}"
-                                     Style="{StaticResource ToolButton}"
-                                     ToolTip="{loc:Tr ToolHandHint}">
+
+                        <Border Width="1"
+                                Margin="8,2"
+                                Background="{StaticResource Brush.Border}" />
+
+                        <Button Command="{Binding DataContext.AddFileCommand,
+                                    RelativeSource={RelativeSource AncestorType=Window}}"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="{loc:Tr AddVideoHint}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Hand}" Style="{StaticResource ToolIcon}" />
-                                <TextBlock Text="{loc:Tr ToolHand}" />
+                                <Path Data="{StaticResource Icon.Plus}" Style="{StaticResource ToolIconStroke}" />
+                                <TextBlock Text="{loc:Tr AddVideo}" />
                             </StackPanel>
-                        </RadioButton>
+                        </Button>
 
                         <Border Width="1"
                                 Margin="8,2"
@@ -111,8 +114,10 @@
                             Style="{StaticResource Button.Ghost}" />
                     <Button Margin="6,0,0,0"
                             Command="{Binding ZoomToFitCommand}"
-                            Content="{loc:Tr ZoomFit}"
-                            Style="{StaticResource Button.Ghost}" />
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="{loc:Tr ZoomFit}">
+                        <Path Data="{StaticResource Icon.Fit}" Style="{StaticResource ToolIconOnly}" />
+                    </Button>
                 </StackPanel>
             </Grid>
 

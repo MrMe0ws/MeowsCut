@@ -110,6 +110,13 @@ public sealed partial class PreviewViewModel : ObservableObject
         RequestFrame();
     }
 
+    /// <summary>В проект добавился файл — плееру нужен обновлённый список источников.</summary>
+    public void UpdateProject(Project project)
+    {
+        _project = project;
+        _playback.UpdateProject(project);
+    }
+
     public void Detach()
     {
         _timer.Stop();

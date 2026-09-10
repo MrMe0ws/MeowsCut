@@ -119,8 +119,6 @@ public static class Strings
 
     public static string ToolRazorHint => Get(nameof(ToolRazorHint));
 
-    public static string ToolHandHint => Get(nameof(ToolHandHint));
-
     public static string Play => Get(nameof(Play));
 
     public static string Pause => Get(nameof(Pause));
@@ -131,11 +129,13 @@ public static class Strings
 
     public static string DeleteClipHint => Get(nameof(DeleteClipHint));
 
+    public static string AddVideo => Get(nameof(AddVideo));
+
+    public static string AddVideoHint => Get(nameof(AddVideoHint));
+
     public static string ToolSelect => Get(nameof(ToolSelect));
 
     public static string ToolRazor => Get(nameof(ToolRazor));
-
-    public static string ToolHand => Get(nameof(ToolHand));
 
     public static string SplitHere => Get(nameof(SplitHere));
 

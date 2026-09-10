@@ -69,43 +69,96 @@ public class TimelineViewModelTests
     }
 
     [Fact]
-    public void Any_tool_selects_the_clip_under_the_pointer()
+    public void The_middle_button_pans_the_board_whatever_the_tool()
     {
         var timeline = Attached();
-        timeline.ActiveTool = TimelineTool.Hand;
-
-        timeline.PointerDown(X(10), 60);
-        timeline.PointerUp();
-
-        timeline.SelectedClip.Should().NotBeNull(
-            "менять инструмент только ради того, чтобы указать клип, — лишний шаг");
-    }
-
-    [Fact]
-    public void The_hand_still_pans_the_board()
-    {
-        var timeline = Attached();
-        timeline.ActiveTool = TimelineTool.Hand;
         timeline.Metrics.Scroll = TimeSpan.FromSeconds(5);
 
-        timeline.PointerDown(X(10), 60);
+        timeline.PointerDown(X(10), 60, PointerMode.Pan);
         timeline.PointerMove(X(10) - 100, 60);
         timeline.PointerUp();
 
         timeline.Metrics.Scroll.Should().Be(TimeSpan.FromSeconds(7), "сто пикселей — это две секунды");
+        timeline.SelectedClip.Should().BeNull("протяжка ничего не выделяет");
     }
 
     [Fact]
-    public void The_hand_moves_the_playhead_along_the_ruler()
+    public void Clicking_the_ruler_moves_the_playhead()
     {
         var timeline = Attached();
-        timeline.ActiveTool = TimelineTool.Hand;
 
         timeline.PointerDown(X(6), 5);   // линейка
         timeline.PointerUp();
 
         timeline.Playhead.Should().Be(TimeSpan.FromSeconds(6));
         timeline.Metrics.Scroll.Should().Be(TimeSpan.Zero, "по линейке доску не тянут");
+    }
+
+    [Fact]
+    public void Ctrl_click_gathers_several_clips()
+    {
+        var timeline = Cut(Attached(), 5, 10, 15);
+
+        timeline.PointerDown(X(2), 60);
+        timeline.PointerUp();
+        timeline.PointerDown(X(12), 60, PointerMode.Toggle);
+        timeline.PointerUp();
+
+        timeline.SelectionCount.Should().Be(2);
+        timeline.SelectedClips.Select(clip => clip.Start).Should()
+            .Equal(TimeSpan.Zero, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public void Ctrl_click_on_a_selected_clip_removes_it_from_the_selection()
+    {
+        var timeline = Cut(Attached(), 10);
+
+        timeline.PointerDown(X(2), 60);
+        timeline.PointerUp();
+        timeline.PointerDown(X(2), 60, PointerMode.Toggle);
+        timeline.PointerUp();
+
+        timeline.SelectionCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void Shift_click_takes_the_whole_row_between()
+    {
+        var timeline = Cut(Attached(), 5, 10, 15);
+
+        timeline.PointerDown(X(2), 60);
+        timeline.PointerUp();
+        timeline.PointerDown(X(17), 60, PointerMode.Range);
+        timeline.PointerUp();
+
+        timeline.SelectionCount.Should().Be(4);
+    }
+
+    [Fact]
+    public void Deleting_several_clips_is_a_single_undo_step()
+    {
+        var timeline = Cut(Attached(), 5, 10, 15);
+
+        timeline.SelectAllCommand.Execute(null);
+        timeline.SelectionCount.Should().Be(4);
+
+        timeline.DeleteSelectedCommand.Execute(null);
+        timeline.Clips.Should().BeEmpty();
+
+        timeline.UndoCommand.Execute(null);
+        timeline.Clips.Should().HaveCount(4, "одно действие пользователя — одна отмена");
+    }
+
+    [Fact]
+    public void A_removed_clip_leaves_the_selection()
+    {
+        var timeline = Cut(Attached(), 10);
+
+        timeline.SelectAllCommand.Execute(null);
+        timeline.DeleteSelectedCommand.Execute(null);
+
+        timeline.SelectionCount.Should().Be(0, "иначе следующее удаление снесёт не то");
     }
 
     [Fact]
@@ -120,6 +173,23 @@ public class TimelineViewModelTests
         timeline.SelectedClip.Should().NotBeNull();
         timeline.SelectedClip!.Start.Should().Be(TimeSpan.FromSeconds(8),
             "режут обычно чтобы сразу что-то сделать с хвостом");
+        timeline.SelectionCount.Should().Be(1, "разрез не копит выделение");
+    }
+
+    /// <summary>Режет последовательность в указанных секундах — заготовка из нескольких клипов.</summary>
+    private static TimelineViewModel Cut(TimelineViewModel timeline, params double[] seconds)
+    {
+        var tool = timeline.ActiveTool;
+        timeline.ActiveTool = TimelineTool.Razor;
+
+        foreach (var second in seconds)
+        {
+            timeline.PointerDown(X(second), 60);
+            timeline.PointerUp();
+        }
+
+        timeline.ActiveTool = tool;
+        return timeline;
     }
 
     [Fact]
@@ -208,17 +278,17 @@ public class TimelineViewModelTests
     }
 
     [Fact]
-    public void Hand_tool_pans_instead_of_editing()
+    public void Panning_does_not_edit_anything()
     {
         var timeline = Attached();
-        timeline.ActiveTool = TimelineTool.Hand;
 
-        timeline.PointerDown(X(10), 60);
+        timeline.PointerDown(X(10), 60, PointerMode.Pan);
         timeline.PointerMove(X(10) - 100, 60);
         timeline.PointerUp();
 
         timeline.Metrics.Scroll.Should().Be(TimeSpan.FromSeconds(2));
-        timeline.Clips.Should().HaveCount(1, "рука ничего не режет");
+        timeline.Clips.Should().HaveCount(1, "протяжка ничего не режет");
+        timeline.CanUndo.Should().BeFalse();
     }
 
     [Fact]

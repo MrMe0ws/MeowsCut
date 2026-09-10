@@ -222,13 +222,10 @@
     <value>Экспортировать ещё раз</value>
   </data>
   <data name="ToolSelectHint" xml:space="preserve">
-    <value>Выделение (V): перенести клип, потянуть за край — подрезать</value>
+    <value>Стрелка (V): выделить, перенести клип, потянуть за край — подрезать.&#10;Ctrl — добавить к выделению, Shift — ряд.&#10;Протянуть доску: средняя кнопка мыши или колесо</value>
   </data>
   <data name="ToolRazorHint" xml:space="preserve">
-    <value>Ножницы (C): щелчок разрезает клип в этой точке</value>
-  </data>
-  <data name="ToolHandHint" xml:space="preserve">
-    <value>Рука (H): протянуть доску. Щелчок по клипу всё равно его выделяет</value>
+    <value>Ножницы (C): щелчок разрезает клип по пунктирной линии</value>
   </data>
   <data name="Play" xml:space="preserve">
     <value>▶  Играть</value>
@@ -245,14 +242,17 @@
   <data name="DeleteClipHint" xml:space="preserve">
     <value>Удалить выбранный клип (Delete)</value>
   </data>
+  <data name="AddVideo" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="AddVideoHint" xml:space="preserve">
+    <value>Добавить файл в конец видеоряда. Файл можно и перетащить на окно</value>
+  </data>
   <data name="ToolSelect" xml:space="preserve">
     <value>Выделение</value>
   </data>
   <data name="ToolRazor" xml:space="preserve">
     <value>Ножницы</value>
-  </data>
-  <data name="ToolHand" xml:space="preserve">
-    <value>Рука</value>
   </data>
   <data name="SplitHere" xml:space="preserve">
     <value>Разрезать</value>

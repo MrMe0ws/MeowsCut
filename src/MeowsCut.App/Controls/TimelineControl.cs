@@ -20,11 +20,13 @@ public sealed class TimelineControl : Control
 {
     private const double RulerHeight = 24d;
     private const double TrackPadding = 10d;
+    private const double ClipGap = 1.5d;
 
     private static readonly Typeface LabelTypeface = new("Segoe UI");
 
     private TimelineViewModel? _model;
     private Point _lastHoverPosition;
+    private bool _dragging;
 
     public TimelineControl()
     {
@@ -45,6 +47,8 @@ public sealed class TimelineControl : Control
     private Brush TextBrush => (Brush)FindResource("Brush.Text");
 
     private Brush MutedBrush => (Brush)FindResource("Brush.TextMuted");
+
+    private Brush RazorBrush => (Brush)FindResource("Brush.Danger");
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
@@ -119,7 +123,41 @@ public sealed class TimelineControl : Control
             DrawClip(context, clip, metrics, trackTop, trackHeight);
         }
 
+        DrawRazorGuide(context, metrics, trackTop, trackHeight);
         DrawPlayhead(context, metrics);
+    }
+
+    /// <summary>
+    /// Показывает, где пройдёт разрез. Без неё ножницами приходится целиться вслепую:
+    /// курсор стоит на одном пикселе, а режется кадр, и промах виден только после.
+    /// </summary>
+    private void DrawRazorGuide(DrawingContext context, TimelineMetrics metrics, double top, double height)
+    {
+        if (_model is null || _model.ActiveTool != TimelineTool.Razor || !IsMouseOver)
+        {
+            return;
+        }
+
+        var x = _lastHoverPosition.X;
+        if (x < 0 || x > ActualWidth || _model.HitKindAt(x, _lastHoverPosition.Y) == TimelineHitKind.Ruler)
+        {
+            return;
+        }
+
+        // Пунктир, чтобы линию реза не путали с плейхедом.
+        var pen = new Pen(RazorBrush, 1.5) { DashStyle = new DashStyle([3, 3], 0) };
+        context.DrawLine(pen, new Point(x, top - 4), new Point(x, top + height + 4));
+
+        var label = new FormattedText(
+            FormatTimeLabel(metrics.XToTime(x), TimeSpan.FromSeconds(0.1)),
+            CultureInfo.CurrentUICulture,
+            FlowDirection.LeftToRight,
+            LabelTypeface,
+            10,
+            RazorBrush,
+            VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+        context.DrawText(label, new Point(x + 4, top - 2));
     }
 
     private void DrawRuler(DrawingContext context, TimelineMetrics metrics)
@@ -186,7 +224,9 @@ public sealed class TimelineControl : Control
             return;
         }
 
-        var rect = new Rect(left, top, Math.Max(2d, right - left), height);
+        // Полупиксельный отступ с каждой стороны: встык нарисованные клипы
+        // сливаются в одну ленту, и место разреза на доске не видно.
+        var rect = new Rect(left + ClipGap, top, Math.Max(2d, right - left - (ClipGap * 2)), height);
         var radius = 6d;
 
         var borderPen = new Pen(clip.IsSelected ? Accent : ClipBorder, clip.IsSelected ? 2 : 1);
@@ -277,20 +317,41 @@ public sealed class TimelineControl : Control
 
     // ───────────────────────────── ввод ─────────────────────────────
 
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    protected override void OnMouseDown(MouseButtonEventArgs e)
     {
-        base.OnMouseLeftButtonDown(e);
+        base.OnMouseDown(e);
 
-        if (_model is null)
+        if (_model is null || e.ChangedButton is not (MouseButton.Left or MouseButton.Middle))
         {
             return;
         }
 
         Focus();
         var position = e.GetPosition(this);
-        _model.PointerDown(position.X, position.Y);
+
+        _dragging = true;
+        _model.PointerDown(position.X, position.Y, ResolveMode(e.ChangedButton));
         CaptureMouse();
         InvalidateVisual();
+    }
+
+    /// <summary>
+    /// Средняя кнопка тянет доску каким угодно инструментом — она и заменила
+    /// отдельную «руку». Ctrl добавляет клип к выделению, Shift берёт ряд.
+    /// </summary>
+    private static PointerMode ResolveMode(MouseButton button)
+    {
+        if (button == MouseButton.Middle)
+        {
+            return PointerMode.Pan;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            return PointerMode.Toggle;
+        }
+
+        return Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? PointerMode.Range : PointerMode.Normal;
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -304,7 +365,7 @@ public sealed class TimelineControl : Control
 
         var position = e.GetPosition(this);
 
-        if (e.LeftButton == MouseButtonState.Pressed)
+        if (_dragging)
         {
             _model.PointerMove(position.X, position.Y);
             InvalidateVisual();
@@ -313,6 +374,17 @@ public sealed class TimelineControl : Control
 
         _lastHoverPosition = position;
         UpdateCursor();
+
+        if (_model.ActiveTool == TimelineTool.Razor)
+        {
+            InvalidateVisual();
+        }
+    }
+
+    protected override void OnMouseLeave(MouseEventArgs e)
+    {
+        base.OnMouseLeave(e);
+        InvalidateVisual();
     }
 
     /// <summary>
@@ -332,7 +404,7 @@ public sealed class TimelineControl : Control
 
     private Cursor ResolveCursor(TimelineHitKind kind)
     {
-        if (_model?.ActiveTool == TimelineTool.Hand)
+        if (Mouse.MiddleButton == MouseButtonState.Pressed)
         {
             return Cursors.SizeAll;
         }
@@ -350,10 +422,16 @@ public sealed class TimelineControl : Control
         };
     }
 
-    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    protected override void OnMouseUp(MouseButtonEventArgs e)
     {
-        base.OnMouseLeftButtonUp(e);
+        base.OnMouseUp(e);
 
+        if (e.ChangedButton is not (MouseButton.Left or MouseButton.Middle))
+        {
+            return;
+        }
+
+        _dragging = false;
         _model?.PointerUp();
         ReleaseMouseCapture();
         InvalidateVisual();

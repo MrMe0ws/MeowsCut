@@ -46,6 +46,28 @@ public class EditCommandTests
     }
 
     [Fact]
+    public void Removing_several_clips_is_one_operation()
+    {
+        var sequence = new SplitClipCommand(S(10)).Apply(SingleClip());
+        sequence = new SplitClipCommand(S(15)).Apply(sequence);
+
+        var doomed = new[] { sequence.Video.Clips[0].Id, sequence.Video.Clips[2].Id };
+        var result = new RemoveClipsCommand(doomed).Apply(sequence);
+
+        result.ClipCount.Should().Be(1);
+        result.Duration.Should().Be(S(5), "остался только средний кусок 10–15");
+        result.EnumeratePlaced().Single().Start.Should().Be(TimeSpan.Zero, "зазора не остаётся");
+    }
+
+    [Fact]
+    public void Removing_clips_that_are_not_there_is_rejected()
+    {
+        var act = () => new RemoveClipsCommand([ClipId.New()]).Apply(SingleClip());
+
+        act.Should().Throw<EditOperationException>();
+    }
+
+    [Fact]
     public void Remove_range_cuts_the_middle_out()
     {
         // Классический сценарий: оставить 0–5, вырезать 5–8, оставить 8–20.

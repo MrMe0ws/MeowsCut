@@ -37,7 +37,7 @@
         <KeyBinding Key="O" Command="{Binding Timeline.TrimEndToPlayheadCommand}" />
         <KeyBinding Key="V" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Select}" />
         <KeyBinding Key="C" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Razor}" />
-        <KeyBinding Key="H" Command="{Binding Timeline.SetToolCommand}" CommandParameter="{x:Static timeline:TimelineTool.Hand}" />
+        <KeyBinding Key="A" Modifiers="Control" Command="{Binding Timeline.SelectAllCommand}" />
         <KeyBinding Key="Left" Command="{Binding Preview.StepCommand}">
             <KeyBinding.CommandParameter>
                 <sys:Double>-0.04</sys:Double>

@@ -35,6 +35,9 @@ public partial class ShellWindow : Window
         }
 
         e.Handled = true;
-        await _viewModel.OpenAsync(file, CancellationToken.None);
+
+        // Файл, брошенный на уже открытый проект, встаёт в конец видеоряда:
+        // так собирают ряд из нескольких роликов. Заменить проект — «Открыть».
+        await _viewModel.AddToTimelineAsync(file, CancellationToken.None);
     }
 }

@@ -66,6 +66,12 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         Position = TimeSpan.Zero;
     }
 
+    /// <summary>
+    /// В проект добавили файл. Последовательность придёт отдельным событием;
+    /// здесь важно лишь то, что клип теперь сможет найти свой источник.
+    /// </summary>
+    public void UpdateProject(Project project) => _project = project;
+
     /// <summary>Последовательность изменилась на доске — подстраиваем воспроизведение.</summary>
     public void UpdateSequence(Sequence sequence)
     {

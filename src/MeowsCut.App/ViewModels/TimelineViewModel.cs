@@ -17,10 +17,26 @@ namespace MeowsCut.App.ViewModels;
 /// Все изменения последовательности идут через <see cref="EditHistory"/>; ViewModel
 /// не мутирует модель напрямую, иначе Ctrl+Z ломается незаметно.
 /// </remarks>
+/// <summary>Что означает нажатие кнопки мыши: обычный клик, добавление к выделению или протяжка.</summary>
+public enum PointerMode
+{
+    Normal = 0,
+
+    /// <summary>Ctrl: добавить клип к выделению или убрать из него.</summary>
+    Toggle,
+
+    /// <summary>Shift: выделить всё от опорного клипа до указанного.</summary>
+    Range,
+
+    /// <summary>Средняя кнопка или пробел: тянуть доску.</summary>
+    Pan
+}
+
 public sealed partial class TimelineViewModel : ObservableObject
 {
     private readonly TimelineHitTester _hitTester = new();
     private readonly List<ClipViewModel> _clipPool = [];
+    private readonly HashSet<ClipId> _selection = [];
 
     private EditHistory? _history;
     private Project? _project;
@@ -51,6 +67,15 @@ public sealed partial class TimelineViewModel : ObservableObject
 
     public bool HasProject => _history is not null;
 
+    /// <summary>Сколько клипов выделено — инспектор показывает это, когда их несколько.</summary>
+    public int SelectionCount => _selection.Count;
+
+    public bool HasMultipleSelected => _selection.Count > 1;
+
+    /// <summary>Выделенные клипы в порядке дорожки.</summary>
+    public IReadOnlyList<ClipViewModel> SelectedClips =>
+        [.. Clips.Where(clip => _selection.Contains(clip.Id))];
+
     public bool CanUndo => _history?.CanUndo == true;
 
     public bool CanRedo => _history?.CanRedo == true;
@@ -73,11 +98,35 @@ public sealed partial class TimelineViewModel : ObservableObject
         _history.Changed += OnHistoryChanged;
 
         Playhead = TimeSpan.Zero;
+        _selection.Clear();
         SelectedClip = null;
         _needsInitialFit = true;
 
         Metrics.ZoomToFit(project.Sequence.Duration);
         RebuildClips();
+    }
+
+    /// <summary>
+    /// Добавляет файл в конец видеоряда. Проект передаётся целиком, потому что
+    /// в нём уже лежит новый источник — без него клипу неоткуда взять кадры.
+    /// </summary>
+    public void AppendSource(Project project, MediaSource source)
+    {
+        _project = project;
+
+        if (_history is null)
+        {
+            Attach(project);
+            return;
+        }
+
+        Execute(new AppendClipCommand(Clip.FromSource(source)));
+        _history.EndMergeGroup();
+
+        // Новый клип сразу становится выбранным: почти всегда следующее действие — про него.
+        _selection.Clear();
+        SelectedClip = Clips.LastOrDefault();
+        ApplySelectionToClips();
     }
 
     /// <summary>
@@ -106,6 +155,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         _history = null;
         _project = null;
         Clips.Clear();
+        _selection.Clear();
         SelectedClip = null;
         Playhead = TimeSpan.Zero;
     }
@@ -149,11 +199,17 @@ public sealed partial class TimelineViewModel : ObservableObject
             }
         }
 
-        SelectedClip = selectedId is { } id ? Clips.FirstOrDefault(clip => clip.Id == id) : null;
+        // Из выделения выпадают клипы, которых больше нет: разрезанный клип
+        // исчезает, и держать его идентификатор — значит удалить потом не то.
+        _selection.RemoveWhere(id => Clips.All(clip => clip.Id != id));
+
+        SelectedClip = selectedId is { } previous && _selection.Contains(previous)
+            ? Clips.FirstOrDefault(clip => clip.Id == previous)
+            : Clips.FirstOrDefault(clip => _selection.Contains(clip.Id));
 
         foreach (var clip in Clips)
         {
-            clip.IsSelected = clip.Id == SelectedClip?.Id;
+            clip.IsSelected = _selection.Contains(clip.Id);
         }
 
         if (Playhead > Duration)
@@ -167,9 +223,11 @@ public sealed partial class TimelineViewModel : ObservableObject
 
     partial void OnSelectedClipChanged(ClipViewModel? value)
     {
-        foreach (var clip in Clips)
+        // Основной клип — тот, что показывает инспектор. Само выделение живёт
+        // в _selection: сбрасывать его здесь значило бы терять множественный выбор.
+        if (value is not null)
         {
-            clip.IsSelected = clip.Id == value?.Id;
+            _selection.Add(value.Id);
         }
 
         SplitAtPlayheadCommand.NotifyCanExecuteChanged();
@@ -199,10 +257,33 @@ public sealed partial class TimelineViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void DeleteSelected()
     {
-        if (SelectedClip is { } clip)
+        if (_selection.Count == 0)
         {
-            Execute(new RemoveClipCommand(clip.Id));
+            return;
         }
+
+        // Одно действие пользователя — одна правка в истории, сколько бы клипов
+        // он ни выделил: иначе Ctrl+Z возвращал бы их по одному.
+        Execute(_selection.Count == 1
+            ? new RemoveClipCommand(_selection.First())
+            : new RemoveClipsCommand([.. _selection]));
+
+        _history?.EndMergeGroup();
+    }
+
+    /// <summary>Выделить все клипы (Ctrl+A).</summary>
+    [RelayCommand]
+    private void SelectAll()
+    {
+        _selection.Clear();
+
+        foreach (var clip in Clips)
+        {
+            _selection.Add(clip.Id);
+        }
+
+        SelectedClip = Clips.FirstOrDefault();
+        ApplySelectionToClips();
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
@@ -323,7 +404,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         Pan
     }
 
-    public void PointerDown(double x, double y)
+    public void PointerDown(double x, double y, PointerMode mode = PointerMode.Normal)
     {
         if (_history is null)
         {
@@ -333,19 +414,10 @@ public sealed partial class TimelineViewModel : ObservableObject
         _lastPointerX = x;
         var hit = _hitTester.Test(x, y, Sequence, Metrics);
 
-        if (ActiveTool == TimelineTool.Hand)
+        // Протяжка доски доступна всегда: средняя кнопка или пробел. Отдельный
+        // инструмент ради неё заставлял переключаться туда и обратно.
+        if (mode == PointerMode.Pan)
         {
-            // По линейке рукой удобнее вести плейхед, а не тащить всю доску.
-            if (hit.Kind == TimelineHitKind.Ruler)
-            {
-                _drag = DragState.Playhead;
-                MovePlayheadTo(hit.Time);
-                return;
-            }
-
-            // Щелчок по клипу выделяет его любым инструментом: менять инструмент
-            // только ради того, чтобы указать, с чем работать, — лишний шаг.
-            Select(hit.Clip);
             _drag = DragState.Pan;
             return;
         }
@@ -369,24 +441,25 @@ public sealed partial class TimelineViewModel : ObservableObject
         {
             case TimelineHitKind.Ruler:
             case TimelineHitKind.Empty:
+                ClearSelection();
                 _drag = DragState.Playhead;
                 MovePlayheadTo(hit.Time);
                 break;
 
             case TimelineHitKind.ClipStartEdge:
-                Select(hit.Clip);
+                Select(hit.Clip, mode);
                 _drag = DragState.TrimStart;
                 _dragReferenceTime = hit.Clip!.Value.Start;
                 break;
 
             case TimelineHitKind.ClipEndEdge:
-                Select(hit.Clip);
+                Select(hit.Clip, mode);
                 _drag = DragState.TrimEnd;
                 _dragReferenceTime = hit.Clip!.Value.End;
                 break;
 
             case TimelineHitKind.ClipBody:
-                Select(hit.Clip);
+                Select(hit.Clip, mode);
                 _drag = DragState.MoveClip;
                 break;
         }
@@ -494,11 +567,84 @@ public sealed partial class TimelineViewModel : ObservableObject
             : snapped > Duration ? Duration : snapped;
     }
 
-    private void Select(PlacedClip? placed)
+    private void Select(PlacedClip? placed, PointerMode mode = PointerMode.Normal)
     {
-        SelectedClip = placed is { } value
-            ? Clips.FirstOrDefault(clip => clip.Id == value.Clip.Id)
+        var clip = placed is { } value
+            ? Clips.FirstOrDefault(item => item.Id == value.Clip.Id)
             : null;
+
+        if (clip is null)
+        {
+            ClearSelection();
+            return;
+        }
+
+        switch (mode)
+        {
+            case PointerMode.Toggle when _selection.Contains(clip.Id):
+                _selection.Remove(clip.Id);
+                SelectedClip = Clips.FirstOrDefault(item => _selection.Contains(item.Id));
+                break;
+
+            case PointerMode.Toggle:
+                _selection.Add(clip.Id);
+                SelectedClip = clip;
+                break;
+
+            case PointerMode.Range when SelectedClip is { } anchor:
+                SelectRange(anchor, clip);
+                break;
+
+            default:
+                _selection.Clear();
+                _selection.Add(clip.Id);
+                SelectedClip = clip;
+                break;
+        }
+
+        ApplySelectionToClips();
+    }
+
+    /// <summary>Всё между опорным клипом и указанным — выбор кадра из середины ряда.</summary>
+    private void SelectRange(ClipViewModel anchor, ClipViewModel clip)
+    {
+        var from = Clips.IndexOf(anchor);
+        var to = Clips.IndexOf(clip);
+
+        if (from < 0 || to < 0)
+        {
+            return;
+        }
+
+        _selection.Clear();
+
+        for (var i = Math.Min(from, to); i <= Math.Max(from, to); i++)
+        {
+            _selection.Add(Clips[i].Id);
+        }
+
+        SelectedClip = clip;
+    }
+
+    private void ClearSelection()
+    {
+        _selection.Clear();
+        SelectedClip = null;
+        ApplySelectionToClips();
+    }
+
+    private void ApplySelectionToClips()
+    {
+        foreach (var clip in Clips)
+        {
+            clip.IsSelected = _selection.Contains(clip.Id);
+        }
+
+        OnPropertyChanged(nameof(SelectionCount));
+        OnPropertyChanged(nameof(HasMultipleSelected));
+        DeleteSelectedCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedCommand.NotifyCanExecuteChanged();
+        RequestRedraw();
     }
 
     /// <summary>Выделяет клип, начинающийся в указанной точке, — половину после разреза.</summary>
@@ -508,7 +654,10 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         if (found is not null)
         {
+            _selection.Clear();
+            _selection.Add(found.Id);
             SelectedClip = found;
+            ApplySelectionToClips();
         }
     }
 

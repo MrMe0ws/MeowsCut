@@ -42,6 +42,39 @@ public sealed class RemoveClipCommand(ClipId clipId) : IEditCommand
 }
 
 /// <summary>
+/// Удалить несколько клипов разом; остальные подтягиваются.
+/// </summary>
+/// <remarks>
+/// Отдельная команда, а не серия <see cref="RemoveClipCommand"/>: иначе Ctrl+Z
+/// возвращал бы удалённые клипы по одному, хотя пользователь удалял их одним действием.
+/// </remarks>
+public sealed class RemoveClipsCommand(IReadOnlyCollection<ClipId> clipIds) : IEditCommand
+{
+    private readonly HashSet<ClipId> _ids = [.. clipIds];
+
+    public string Title => "Удалить клипы";
+
+    public IReadOnlyCollection<ClipId> ClipIds { get; } = clipIds;
+
+    public Sequence Apply(Sequence sequence)
+    {
+        if (_ids.Count == 0)
+        {
+            throw new EditOperationException("Не выбрано ни одного клипа.");
+        }
+
+        var kept = sequence.Video.Clips.Where(clip => !_ids.Contains(clip.Id)).ToList();
+
+        if (kept.Count == sequence.Video.Count)
+        {
+            throw new EditOperationException("Выбранных клипов нет на дорожке.");
+        }
+
+        return sequence.WithTrack(new VideoTrack(kept));
+    }
+}
+
+/// <summary>
 /// Вырезать интервал таймлайна: два разреза и удаление того, что между ними.
 /// Именно так работает «удалить кусок из середины» — отдельной сущности для этого нет.
 /// </summary>

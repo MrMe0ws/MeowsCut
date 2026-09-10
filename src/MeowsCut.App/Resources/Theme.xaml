@@ -5,11 +5,13 @@
     <Color x:Key="Color.Background">#FF141416</Color>
     <Color x:Key="Color.Surface">#FF1C1C1F</Color>
     <Color x:Key="Color.SurfaceRaised">#FF232327</Color>
-    <Color x:Key="Color.Border">#FF2E2E33</Color>
+    <Color x:Key="Color.Border">#FF3A3A41</Color>
     <Color x:Key="Color.Text">#FFEDEDF0</Color>
-    <Color x:Key="Color.TextMuted">#FF9A9AA3</Color>
+    <!-- Подписи полей и пояснения. Были #9A9AA3 — на тёмном фоне читались
+         как «тёмный текст»; замерено 5.3:1, теперь около 8:1. -->
+    <Color x:Key="Color.TextMuted">#FFBFBFC8</Color>
     <!-- Недоступный элемент: заметно тише обычного текста, но всё ещё читается -->
-    <Color x:Key="Color.TextDisabled">#FF61616B</Color>
+    <Color x:Key="Color.TextDisabled">#FF85858F</Color>
     <Color x:Key="Color.Accent">#FF5FE06B</Color>
     <Color x:Key="Color.AccentHover">#FF7BEA85</Color>
     <Color x:Key="Color.Warning">#FFE0B341</Color>
