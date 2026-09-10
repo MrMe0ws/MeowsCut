@@ -27,6 +27,14 @@ public sealed class FilterGraphBuilder
     private const int SilenceSampleRate = 48_000;
     private const string SilenceLayout = "stereo";
 
+    private readonly AudioMixBuilder _mixer = new();
+
+    /// <summary>
+    /// Есть ли в сборке ffmpeg фильтр rubberband. Задаётся снаружи — сборки бывают разные,
+    /// а без него сдвиг тональности собирается из asetrate и atempo.
+    /// </summary>
+    public bool SupportsPitchShift { get; set; } = true;
+
     /// <param name="inputIndexBySource">Соответствие источника номеру входа -i.</param>
     public FilterGraph Build(
         Sequence sequence,
@@ -39,7 +47,9 @@ public sealed class FilterGraphBuilder
             throw new InvalidOperationException("Последовательность пуста.");
         }
 
-        var wantsAudio = settings.Audio.Enabled && sequence.HasAudio;
+        // Отдельные дорожки — тоже звук: без них ролик, у которого своя звуковая
+        // дорожка выключена, а подложена другая, вышел бы немым.
+        var wantsAudio = settings.Audio.Enabled && sequence.HasAnyAudio;
 
         var builder = new StringBuilder();
         var videoLabels = new List<string>(clips.Count);
@@ -64,6 +74,7 @@ public sealed class FilterGraphBuilder
 
         if (wantsAudio && audioOut is not null)
         {
+            audioOut = _mixer.Append(builder, sequence, inputIndexBySource, audioOut, SupportsPitchShift);
             audioOut = AppendOutputAudioChain(builder, settings, audioOut);
         }
 

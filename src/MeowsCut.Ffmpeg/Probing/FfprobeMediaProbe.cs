@@ -74,17 +74,19 @@ public sealed class FfprobeMediaProbe(
         var fileSize = new FileInfo(filePath).Length;
         var mediaInfo = MediaInfoMapper.Map(response, filePath, fileSize);
 
-        if (!mediaInfo.HasVideo)
+        // Файл без видео — это музыка или запись голоса для аудиодорожки.
+        // Отказываем только тогда, когда в файле нет вообще ничего звучащего или видимого.
+        if (!mediaInfo.HasVideo && !mediaInfo.HasAudio)
         {
             throw new UnsupportedMediaException(
-                "В файле нет видеопотока — с ним нечего монтировать.",
+                "В файле нет ни видео, ни звука — с ним нечего делать.",
                 filePath);
         }
 
         if (mediaInfo.Duration <= TimeSpan.Zero)
         {
             throw new UnsupportedMediaException(
-                "Не удалось определить длительность видео.",
+                "Не удалось определить длительность файла.",
                 filePath);
         }
 

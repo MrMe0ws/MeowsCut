@@ -53,8 +53,10 @@ public sealed class ProbeIntegrationTests : IDisposable
     }
 
     [FfmpegFact]
-    public async Task Reports_unsupported_media_for_audio_only_file()
+    public async Task Reads_an_audio_only_file()
     {
+        // Раньше такой файл отвергался: «нет видеопотока». Теперь это музыка
+        // или запись голоса для аудиодорожки — законный источник.
         var audioPath = Path.Combine(_workDirectory, "звук.m4a");
         await RunFfmpegAsync(
         [
@@ -63,11 +65,11 @@ public sealed class ProbeIntegrationTests : IDisposable
             "-c:a", "aac", audioPath
         ]);
 
-        var probe = CreateProbe();
+        var info = await CreateProbe().ProbeAsync(audioPath, CancellationToken.None);
 
-        var act = async () => await probe.ProbeAsync(audioPath, CancellationToken.None);
-
-        await act.Should().ThrowAsync<UnsupportedMediaException>();
+        info.HasVideo.Should().BeFalse();
+        info.HasAudio.Should().BeTrue();
+        info.Duration.Should().BeCloseTo(TimeSpan.FromSeconds(2), TimeSpan.FromMilliseconds(200));
     }
 
     [FfmpegFact]

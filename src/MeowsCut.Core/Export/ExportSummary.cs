@@ -16,7 +16,10 @@ public enum PlanWarningKind
     StreamCopyKeyframeSnap,
     VariableFrameRateSource,
     AudioDropped,
-    SizeEstimateUnavailable
+    SizeEstimateUnavailable,
+
+    /// <summary>Наложенный звук существует только внутри графа фильтров.</summary>
+    AudioMixNeedsEncode
 }
 
 /// <summary>Предупреждение о последствиях выбранных настроек — показывается до запуска.</summary>

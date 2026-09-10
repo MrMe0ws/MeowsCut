@@ -15,9 +15,18 @@ public sealed record MediaCapabilities(
         new HashSet<string>(StringComparer.OrdinalIgnoreCase),
         new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
+    /// <summary>
+    /// Доступные фильтры. Нужны не для показа в интерфейсе, а для выбора реализации:
+    /// сдвиг тональности с rubberband звучит чище, но этого фильтра в сборке может не быть.
+    /// </summary>
+    public IReadOnlySet<string> Filters { get; init; } =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
     public bool HasVideoEncoder(string name) => VideoEncoders.Contains(name);
 
     public bool HasAudioEncoder(string name) => AudioEncoders.Contains(name);
 
     public bool HasHardwareAcceleration(string name) => HardwareAccelerators.Contains(name);
+
+    public bool HasFilter(string name) => Filters.Contains(name);
 }

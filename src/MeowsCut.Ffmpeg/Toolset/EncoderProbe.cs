@@ -32,7 +32,43 @@ public sealed class EncoderProbe(IProcessRunner processRunner)
             ? ParseHardwareAccelerators(accelOutput)
             : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        return new MediaCapabilities(video, audio, accelerators);
+        var (filtersResult, filtersOutput) = await processRunner
+            .RunCapturingOutputAsync(new ProcessRequest(ffmpegPath, ["-hide_banner", "-filters"]), cancellationToken)
+            .ConfigureAwait(false);
+
+        var filters = filtersResult.Success
+            ? ParseFilters(filtersOutput)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        return new MediaCapabilities(video, audio, accelerators) { Filters = filters };
+    }
+
+    /// <summary>
+    /// Формат строк ffmpeg -filters: " T.. rubberband  A-&gt;A  Apply time-stretching...".
+    /// Имя идёт третьим полем после флагов.
+    /// </summary>
+    private static HashSet<string> ParseFilters(string output)
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var rawLine in output.Split('\n'))
+        {
+            var line = rawLine.TrimEnd('\r');
+            if (line.Length < 6 || !line.StartsWith(' '))
+            {
+                continue;
+            }
+
+            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                continue;
+            }
+
+            result.Add(parts[1]);
+        }
+
+        return result;
     }
 
     /// <summary>

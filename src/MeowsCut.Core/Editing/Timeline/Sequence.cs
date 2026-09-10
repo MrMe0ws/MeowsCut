@@ -46,13 +46,55 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
     public static Sequence FromSource(MediaSource source) =>
         new(new VideoTrack([Clip.FromSource(source)]), SequenceFormat.FromMedia(source.Info));
 
+    /// <summary>
+    /// Отдельные звуковые дорожки поверх звука видеоряда.
+    /// </summary>
+    /// <remarks>
+    /// Свойство, а не позиционный параметр: последовательность создаётся в десятке мест,
+    /// и звук там ни при чём — пусть по умолчанию его просто нет.
+    /// </remarks>
+    public IReadOnlyList<AudioTrack> AudioTracks { get; init; } = [];
+
+    /// <summary>Длительность видеоряда. Звук за его пределами при экспорте отсекается.</summary>
     public TimeSpan Duration => Video.Duration;
 
     public bool IsEmpty => Video.IsEmpty;
 
     public int ClipCount => Video.Count;
 
+    /// <summary>Есть ли звук у самого видеоряда (без отдельных дорожек).</summary>
     public bool HasAudio => Video.Clips.Any(clip => clip.HasAudio);
+
+    /// <summary>Звучащие отдельные дорожки — только их имеет смысл подавать в микшер.</summary>
+    public IEnumerable<AudioTrack> AudibleTracks => AudioTracks.Where(track => track.IsAudible);
+
+    public bool HasAudioTracks => AudibleTracks.Any();
+
+    /// <summary>Есть ли звук вообще — из видеоряда или с отдельной дорожки.</summary>
+    public bool HasAnyAudio => HasAudio || HasAudioTracks;
+
+    public AudioTrack? FindTrack(AudioTrackId id) =>
+        AudioTracks.FirstOrDefault(track => track.Id == id);
+
+    public AudioTrack RequireTrack(AudioTrackId id) =>
+        FindTrack(id) ?? throw new EditOperationException($"Аудиодорожка {id} не найдена.");
+
+    public Sequence WithTracks(IReadOnlyList<AudioTrack> tracks) => this with { AudioTracks = tracks };
+
+    /// <summary>Заменяет одну дорожку, остальные оставляет как есть.</summary>
+    public Sequence WithTrack(AudioTrack track)
+    {
+        var tracks = AudioTracks.ToArray();
+        var index = Array.FindIndex(tracks, item => item.Id == track.Id);
+
+        if (index < 0)
+        {
+            throw new EditOperationException($"Аудиодорожка {track.Id} не найдена.");
+        }
+
+        tracks[index] = track;
+        return this with { AudioTracks = tracks };
+    }
 
     /// <summary>Клипы вместе с их временем начала — основа отрисовки и планирования экспорта.</summary>
     public IEnumerable<PlacedClip> EnumeratePlaced()
@@ -160,7 +202,59 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
             }
         }
 
-        return WithTrack(new VideoTrack(clips));
+        return WithTrack(new VideoTrack(clips)) with { AudioTracks = SliceAudio(clamped) };
+    }
+
+    /// <summary>
+    /// Звук того же отрезка, сдвинутый к нулю. Без этого проверка фрагмента и лимит
+    /// длительности в пресетах отдавали бы звук, не совпадающий с картинкой.
+    /// </summary>
+    private IReadOnlyList<AudioTrack> SliceAudio(TimeRange range)
+    {
+        var tracks = new List<AudioTrack>();
+
+        foreach (var track in AudioTracks)
+        {
+            var clips = new List<AudioClip>();
+
+            foreach (var clip in track.Clips)
+            {
+                if (clip.TimelineEnd <= range.Start || clip.TimelineStart >= range.End)
+                {
+                    continue;
+                }
+
+                var trimmed = clip;
+
+                if (clip.TimelineStart < range.Start)
+                {
+                    trimmed = trimmed.TrimStart(range.Start - clip.TimelineStart);
+                }
+
+                if (clip.TimelineEnd > range.End)
+                {
+                    trimmed = trimmed.TrimEnd(range.End - clip.TimelineEnd);
+                }
+
+                if (trimmed.Duration < AudioClip.MinDuration)
+                {
+                    continue;
+                }
+
+                clips.Add(trimmed with
+                {
+                    Id = AudioClipId.New(),
+                    TimelineStart = trimmed.TimelineStart - range.Start
+                });
+            }
+
+            if (clips.Count > 0)
+            {
+                tracks.Add(track with { Clips = clips });
+            }
+        }
+
+        return tracks;
     }
 
     /// <summary>

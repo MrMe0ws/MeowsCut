@@ -57,19 +57,23 @@ public sealed record Project(IReadOnlyList<MediaSource> Sources, Sequence Sequen
 
     public Project WithSequence(Sequence sequence) => this with { Sequence = sequence };
 
-    /// <summary>Источники, реально используемые клипами — их и подаём на вход ffmpeg.</summary>
+    /// <summary>
+    /// Источники, реально используемые клипами — их и подаём на вход ffmpeg.
+    /// Звуковые дорожки считаются наравне с видео: подложенная музыка живёт
+    /// в своём файле, и без него на входе она бы просто не зазвучала.
+    /// </summary>
     public IReadOnlyList<MediaSource> UsedSources()
     {
         var used = new List<MediaSource>();
 
-        foreach (var clip in Sequence.Video.Clips)
+        foreach (var id in UsedSourceIds())
         {
-            if (used.Any(source => source.Id == clip.SourceId))
+            if (used.Any(source => source.Id == id))
             {
                 continue;
             }
 
-            var source = Find(clip.SourceId);
+            var source = Find(id);
             if (source is not null)
             {
                 used.Add(source);
@@ -77,5 +81,21 @@ public sealed record Project(IReadOnlyList<MediaSource> Sources, Sequence Sequen
         }
 
         return used;
+    }
+
+    private IEnumerable<SourceId> UsedSourceIds()
+    {
+        foreach (var clip in Sequence.Video.Clips)
+        {
+            yield return clip.SourceId;
+        }
+
+        foreach (var track in Sequence.AudibleTracks)
+        {
+            foreach (var clip in track.Clips)
+            {
+                yield return clip.SourceId;
+            }
+        }
     }
 }

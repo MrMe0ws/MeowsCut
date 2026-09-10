@@ -318,6 +318,16 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             return false;
         }
 
+        // Подмешанный звук существует только внутри графа фильтров: копирование
+        // потоков отдало бы исходную дорожку, будто наложения и не было.
+        if (sequence.HasAudioTracks)
+        {
+            warnings.Add(new PlanWarning(
+                PlanWarningKind.AudioMixNeedsEncode,
+                "Наложенный звук требует перекодирования — быстрая склейка не подходит."));
+            return false;
+        }
+
         var clip = sequence.Video.Clips[0];
 
         if (clip.IsSpeedChanged || !clip.Transform.IsIdentity)
@@ -426,6 +436,8 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         var graphSettings = pass == 1
             ? settings with { Audio = AudioSettings.Disabled }
             : settings;
+
+        _graphBuilder.SupportsPitchShift = capabilities.HasFilter("rubberband");
 
         var graph = _graphBuilder.Build(sequence, indexBySource, graphSettings);
 
