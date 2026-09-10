@@ -176,5 +176,8 @@ public static class Strings
 
     public static string FieldKeyframeInterval => Get(nameof(FieldKeyframeInterval));
 
+
+    public static string CodecReplacedNotice => Get(nameof(CodecReplacedNotice));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

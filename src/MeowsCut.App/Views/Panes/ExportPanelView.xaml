@@ -50,6 +50,13 @@
                                   SelectedItem="{Binding VideoCodec}"
                                   Style="{StaticResource FieldBox}" />
 
+                        <TextBlock Margin="0,0,0,12"
+                                   Foreground="{StaticResource Brush.Warning}"
+                                   Style="{StaticResource Text.Base}"
+                                   Text="{Binding CodecNotice}"
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding CodecNotice, Converter={StaticResource NullToVisibility}}" />
+
                         <!-- Качество -->
                         <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldQuality}" />
                         <ComboBox ItemsSource="{Binding QualityModes}"

@@ -79,6 +79,23 @@ public sealed class FfmpegArgumentBuilder
         return this;
     }
 
+    /// <summary>
+    /// Опция, относящаяся к следующему входу.
+    /// </summary>
+    /// <remarks>
+    /// Секция важна: те же ключи в выходной части означают совсем другое.
+    /// Например, «-f concat» перед -i выбирает демультиплексор, а после —
+    /// формат результата, и ffmpeg пытается прочитать список как видео.
+    /// </remarks>
+    public FfmpegArgumentBuilder InputOption(string key, string value)
+    {
+        _inputs.Add(key);
+        _inputs.Add(value);
+        return this;
+    }
+
+    public FfmpegArgumentBuilder InputFormat(string demuxer) => InputOption("-f", demuxer);
+
     public FfmpegArgumentBuilder FilterComplex(string graph)
     {
         if (string.IsNullOrWhiteSpace(graph))

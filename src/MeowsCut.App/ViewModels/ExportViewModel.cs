@@ -147,6 +147,13 @@ public sealed partial class ExportViewModel : ObservableObject
     [ObservableProperty]
     private string _resultSizeText = string.Empty;
 
+    /// <summary>
+    /// Объяснение автоматической замены кодека. Молча менять выбор пользователя нельзя:
+    /// он потом не поймёт, почему в файле оказался не тот кодек.
+    /// </summary>
+    [ObservableProperty]
+    private string? _codecNotice;
+
     public ExportViewModel(
         IExportPlanner planner,
         IExportEngine engine,
@@ -364,7 +371,18 @@ public sealed partial class ExportViewModel : ObservableObject
 
         if (!VideoCodecs.Contains(VideoCodec))
         {
+            var previous = VideoCodec;
             VideoCodec = VideoCodecs.FirstOrDefault(CompatibilityMatrix.DefaultVideoCodec(Container));
+
+            CodecNotice = string.Format(
+                Strings.CodecReplacedNotice,
+                CodecNames.DisplayName(previous),
+                ContainerLabel(Container),
+                CodecNames.DisplayName(VideoCodec));
+        }
+        else
+        {
+            CodecNotice = null;
         }
 
         AvailableAudioCodecs.Clear();
@@ -381,6 +399,16 @@ public sealed partial class ExportViewModel : ObservableObject
             AudioCodec = AvailableAudioCodecs.FirstOrDefault(CompatibilityMatrix.DefaultAudioCodec(Container));
         }
     }
+
+    private static string ContainerLabel(ContainerFormat container) => container switch
+    {
+        ContainerFormat.Mp4 => "MP4",
+        ContainerFormat.WebM => "WebM",
+        ContainerFormat.Mov => "MOV",
+        ContainerFormat.Mkv => "MKV",
+        ContainerFormat.Avi => "AVI",
+        _ => container.ToString()
+    };
 
     public ExportSettings BuildSettings() => new ExportSettings
     {

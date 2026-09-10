@@ -50,7 +50,11 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         var stages = new List<ExportStage>();
         var cleanup = new List<string>();
 
-        if (streamCopy)
+        if (!streamCopy && CanConcatWithoutReencoding(project, settings))
+        {
+            stages.AddRange(BuildConcatStages(project, settings, partPath, cleanup));
+        }
+        else if (streamCopy)
         {
             stages.Add(new ExportStage(
                 StageKind.Remux,
@@ -140,6 +144,162 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         !streamCopy &&
         (settings.Video.Advanced.TwoPass || settings.Video.RateControl is RateControl.TargetSize) &&
         settings.Video.Codec != VideoCodec.Copy;
+
+    /// <summary>
+    /// Можно ли склеить куски без перекодирования.
+    /// </summary>
+    /// <remarks>
+    /// Демультиплексор concat склеивает потоки как есть, поэтому требует, чтобы у всех
+    /// частей совпадали кодеки и параметры. Гарантировать это можно только для кусков
+    /// одного файла — на разнородных источниках склейка даёт битый результат, поэтому
+    /// такой случай честнее отправить на перекодирование.
+    /// </remarks>
+    private static bool CanConcatWithoutReencoding(Project project, ExportSettings settings)
+    {
+        if (!settings.PreferStreamCopy)
+        {
+            return false;
+        }
+
+        var sequence = project.Sequence;
+        if (sequence.ClipCount < 2)
+        {
+            return false;
+        }
+
+        if (settings.Video.Resolution is not ResolutionSpec.Original ||
+            settings.Video.FrameRate is not FrameRateSpec.Original)
+        {
+            return false;
+        }
+
+        if (Math.Abs(settings.Audio.MasterVolume - 1d) > 0.0001)
+        {
+            return false;
+        }
+
+        var firstSourceId = sequence.Video.Clips[0].SourceId;
+
+        foreach (var clip in sequence.Video.Clips)
+        {
+            if (clip.SourceId != firstSourceId ||
+                clip.IsSpeedChanged ||
+                !clip.Transform.IsIdentity ||
+                Math.Abs(clip.Audio.Volume - 1d) > 0.0001 ||
+                !clip.Audio.Enabled)
+            {
+                return false;
+            }
+        }
+
+        var source = project.Find(firstSourceId);
+        var sourceVideo = CodecNames.VideoFromProbeName(source?.Info.PrimaryVideo?.CodecName);
+
+        if (sourceVideo is null || !CompatibilityMatrix.Supports(settings.Container, sourceVideo.Value))
+        {
+            return false;
+        }
+
+        if (settings.Audio.Enabled && source?.Info.HasAudio == true)
+        {
+            var sourceAudio = CodecNames.AudioFromProbeName(source.Info.PrimaryAudio?.CodecName);
+            if (sourceAudio is null || !CompatibilityMatrix.Supports(settings.Container, sourceAudio.Value))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Стадии быстрой склейки: каждый кусок вырезается копированием потоков,
+    /// затем всё соединяется одним проходом без перекодирования.
+    /// </summary>
+    private static IEnumerable<ExportStage> BuildConcatStages(
+        Project project,
+        ExportSettings settings,
+        string partPath,
+        List<string> cleanup)
+    {
+        var sequence = project.Sequence;
+        var source = project.Require(sequence.Video.Clips[0].SourceId);
+        var extension = Path.GetExtension(source.FilePath);
+
+        var workDirectory = Path.Combine(
+            Path.GetDirectoryName(partPath) ?? Path.GetTempPath(),
+            "meowscut-segments-" + Guid.NewGuid().ToString("N")[..8]);
+
+        var segments = new List<string>();
+        var stages = new List<ExportStage>();
+
+        for (var i = 0; i < sequence.ClipCount; i++)
+        {
+            var clip = sequence.Video.Clips[i];
+            var segment = Path.Combine(workDirectory, $"seg-{i:000}{extension}");
+            segments.Add(segment);
+
+            var builder = FfmpegArgumentBuilder.Create()
+                .HideBanner()
+                .OverwriteOutput()
+                .NoStdin()
+                .LogLevel("error")
+                .ProgressToStdout()
+                .InputSeek(clip.SourceRange.Start)
+                .Input(source.FilePath)
+                .Option("-t", FfmpegArgumentBuilder.FormatTime(clip.SourceRange.Duration))
+                .CopyAllStreams()
+                .NoSubtitles();
+
+            if (!settings.Audio.Enabled)
+            {
+                builder.NoAudio();
+            }
+
+            stages.Add(new ExportStage(
+                StageKind.SegmentExtract,
+                $"Вырезание фрагмента {i + 1} из {sequence.ClipCount}",
+                builder.Output(segment).Build(),
+                // Копирование идёт на порядок быстрее склейки в общем времени,
+                // но каждый кусок всё равно занимает свою долю прогресса.
+                Weight: 0.6 / sequence.ClipCount,
+                clip.TimelineDuration,
+                segment));
+        }
+
+        var listFile = Path.Combine(workDirectory, "concat.txt");
+
+        var concatArguments = FfmpegArgumentBuilder.Create()
+            .HideBanner()
+            .OverwriteOutput()
+            .NoStdin()
+            .LogLevel("error")
+            .ProgressToStdout()
+            .InputFormat("concat")
+            .InputOption("-safe", "0")
+            .Input(listFile)
+            .CopyAllStreams()
+            .Format(settings.Container.MuxerName())
+            .Output(partPath)
+            .Build();
+
+        stages.Add(new ExportStage(
+            StageKind.Concat,
+            "Сборка фрагментов",
+            concatArguments,
+            Weight: 0.4,
+            sequence.Duration,
+            partPath)
+        {
+            Concat = new ConcatSpec(listFile, segments)
+        });
+
+        cleanup.AddRange(segments);
+        cleanup.Add(listFile);
+        cleanup.Add(workDirectory);
+
+        return stages;
+    }
 
     /// <summary>
     /// Копирование потоков возможно, только если ни одна правка не требует пересчёта кадров.
@@ -427,7 +587,8 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
                 "Частота кадров выше исходной: новые кадры будут дублироваться."));
         }
 
-        if (streamCopy && !sequence.Video.Clips[0].IsFullSource)
+        if ((streamCopy && !sequence.Video.Clips[0].IsFullSource) ||
+            (!streamCopy && CanConcatWithoutReencoding(project, settings)))
         {
             warnings.Add(new PlanWarning(
                 PlanWarningKind.StreamCopyKeyframeSnap,

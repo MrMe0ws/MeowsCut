@@ -311,4 +311,7 @@
   <data name="FieldKeyframeInterval" xml:space="preserve">
     <value>Интервал ключевых кадров</value>
   </data>
+  <data name="CodecReplacedNotice" xml:space="preserve">
+    <value>{0} нельзя положить в {1} — выбран {2}</value>
+  </data>
 </root>

@@ -86,6 +86,18 @@ public sealed class FfmpegExportEngine(
         CancellationToken cancellationToken)
     {
         var stage = plan.Stages[stageIndex];
+
+        if (stage.OutputFile is { } stageOutput)
+        {
+            EnsureOutputDirectory(stageOutput);
+        }
+
+        // Список для склейки пишется прямо перед запуском: планировщик остаётся чистым.
+        if (stage.Concat is { } concat)
+        {
+            Temp.ConcatListWriter.Write(concat.ListFile, concat.Files);
+        }
+
         var parser = new FfmpegProgressParser();
         var eta = new EtaEstimator(plan.ExpectedOutputDuration);
         var lastReport = TimeSpan.Zero;
@@ -216,18 +228,26 @@ public sealed class FfmpegExportEngine(
     {
         foreach (var file in files)
         {
-            if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            if (string.IsNullOrEmpty(file))
             {
                 continue;
             }
 
             try
             {
-                File.Delete(file);
+                if (File.Exists(file))
+                {
+                    File.Delete(file);
+                }
+                else if (Directory.Exists(file))
+                {
+                    // Папка кусков быстрой склейки: удаляется целиком и только пустой.
+                    Directory.Delete(file, recursive: true);
+                }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                logger.LogDebug(ex, "Не удалось удалить незавершённый файл {File}", file);
+                logger.LogDebug(ex, "Не удалось удалить временный файл {File}", file);
             }
         }
     }

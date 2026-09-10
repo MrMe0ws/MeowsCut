@@ -55,14 +55,15 @@ public class FfmpegExportPlannerTests
     }
 
     [Fact]
-    public void Several_clips_always_go_through_the_filter_graph()
+    public void Several_clips_go_through_the_filter_graph_by_default()
     {
         var project = Project.FromMedia(Fake.Info());
         var cut = new RemoveRangeCommand(
                 new TimeRangeSelection(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(8)))
             .Apply(project.Sequence);
 
-        var plan = Plan(project.WithSequence(cut), Settings() with { PreferStreamCopy = true });
+        // Точность важнее скорости: без явного «Быстро» куски пересобираются одним проходом.
+        var plan = Plan(project.WithSequence(cut), Settings());
 
         plan.IsStreamCopy.Should().BeFalse();
         plan.Stages.Single().Arguments.Should().Contain("-filter_complex");

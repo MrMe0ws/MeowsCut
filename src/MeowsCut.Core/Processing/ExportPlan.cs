@@ -15,8 +15,24 @@ public enum StageKind
     PassOne,
 
     /// <summary>Второй проход.</summary>
-    PassTwo
+    PassTwo,
+
+    /// <summary>Вырезание куска копированием потоков во временный файл.</summary>
+    SegmentExtract,
+
+    /// <summary>Склейка вырезанных кусков без перекодирования.</summary>
+    Concat
 }
+
+/// <summary>
+/// Список файлов для склейки через демультиплексор concat.
+/// </summary>
+/// <remarks>
+/// Сам файл списка пишет движок перед запуском стадии, а не планировщик:
+/// сводка пересчитывается на каждое движение ползунка, и планирование обязано
+/// оставаться чистым, без следов на диске.
+/// </remarks>
+public sealed record ConcatSpec(string ListFile, IReadOnlyList<string> Files);
 
 /// <summary>
 /// Одна стадия работы: готовые аргументы ffmpeg плюс всё, что нужно для прогресса.
@@ -27,7 +43,11 @@ public sealed record ExportStage(
     IReadOnlyList<string> Arguments,
     double Weight,
     TimeSpan ExpectedDuration,
-    string? OutputFile);
+    string? OutputFile)
+{
+    /// <summary>Заполнено только у стадии склейки: что и куда перечислить перед запуском.</summary>
+    public ConcatSpec? Concat { get; init; }
+}
 
 /// <summary>
 /// План экспорта — промежуточное представление между намерением пользователя
