@@ -88,6 +88,37 @@
                           Content="{loc:Tr ClipAudioEnabled}"
                           IsChecked="{Binding AudioEnabled}" />
 
+                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldZoom}" />
+                <Slider Margin="0,4,0,0"
+                        IsSnapToTickEnabled="True"
+                        Maximum="300"
+                        Minimum="50"
+                        TickFrequency="5"
+                        Value="{Binding ZoomPercent}" />
+                <TextBlock HorizontalAlignment="Right"
+                           Style="{StaticResource Text.Muted}"
+                           Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
+
+                <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldOffsetX}" />
+                <Slider Margin="0,4,0,0"
+                        Maximum="50"
+                        Minimum="-50"
+                        TickFrequency="5"
+                        Value="{Binding OffsetXPercent}" />
+
+                <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldOffsetY}" />
+                <Slider Margin="0,4,0,0"
+                        Maximum="50"
+                        Minimum="-50"
+                        TickFrequency="5"
+                        Value="{Binding OffsetYPercent}" />
+
+                <Button Margin="0,6,0,10"
+                        HorizontalAlignment="Left"
+                        Command="{Binding ResetTransformCommand}"
+                        Content="{loc:Tr ResetTransform}"
+                        Style="{StaticResource Button.Ghost}" />
+
                 <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldVolume}" />
                 <Slider Margin="0,4,0,0"
                         IsSnapToTickEnabled="True"

@@ -179,5 +179,26 @@ public static class Strings
 
     public static string CodecReplacedNotice => Get(nameof(CodecReplacedNotice));
 
+
+    public static string SectionPresets => Get(nameof(SectionPresets));
+
+    public static string ApplyPreset => Get(nameof(ApplyPreset));
+
+    public static string DurationFitLabel => Get(nameof(DurationFitLabel));
+
+    public static string PresetChanges => Get(nameof(PresetChanges));
+
+    public static string PresetViolations => Get(nameof(PresetViolations));
+
+    public static string FixViolations => Get(nameof(FixViolations));
+
+    public static string FieldZoom => Get(nameof(FieldZoom));
+
+    public static string FieldOffsetX => Get(nameof(FieldOffsetX));
+
+    public static string FieldOffsetY => Get(nameof(FieldOffsetY));
+
+    public static string ResetTransform => Get(nameof(ResetTransform));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

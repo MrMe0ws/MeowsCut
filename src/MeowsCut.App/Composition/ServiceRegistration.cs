@@ -6,6 +6,7 @@ using MeowsCut.App.Views;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Jobs;
+using MeowsCut.Core.Presets;
 using MeowsCut.Core.Processing;
 using MeowsCut.Ffmpeg.Execution;
 using MeowsCut.Ffmpeg.Planning;
@@ -29,6 +30,9 @@ public static class ServiceRegistration
         services.AddSingleton<AppPaths>();
         services.AddSingleton<IAppSettingsStore, JsonAppSettingsStore>();
         services.AddSingleton<IJobQueue, JobQueue>();
+        services.AddSingleton<IPresetProvider, JsonPresetProvider>();
+        services.AddSingleton<IPresetValidator, PresetValidator>();
+        services.AddSingleton<IPresetApplier, PresetApplier>();
 
         return services;
     }
@@ -62,6 +66,7 @@ public static class ServiceRegistration
         services.AddSingleton<PreviewViewModel>();
         services.AddSingleton<InspectorViewModel>();
         services.AddSingleton<ExportViewModel>();
+        services.AddSingleton<PresetsViewModel>();
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<ShellWindow>();
 

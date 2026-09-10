@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "group": {
+    "id": "general",
+    "title": "Общие",
+    "description": "Частые случаи: выложить, отправить, сохранить",
+    "order": 20
+  },
+  "presets": [
+    {
+      "id": "general.web-1080",
+      "title": "Для интернета · 1080p",
+      "description": "H.264, постоянное качество — универсальный вариант",
+      "order": 10,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "crf": 22,
+        "width": 1920,
+        "height": 1080,
+        "fit": "Contain",
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 192
+      },
+      "constraints": {},
+      "notes": []
+    },
+    {
+      "id": "general.small-file",
+      "title": "Маленький файл",
+      "description": "720p, H.265 — вдвое меньше при том же качестве",
+      "order": 20,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H265",
+        "crf": 28,
+        "width": 1280,
+        "height": 720,
+        "fit": "Contain",
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 128
+      },
+      "constraints": {},
+      "notes": [
+        "H.265 открывается не везде — для отправки незнакомым устройствам берите H.264"
+      ]
+    },
+    {
+      "id": "general.max-quality",
+      "title": "Максимальное качество",
+      "description": "Разрешение как в исходнике, медленное кодирование",
+      "order": 30,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "crf": 16,
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 256
+      },
+      "constraints": {},
+      "notes": [
+        "Файл получится большим — это плата за отсутствие видимых потерь"
+      ]
+    }
+  ]
+}

@@ -16,6 +16,12 @@
                    Text="{Binding Converter={StaticResource EnumLabel}}" />
     </DataTemplate>
 
+    <!-- Подпись элемента по свойству Title. DisplayMemberPath в своём шаблоне
+         ComboBox не доходит до выбранного элемента, и в поле попадает ToString(). -->
+    <DataTemplate x:Key="TitleTemplate">
+        <TextBlock Foreground="{StaticResource Brush.Text}" Text="{Binding Title}" />
+    </DataTemplate>
+
     <!-- Строка «поле — значение» в карточках информации о файле -->
     <DataTemplate x:Key="MediaFieldTemplate" DataType="{x:Type vm:MediaField}">
         <Grid Margin="0,0,0,7">

@@ -197,12 +197,20 @@
 
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" MaxHeight="210" />
+                    <RowDefinition Height="Auto" MaxHeight="270" />
+                    <RowDefinition Height="*" MinHeight="240" />
                 </Grid.RowDefinitions>
 
-                <panes:InspectorView Grid.Row="0" DataContext="{Binding Inspector}" />
-                <panes:ExportPanelView Grid.Row="1" DataContext="{Binding Export}" />
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <panes:InspectorView DataContext="{Binding Inspector}" />
+                </ScrollViewer>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <panes:PresetsView DataContext="{Binding Presets}" />
+                </ScrollViewer>
+
+                <panes:ExportPanelView Grid.Row="2" DataContext="{Binding Export}" />
             </Grid>
         </Grid>
 

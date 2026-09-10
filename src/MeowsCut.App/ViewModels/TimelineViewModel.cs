@@ -262,9 +262,22 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Заменяет последовательность целиком — например, когда пресет укоротил ролик
+    /// под лимит площадки. Идёт через историю, чтобы отменялось как обычная правка.
+    /// </summary>
+    public void ApplySequence(Sequence sequence, string title)
+    {
+        Execute(new ReplaceSequenceCommand(sequence, title));
+        _history?.EndMergeGroup();
+    }
+
     public void SetClipSpeed(ClipId clipId, double speed) => Execute(new SetClipSpeedCommand(clipId, speed));
 
     public void SetClipAudio(ClipId clipId, ClipAudio audio) => Execute(new SetClipAudioCommand(clipId, audio));
+
+    public void SetClipTransform(ClipId clipId, ClipTransform transform) =>
+        Execute(new SetClipTransformCommand(clipId, transform));
 
     public void EndInteraction() => _history?.EndMergeGroup();
 

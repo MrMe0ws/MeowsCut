@@ -410,6 +410,98 @@ public sealed partial class ExportViewModel : ObservableObject
         _ => container.ToString()
     };
 
+    /// <summary>
+    /// Загружает готовые настройки в поля панели.
+    /// </summary>
+    /// <remarks>
+    /// Нужна пресетам: они возвращают готовый набор параметров, а панель обязана
+    /// показать его целиком — иначе пользователь увидит одно, а экспортируется другое.
+    /// </remarks>
+    public void ApplySettings(ExportSettings settings)
+    {
+        Container = settings.Container;
+        VideoCodec = settings.Video.Codec;
+        PreferStreamCopy = settings.PreferStreamCopy;
+        EncodingSpeed = EncodingSpeeds.FirstOrDefault(option => option.Speed == settings.Video.Speed)
+                        ?? EncodingSpeed;
+
+        switch (settings.Video.RateControl)
+        {
+            case RateControl.ConstantQuality quality:
+                QualityMode = QualityModes.First(mode => mode.Mode == ViewModels.QualityMode.ConstantQuality);
+                Crf = quality.Crf;
+                break;
+
+            case RateControl.ConstantBitrate bitrate:
+                QualityMode = QualityModes.First(mode => mode.Mode == ViewModels.QualityMode.Bitrate);
+                BitrateKbps = bitrate.Kbps;
+                break;
+
+            case RateControl.TargetSize target:
+                QualityMode = QualityModes.First(mode => mode.Mode == ViewModels.QualityMode.TargetSize);
+                TargetSizeMegabytes = Math.Round(target.Bytes / 1024d / 1024d, 3);
+                break;
+
+            default:
+                QualityMode = QualityModes.First(mode => mode.Mode == ViewModels.QualityMode.Auto);
+                break;
+        }
+
+        switch (settings.Video.Resolution)
+        {
+            case ResolutionSpec.Custom custom:
+                Resolution = ResolutionOption.Custom;
+                CustomWidth = custom.Width;
+                CustomHeight = custom.Height;
+                FitMode = FitModes.FirstOrDefault(option => option.Mode == custom.Fit) ?? FitMode;
+                break;
+
+            case ResolutionSpec.Preset preset:
+                Resolution = Resolutions.FirstOrDefault(option => option.TargetHeight == preset.TargetHeight)
+                             ?? ResolutionOption.Original;
+                break;
+
+            default:
+                Resolution = ResolutionOption.Original;
+                break;
+        }
+
+        if (settings.Video.FrameRate is FrameRateSpec.Fixed fixedFps)
+        {
+            var known = FrameRates.FirstOrDefault(option => option.Fps is { } value && Math.Abs(value - fixedFps.Fps) < 0.01);
+
+            if (known is not null)
+            {
+                FrameRate = known;
+            }
+            else
+            {
+                FrameRate = FrameRateOption.Custom;
+                CustomFps = fixedFps.Fps;
+            }
+        }
+        else
+        {
+            FrameRate = FrameRateOption.Original;
+        }
+
+        KeepAudio = settings.Audio.Enabled;
+
+        if (settings.Audio.Enabled)
+        {
+            AudioCodec = settings.Audio.Codec;
+            AudioBitrateKbps = settings.Audio.BitrateKbps;
+            AudioSampleRateHz = settings.Audio.SampleRateHz ?? AudioSampleRateHz;
+            AudioChannels = settings.Audio.Channels ?? AudioChannels;
+            MasterVolumePercent = Math.Round(settings.Audio.MasterVolume * 100);
+        }
+
+        PixelFormat = settings.Video.Advanced.PixelFormat ?? string.Empty;
+        TwoPass = settings.Video.Advanced.TwoPass;
+
+        RefreshSummary();
+    }
+
     public ExportSettings BuildSettings() => new ExportSettings
     {
         Container = Container,

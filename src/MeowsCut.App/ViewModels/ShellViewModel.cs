@@ -55,6 +55,7 @@ public sealed partial class ShellViewModel : ObservableObject
         TimelineViewModel timeline,
         PreviewViewModel preview,
         InspectorViewModel inspector,
+        PresetsViewModel presets,
         TimelineThumbnailLoader thumbnailLoader,
         ILogger<ShellViewModel> logger)
     {
@@ -69,6 +70,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Timeline = timeline;
         Preview = preview;
         Inspector = inspector;
+        Presets = presets;
         _logger = logger;
 
         // Правка на доске меняет проект: сводку экспорта нужно пересчитать сразу.
@@ -81,6 +83,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
             Project = Project.WithSequence(sequence);
             Export.UpdateProject(Project);
+            Presets.UpdateProject(Project);
         };
     }
 
@@ -95,6 +98,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
     /// <summary>Свойства выделенного клипа.</summary>
     public InspectorViewModel Inspector { get; }
+
+    /// <summary>Пресеты площадок, включая Telegram.</summary>
+    public PresetsViewModel Presets { get; }
 
     /// <summary>Проект целиком: источники и таймлайн. Доска монтажа появится на следующем этапе.</summary>
     public Project? Project { get; private set; }
@@ -162,6 +168,7 @@ public sealed partial class ShellViewModel : ObservableObject
             Preview.Attach(Project);
             _thumbnailLoader.Attach(Timeline);
             Export.Attach(Project);
+            Presets.Attach(Project);
 
             var settings = _settingsStore.Current.WithRecentFile(path);
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(true);
@@ -192,6 +199,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Timeline.Detach();
         Preview.Detach();
         Export.Detach();
+        Presets.Detach();
     }
 
     [RelayCommand]

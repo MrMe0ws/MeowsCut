@@ -314,4 +314,34 @@
   <data name="CodecReplacedNotice" xml:space="preserve">
     <value>{0} нельзя положить в {1} — выбран {2}</value>
   </data>
+  <data name="SectionPresets" xml:space="preserve">
+    <value>Пресеты</value>
+  </data>
+  <data name="ApplyPreset" xml:space="preserve">
+    <value>Применить пресет</value>
+  </data>
+  <data name="DurationFitLabel" xml:space="preserve">
+    <value>Если длиннее лимита</value>
+  </data>
+  <data name="PresetChanges" xml:space="preserve">
+    <value>Что изменилось</value>
+  </data>
+  <data name="PresetViolations" xml:space="preserve">
+    <value>Требования площадки</value>
+  </data>
+  <data name="FixViolations" xml:space="preserve">
+    <value>Исправить</value>
+  </data>
+  <data name="FieldZoom" xml:space="preserve">
+    <value>Масштаб кадра</value>
+  </data>
+  <data name="FieldOffsetX" xml:space="preserve">
+    <value>Сдвиг по горизонтали</value>
+  </data>
+  <data name="FieldOffsetY" xml:space="preserve">
+    <value>Сдвиг по вертикали</value>
+  </data>
+  <data name="ResetTransform" xml:space="preserve">
+    <value>Сбросить кадрирование</value>
+  </data>
 </root>

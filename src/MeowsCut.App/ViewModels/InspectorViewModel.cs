@@ -58,6 +58,15 @@ public sealed partial class InspectorViewModel : ObservableObject
     [ObservableProperty]
     private double _volumePercent = 100d;
 
+    [ObservableProperty]
+    private double _zoomPercent = 100d;
+
+    [ObservableProperty]
+    private double _offsetXPercent;
+
+    [ObservableProperty]
+    private double _offsetYPercent;
+
     public bool HasSelection => Clip is not null;
 
     private void Refresh()
@@ -76,6 +85,9 @@ public sealed partial class InspectorViewModel : ObservableObject
             Speed = clip.Clip.Speed;
             AudioEnabled = clip.Clip.Audio.Enabled;
             VolumePercent = Math.Round(clip.Clip.Audio.Volume * 100);
+            ZoomPercent = Math.Round(clip.Clip.Transform.Zoom * 100);
+            OffsetXPercent = Math.Round(clip.Clip.Transform.OffsetX * 100);
+            OffsetYPercent = Math.Round(clip.Clip.Transform.OffsetY * 100);
         }
         else
         {
@@ -83,6 +95,9 @@ public sealed partial class InspectorViewModel : ObservableObject
             Speed = 1d;
             AudioEnabled = true;
             VolumePercent = 100d;
+            ZoomPercent = 100d;
+            OffsetXPercent = 0d;
+            OffsetYPercent = 0d;
         }
 
         _updating = false;
@@ -124,6 +139,45 @@ public sealed partial class InspectorViewModel : ObservableObject
         }
 
         _timeline.SetClipAudio(clip.Id, clip.Clip.Audio.WithVolume(volume));
+    }
+
+    partial void OnZoomPercentChanged(double value) => ApplyTransform();
+
+    partial void OnOffsetXPercentChanged(double value) => ApplyTransform();
+
+    partial void OnOffsetYPercentChanged(double value) => ApplyTransform();
+
+    /// <summary>
+    /// Масштаб и сдвиг кадра внутри клипа: то, чем выбирают, какая часть картинки
+    /// попадёт в квадрат стикера.
+    /// </summary>
+    private void ApplyTransform()
+    {
+        if (_updating || Clip is not { } clip)
+        {
+            return;
+        }
+
+        var transform = new ClipTransform(
+            Math.Clamp(ZoomPercent / 100d, ClipTransform.MinZoom, ClipTransform.MaxZoom),
+            OffsetXPercent / 100d,
+            OffsetYPercent / 100d);
+
+        if (transform == clip.Clip.Transform)
+        {
+            return;
+        }
+
+        _timeline.SetClipTransform(clip.Id, transform);
+    }
+
+    [RelayCommand]
+    private void ResetTransform()
+    {
+        ZoomPercent = 100d;
+        OffsetXPercent = 0d;
+        OffsetYPercent = 0d;
+        _timeline.EndInteraction();
     }
 
     /// <summary>Ползунки отпущены — следующая правка станет отдельной записью в истории.</summary>

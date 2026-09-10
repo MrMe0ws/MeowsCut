@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "group": {
+    "id": "telegram",
+    "title": "Telegram",
+    "description": "Требования Telegram меняются — правьте значения прямо здесь, приложение пересобирать не нужно",
+    "order": 10
+  },
+  "presets": [
+    {
+      "id": "telegram.video-sticker",
+      "title": "Видеостикер",
+      "description": "Квадрат 512×512, до 3 секунд, без звука, WebM с VP9",
+      "order": 10,
+      "template": {
+        "container": "WebM",
+        "videoCodec": "Vp9",
+        "targetSizeBytes": 256000,
+        "width": 512,
+        "height": 512,
+        "fit": "Cover",
+        "fps": 30,
+        "pixelFormat": "yuva420p",
+        "audioEnabled": false
+      },
+      "constraints": {
+        "maxDurationSeconds": 3,
+        "maxFileSizeBytes": 256000,
+        "maxWidth": 512,
+        "maxHeight": 512,
+        "requireSquare": true,
+        "maxFps": 30,
+        "forbidAudio": true,
+        "allowedContainers": ["WebM"],
+        "allowedVideoCodecs": ["Vp9"]
+      },
+      "notes": [
+        "Звук в стикерах не воспроизводится и будет удалён",
+        "Если ролик длиннее трёх секунд, выберите: обрезать или ускорить"
+      ]
+    },
+    {
+      "id": "telegram.video-emoji",
+      "title": "Видеоэмодзи",
+      "description": "Квадрат 100×100, до 3 секунд, без звука",
+      "order": 20,
+      "template": {
+        "container": "WebM",
+        "videoCodec": "Vp9",
+        "targetSizeBytes": 64000,
+        "width": 100,
+        "height": 100,
+        "fit": "Cover",
+        "fps": 30,
+        "pixelFormat": "yuva420p",
+        "audioEnabled": false
+      },
+      "constraints": {
+        "maxDurationSeconds": 3,
+        "maxFileSizeBytes": 64000,
+        "maxWidth": 100,
+        "maxHeight": 100,
+        "requireSquare": true,
+        "maxFps": 30,
+        "forbidAudio": true,
+        "allowedContainers": ["WebM"],
+        "allowedVideoCodecs": ["Vp9"]
+      },
+      "notes": [
+        "На ста пикселях мелкие детали пропадут — берите крупный план"
+      ]
+    },
+    {
+      "id": "telegram.video-message",
+      "title": "Видеосообщение (кружок)",
+      "description": "Квадрат 640×640, до минуты, со звуком",
+      "order": 30,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "bitrateKbps": 1200,
+        "width": 640,
+        "height": 640,
+        "fit": "Cover",
+        "fps": 30,
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 96,
+        "audioSampleRateHz": 44100,
+        "audioChannels": 1
+      },
+      "constraints": {
+        "maxDurationSeconds": 60,
+        "requireSquare": true,
+        "maxWidth": 640,
+        "maxHeight": 640,
+        "maxFps": 30,
+        "allowedContainers": ["Mp4"],
+        "allowedVideoCodecs": ["H264"]
+      },
+      "notes": [
+        "Кружок обрезает кадр по краям — держите главное в центре"
+      ]
+    },
+    {
+      "id": "telegram.compress",
+      "title": "Сжать для отправки",
+      "description": "720p, H.264 — файл заметно меньше, открывается везде",
+      "order": 40,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "crf": 26,
+        "fps": 30,
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 128,
+        "width": 1280,
+        "height": 720,
+        "fit": "Contain"
+      },
+      "constraints": {
+        "maxFps": 30,
+        "allowedContainers": ["Mp4"],
+        "allowedVideoCodecs": ["H264"]
+      },
+      "notes": []
+    }
+  ]
+}
