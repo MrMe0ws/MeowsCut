@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Animation;
+using System.Windows.Media;
 
 namespace MeowsCut.App.Controls;
 
@@ -11,18 +11,25 @@ namespace MeowsCut.App.Controls;
 /// <remarks>
 /// Системная прокрутка прыгает на три «строки» разом, и в длинной панели настроек
 /// это выглядит рывком: глазу не за что зацепиться, и место, где ты был, теряется.
-/// Здесь тот же путь проезжается за 220 мс с замедлением к концу.
 ///
-/// Прокручиваемая величина копится в <see cref="TargetOffsetProperty"/>, а не читается
-/// у <see cref="ScrollViewer"/>: во время анимации его собственное смещение отстаёт,
-/// и второй поворот колеса подряд отматывал бы назад уже пройденное.
+/// Движение считается в цикле отрисовки, а не <see cref="System.Windows.Media.Animation.DoubleAnimation"/>.
+/// Анимация задавала свой темп и на тяжёлой панели не поспевала за отрисовкой —
+/// получалась дёрганая прокрутка. Здесь на каждый нарисованный кадр смещение
+/// подтягивается к цели на долю оставшегося пути: сколько кадров успевает окно,
+/// столько шагов и делается, и рывков не бывает по построению.
 /// </remarks>
 public static class SmoothScroll
 {
     /// <summary>Сколько пикселей проезжает один щелчок колеса.</summary>
     private const double StepPixels = 110d;
 
-    private static readonly Duration Glide = new(TimeSpan.FromMilliseconds(220));
+    /// <summary>Доля оставшегося пути за кадр. Больше — резче, меньше — вязче.</summary>
+    private const double Approach = 0.22d;
+
+    /// <summary>Ближе этого к цели считаем, что приехали: доли пикселя не видны.</summary>
+    private const double Epsilon = 0.5d;
+
+    private static readonly Dictionary<ScrollViewer, double> Targets = [];
 
     public static readonly DependencyProperty IsEnabledProperty =
         DependencyProperty.RegisterAttached(
@@ -30,14 +37,6 @@ public static class SmoothScroll
             typeof(bool),
             typeof(SmoothScroll),
             new PropertyMetadata(false, OnIsEnabledChanged));
-
-    /// <summary>Куда едем. Анимируется именно оно, а сеттер двигает сам ScrollViewer.</summary>
-    private static readonly DependencyProperty TargetOffsetProperty =
-        DependencyProperty.RegisterAttached(
-            "TargetOffset",
-            typeof(double),
-            typeof(SmoothScroll),
-            new PropertyMetadata(0d, OnTargetOffsetChanged));
 
     public static void SetIsEnabled(DependencyObject element, bool value) =>
         element.SetValue(IsEnabledProperty, value);
@@ -53,12 +52,20 @@ public static class SmoothScroll
         }
 
         viewer.PreviewMouseWheel -= OnWheel;
+        viewer.Unloaded -= OnUnloaded;
 
         if (e.NewValue is true)
         {
             viewer.PreviewMouseWheel += OnWheel;
+            viewer.Unloaded += OnUnloaded;
+        }
+        else
+        {
+            Stop(viewer);
         }
     }
+
+    private static void OnUnloaded(object sender, RoutedEventArgs e) => Stop((ScrollViewer)sender);
 
     private static void OnWheel(object sender, MouseWheelEventArgs e)
     {
@@ -67,41 +74,55 @@ public static class SmoothScroll
             return;
         }
 
-        var current = (double)viewer.GetValue(TargetOffsetProperty);
+        // Пока едем — считаем от цели, а не от текущего положения: иначе второй
+        // щелчок колеса подряд отматывал бы назад уже пройденное.
+        var from = Targets.TryGetValue(viewer, out var target) ? target : viewer.VerticalOffset;
 
-        // Первый поворот колеса начинается оттуда, где ScrollViewer стоит сейчас:
-        // его могли прокрутить перетаскиванием ползунка или клавишами.
-        if (viewer.Tag as string != Marker)
+        var next = Math.Clamp(from - (Math.Sign(e.Delta) * StepPixels), 0d, viewer.ScrollableHeight);
+
+        var wasMoving = Targets.ContainsKey(viewer);
+        Targets[viewer] = next;
+
+        if (!wasMoving)
         {
-            viewer.Tag = Marker;
-            current = viewer.VerticalOffset;
+            CompositionTarget.Rendering += OnRendering;
         }
-
-        var target = Math.Clamp(
-            current - (Math.Sign(e.Delta) * StepPixels),
-            0d,
-            viewer.ScrollableHeight);
-
-        viewer.BeginAnimation(TargetOffsetProperty, null);
-        viewer.SetValue(TargetOffsetProperty, current);
-
-        viewer.BeginAnimation(TargetOffsetProperty, new DoubleAnimation(target, Glide)
-        {
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            FillBehavior = FillBehavior.HoldEnd
-        });
 
         e.Handled = true;
     }
 
-    private static void OnTargetOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnRendering(object? sender, EventArgs e)
     {
-        if (d is ScrollViewer viewer)
+        if (Targets.Count == 0)
         {
-            viewer.ScrollToVerticalOffset((double)e.NewValue);
+            CompositionTarget.Rendering -= OnRendering;
+            return;
+        }
+
+        foreach (var viewer in Targets.Keys.ToArray())
+        {
+            var target = Targets[viewer];
+            var current = viewer.VerticalOffset;
+            var remaining = target - current;
+
+            if (Math.Abs(remaining) <= Epsilon)
+            {
+                viewer.ScrollToVerticalOffset(target);
+                Stop(viewer);
+                continue;
+            }
+
+            viewer.ScrollToVerticalOffset(current + (remaining * Approach));
         }
     }
 
-    /// <summary>Признак того, что накопленное смещение уже наше и читать чужое не нужно.</summary>
-    private const string Marker = "smooth-scroll";
+    private static void Stop(ScrollViewer viewer)
+    {
+        Targets.Remove(viewer);
+
+        if (Targets.Count == 0)
+        {
+            CompositionTarget.Rendering -= OnRendering;
+        }
+    }
 }

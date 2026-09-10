@@ -55,8 +55,58 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
     /// </remarks>
     public IReadOnlyList<AudioTrack> AudioTracks { get; init; } = [];
 
-    /// <summary>Длительность видеоряда. Звук за его пределами при экспорте отсекается.</summary>
-    public TimeSpan Duration => Video.Duration;
+    /// <summary>
+    /// Длительность ролика.
+    /// </summary>
+    /// <remarks>
+    /// Звук, выходящий за видеоряд, ролик продлевает: досматривать под музыку чёрный
+    /// экран — обычный приём, и обрывать её ровно на последнем кадре пользователь
+    /// не просил. Хвост рисуется чёрным кадром, как и зазор между клипами.
+    /// </remarks>
+    public TimeSpan Duration
+    {
+        get
+        {
+            var video = Video.Duration;
+            var audio = AudioDuration;
+
+            return audio > video ? audio : video;
+        }
+    }
+
+    /// <summary>Докуда доходит самый дальний кусок звука на дорожках.</summary>
+    public TimeSpan AudioDuration
+    {
+        get
+        {
+            var last = TimeSpan.Zero;
+
+            foreach (var track in AudioTracks)
+            {
+                foreach (var clip in track.Clips)
+                {
+                    if (clip.TimelineEnd > last)
+                    {
+                        last = clip.TimelineEnd;
+                    }
+                }
+            }
+
+            return last;
+        }
+    }
+
+    /// <summary>Сколько чёрного кадра идёт после последнего клипа. Ноль — хвоста нет.</summary>
+    public TimeSpan VideoTail
+    {
+        get
+        {
+            var tail = Duration - Video.Duration;
+            return tail > TimeSpan.Zero ? tail : TimeSpan.Zero;
+        }
+    }
+
+    public bool HasVideoTail => VideoTail > TimeSpan.Zero;
 
     public bool IsEmpty => Video.IsEmpty;
 

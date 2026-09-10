@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="MeowsCut.App.Views.Panes.PreviewPaneView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
              xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
@@ -16,7 +17,11 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Margin="18,14,18,8" Background="#FF0B0B0D" CornerRadius="8">
-            <Grid Margin="6">
+            <controls:FramingHost Margin="6"
+                                  OffsetX="{Binding FrameOffsetX}"
+                                  OffsetY="{Binding FrameOffsetY}"
+                                  Zoom="{Binding FrameZoom}">
+            <Grid>
                 <!-- Обычный режим: системный проигрыватель -->
                 <ContentControl Content="{Binding PlayerVisual}"
                                 Visibility="{Binding IsPlayerVisible, Converter={StaticResource BoolToVisibility}}" />
@@ -28,6 +33,7 @@
                        Stretch="Uniform"
                        Visibility="{Binding IsFrameVisible, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
+            </controls:FramingHost>
         </Border>
 
         <StackPanel Grid.Row="1"

@@ -67,6 +67,7 @@ public sealed partial class PreviewViewModel : ObservableObject
 
         _playback.PositionChanged += OnPlaybackPositionChanged;
         _playback.StillImageChanged += (_, path) => _dispatcher.Post(() => ShowStillImage(path));
+        _playback.BlackScreenChanged += (_, black) => _dispatcher.Post(() => IsBlackScreen = black);
         _playback.StateChanged += (_, _) => _dispatcher.Post(RefreshPlaybackState);
 
         _timeline.PropertyChanged += (_, e) =>
@@ -108,6 +109,15 @@ public sealed partial class PreviewViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsFrameVisible))]
     private bool _isStillImage;
 
+    /// <summary>
+    /// Под курсором пустое место: зазор между клипами или хвост, где звук уже идёт,
+    /// а картинки ещё нет. Показываем чёрный экран — ровно то, что будет в файле.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPlayerVisible))]
+    [NotifyPropertyChangedFor(nameof(IsFrameVisible))]
+    private bool _isBlackScreen;
+
     [ObservableProperty]
     private bool _isPlaying;
 
@@ -117,10 +127,24 @@ public sealed partial class PreviewViewModel : ObservableObject
     [ObservableProperty]
     private string _durationText = "00:00.00";
 
-    public bool IsPlayerVisible => !UseFallbackFrames && !IsStillImage;
+    /// <summary>
+    /// Кадрирование клипа под курсором. Показывается в предпросмотре приблизительно:
+    /// точный результат даёт только экспорт, но выбрать, какая часть кадра останется,
+    /// без этого было нельзя вовсе.
+    /// </summary>
+    [ObservableProperty]
+    private double _frameZoom = 1d;
+
+    [ObservableProperty]
+    private double _frameOffsetX;
+
+    [ObservableProperty]
+    private double _frameOffsetY;
+
+    public bool IsPlayerVisible => !UseFallbackFrames && !IsStillImage && !IsBlackScreen;
 
     /// <summary>Картинку показывают и запасной режим, и фотография в видеоряду.</summary>
-    public bool IsFrameVisible => UseFallbackFrames || IsStillImage;
+    public bool IsFrameVisible => (UseFallbackFrames || IsStillImage) && !IsBlackScreen;
 
     public void Attach(Project project)
     {
@@ -151,6 +175,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         _project = null;
         Frame = null;
         IsStillImage = false;
+        IsBlackScreen = false;
         UseFallbackFrames = false;
         IsPlaying = false;
         PositionText = DurationText = "00:00.00";
@@ -241,6 +266,18 @@ public sealed partial class PreviewViewModel : ObservableObject
     {
         PositionText = DisplayFormat.Duration(_timeline.Playhead);
         DurationText = DisplayFormat.Duration(_timeline.Duration);
+        RefreshFraming();
+    }
+
+    /// <summary>Кадрирование берётся у клипа под курсором и меняется вместе с ним.</summary>
+    private void RefreshFraming()
+    {
+        var transform = _timeline.Sequence.ClipAt(_timeline.Playhead)?.Clip.Transform
+                        ?? Core.Editing.Timeline.ClipTransform.Identity;
+
+        FrameZoom = transform.Zoom;
+        FrameOffsetX = transform.OffsetX;
+        FrameOffsetY = transform.OffsetY;
     }
 
     /// <summary>

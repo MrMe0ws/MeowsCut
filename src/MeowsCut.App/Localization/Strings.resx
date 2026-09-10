@@ -77,6 +77,9 @@
   <data name="FilterVideoFiles" xml:space="preserve">
     <value>Видеофайлы</value>
   </data>
+  <data name="FieldSpeedCustomHint" xml:space="preserve">
+    <value>Своя скорость: от 0.1 до 16</value>
+  </data>
   <data name="SectionSources" xml:space="preserve">
     <value>Файлы проекта</value>
   </data>

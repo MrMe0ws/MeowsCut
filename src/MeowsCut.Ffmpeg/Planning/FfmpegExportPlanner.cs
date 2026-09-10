@@ -218,7 +218,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 
         // Демультиплексор concat склеивает части встык и о пустых местах не знает:
         // зазор просто исчез бы, а ролик стал короче задуманного.
-        if (sequence.HasGaps || sequence.HasImages)
+        if (sequence.HasGaps || sequence.HasImages || sequence.HasVideoTail)
         {
             return false;
         }
@@ -424,7 +424,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 
         // Чёрная вставка перед клипом и кадры фотографии существуют только
         // после перерисовки: копировать тут нечего.
-        if (sequence.HasGaps || sequence.HasImages)
+        if (sequence.HasGaps || sequence.HasImages || sequence.HasVideoTail)
         {
             return false;
         }

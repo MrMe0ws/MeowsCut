@@ -267,6 +267,33 @@
         </Setter>
     </Style>
 
+    <!-- Тот же разделитель, поставленный на бок: делит колонки, а не строки -->
+    <Style x:Key="Splitter.Vertical" TargetType="GridSplitter">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="SizeWE" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GridSplitter">
+                    <Border Background="Transparent">
+                        <Rectangle x:Name="Line"
+                                   Width="1"
+                                   HorizontalAlignment="Center"
+                                   Fill="{StaticResource Brush.Border}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Line" Property="Width" Value="2" />
+                            <Setter TargetName="Line" Property="Fill" Value="{StaticResource Brush.Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Ползунок целиком свой: системный светлый в тёмном окне выглядел белой полосой,
          и это было заметнее всего на громкости и тональности. -->
     <Style TargetType="Slider">

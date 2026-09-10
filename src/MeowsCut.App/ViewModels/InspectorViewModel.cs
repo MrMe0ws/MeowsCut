@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MeowsCut.App.Formatting;
 using MeowsCut.Core.Editing.Timeline;
@@ -52,6 +52,13 @@ public sealed partial class InspectorViewModel : ObservableObject
     [ObservableProperty]
     private double _speed = 1d;
 
+    /// <summary>
+    /// Скорость, набранная вручную. Кнопок-заготовок не хватает: замедление до 0.4
+    /// или ускорение до 3.2 — обычное дело, а заводить кнопку под каждое число глупо.
+    /// </summary>
+    [ObservableProperty]
+    private string _speedText = "1";
+
     [ObservableProperty]
     private bool _audioEnabled = true;
 
@@ -83,6 +90,7 @@ public sealed partial class InspectorViewModel : ObservableObject
             SourceRangeText =
                 $"{DisplayFormat.Duration(clip.Clip.SourceRange.Start)} → {DisplayFormat.Duration(clip.Clip.SourceRange.End)}";
             Speed = clip.Clip.Speed;
+            SpeedText = FormatSpeed(clip.Clip.Speed);
             AudioEnabled = clip.Clip.Audio.Enabled;
             VolumePercent = Math.Round(clip.Clip.Audio.Volume * 100);
             ZoomPercent = Math.Round(clip.Clip.Transform.Zoom * 100);
@@ -93,6 +101,7 @@ public sealed partial class InspectorViewModel : ObservableObject
         {
             StartText = EndText = DurationText = SourceRangeText = string.Empty;
             Speed = 1d;
+            SpeedText = "1";
             AudioEnabled = true;
             VolumePercent = 100d;
             ZoomPercent = 100d;
@@ -104,6 +113,56 @@ public sealed partial class InspectorViewModel : ObservableObject
         OnPropertyChanged(nameof(HasSelection));
     }
 
+    /// <summary>
+    /// Применяется по мере набора: «3» даёт 3×, следующая «.5» — 3.5×.
+    /// Ждать Enter незачем, а незаконченный ввод вроде «0.» просто игнорируется.
+    /// </summary>
+    partial void OnSpeedTextChanged(string value)
+    {
+        if (_updating || !TryParseSpeed(value, out var speed))
+        {
+            return;
+        }
+
+        Speed = speed;
+    }
+
+    private static bool TryParseSpeed(string value, out double speed)
+    {
+        speed = 1d;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        // И точка, и запятая: раскладка у пользователя русская, а на клавиатуре
+        // цифрового блока запятая, и заставлять его помнить об этом незачем.
+        var normalized = value.Trim().Replace(',', '.');
+
+        if (!double.TryParse(
+                normalized,
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var parsed))
+        {
+            return false;
+        }
+
+        // Полное имя типа: у самой модели есть свойство Clip, и короткое имя
+        // разрешилось бы в него.
+        if (parsed < Core.Editing.Timeline.Clip.MinSpeed || parsed > Core.Editing.Timeline.Clip.MaxSpeed)
+        {
+            return false;
+        }
+
+        speed = parsed;
+        return true;
+    }
+
+    private static string FormatSpeed(double speed) =>
+        speed.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
     partial void OnSpeedChanged(double value)
     {
         if (_updating || Clip is not { } clip || Math.Abs(clip.Clip.Speed - value) < 0.0001)
@@ -111,7 +170,12 @@ public sealed partial class InspectorViewModel : ObservableObject
             return;
         }
 
-        _timeline.SetClipSpeed(clip.Id, value);
+        _timeline.SetClipSpeed(value);
+
+        // Поле подписи держим в согласии с кнопками-заготовками.
+        _updating = true;
+        SpeedText = FormatSpeed(value);
+        _updating = false;
     }
 
     partial void OnAudioEnabledChanged(bool value)
@@ -121,7 +185,7 @@ public sealed partial class InspectorViewModel : ObservableObject
             return;
         }
 
-        _timeline.SetClipAudio(clip.Id, clip.Clip.Audio with { Enabled = value });
+        _timeline.SetClipAudio(clip.Clip.Audio with { Enabled = value });
         _timeline.EndInteraction();
     }
 
@@ -138,7 +202,7 @@ public sealed partial class InspectorViewModel : ObservableObject
             return;
         }
 
-        _timeline.SetClipAudio(clip.Id, clip.Clip.Audio.WithVolume(volume));
+        _timeline.SetClipAudio(clip.Clip.Audio.WithVolume(volume));
     }
 
     partial void OnZoomPercentChanged(double value) => ApplyTransform();
@@ -168,7 +232,7 @@ public sealed partial class InspectorViewModel : ObservableObject
             return;
         }
 
-        _timeline.SetClipTransform(clip.Id, transform);
+        _timeline.SetClipTransform(transform);
     }
 
     [RelayCommand]

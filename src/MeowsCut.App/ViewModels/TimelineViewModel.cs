@@ -186,6 +186,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         Metrics.ZoomToFit(project.Sequence.Duration);
         RebuildClips();
         OnPropertyChanged(nameof(SummaryLine));
+        RefreshProjectCommands();
     }
 
     /// <summary>
@@ -237,6 +238,19 @@ public sealed partial class TimelineViewModel : ObservableObject
         RequestRedraw();
     }
 
+    /// <summary>
+    /// Пересчитывает доступность команд, которым нужен открытый проект.
+    /// </summary>
+    /// <remarks>
+    /// Без этого «Дорожка» оставалась серой навсегда: её условие проверяется один раз
+    /// при создании модели, когда проекта ещё нет, и открытие файла об этом не сообщало.
+    /// </remarks>
+    private void RefreshProjectCommands()
+    {
+        OnPropertyChanged(nameof(HasProject));
+        AddAudioTrackCommand.NotifyCanExecuteChanged();
+    }
+
     public void Detach()
     {
         if (_history is not null)
@@ -246,6 +260,7 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         _history = null;
         _project = null;
+        RefreshProjectCommands();
         Clips.Clear();
         _selection.Clear();
         SelectedClip = null;
@@ -466,12 +481,40 @@ public sealed partial class TimelineViewModel : ObservableObject
         _history?.EndMergeGroup();
     }
 
-    public void SetClipSpeed(ClipId clipId, double speed) => Execute(new SetClipSpeedCommand(clipId, speed));
+    /// <summary>
+    /// Свойства применяются ко всему выделению, а не к одному клипу.
+    /// </summary>
+    /// <remarks>
+    /// Выделив три куска и нажав «2×», пользователь ждёт, что ускорятся все три.
+    /// Основной клип идёт первым: если выделение пусто, правка не делается вовсе.
+    /// </remarks>
+    public IReadOnlyList<ClipId> TargetClips => _selection.Count > 0
+        ? [.. Clips.Where(clip => _selection.Contains(clip.Id)).Select(clip => clip.Id)]
+        : SelectedClip is { } single ? [single.Id] : [];
 
-    public void SetClipAudio(ClipId clipId, ClipAudio audio) => Execute(new SetClipAudioCommand(clipId, audio));
+    public void SetClipSpeed(double speed)
+    {
+        if (TargetClips is { Count: > 0 } clips)
+        {
+            Execute(new SetClipSpeedCommand(clips, speed));
+        }
+    }
 
-    public void SetClipTransform(ClipId clipId, ClipTransform transform) =>
-        Execute(new SetClipTransformCommand(clipId, transform));
+    public void SetClipAudio(ClipAudio audio)
+    {
+        if (TargetClips is { Count: > 0 } clips)
+        {
+            Execute(new SetClipAudioCommand(clips, audio));
+        }
+    }
+
+    public void SetClipTransform(ClipTransform transform)
+    {
+        if (TargetClips is { Count: > 0 } clips)
+        {
+            Execute(new SetClipTransformCommand(clips, transform));
+        }
+    }
 
     public void EndInteraction() => _history?.EndMergeGroup();
 

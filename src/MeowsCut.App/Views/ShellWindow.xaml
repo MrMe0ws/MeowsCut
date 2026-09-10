@@ -202,20 +202,25 @@
                  отъедала высоту у самой доски. -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" MinWidth="320" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="330" MinWidth="220" MaxWidth="720" />
                 </Grid.ColumnDefinitions>
 
                 <panes:PreviewPaneView Grid.Column="0" DataContext="{Binding Preview}" />
+                <GridSplitter Grid.Column="1" Style="{StaticResource Splitter.Vertical}" />
 
-                <Border Grid.Column="1"
-                        Width="330"
+                <Border Grid.Column="2"
                         BorderBrush="{StaticResource Brush.Border}"
                         BorderThickness="1,0,0,0">
+                    <!-- Свойства и файлы делят колонку по вертикали: у одного бывает
+                         десяток полей, у другого десяток файлов, и что важнее сейчас,
+                         знает только пользователь. -->
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" MaxHeight="330" />
-                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" MinHeight="90" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="1.2*" MinHeight="90" />
                         </Grid.RowDefinitions>
 
                         <ScrollViewer Grid.Row="0"
@@ -234,7 +239,8 @@
                             </Grid>
                         </ScrollViewer>
 
-                        <panes:SourcesView Grid.Row="1" DataContext="{Binding Sources}" />
+                        <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
+                        <panes:SourcesView Grid.Row="2" DataContext="{Binding Sources}" />
                     </Grid>
                 </Border>
             </Grid>

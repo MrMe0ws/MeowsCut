@@ -169,6 +169,36 @@ public class ClipDragAndClipboardTests
     }
 
     [Fact]
+    public void Speed_applies_to_the_whole_selection()
+    {
+        var timeline = Attached();
+
+        // Выделяем оба куска: второй — с Ctrl, как это делает пользователь.
+        timeline.PointerDown(X(2), VideoY);
+        timeline.PointerUp();
+        timeline.PointerDown(X(12), VideoY, PointerMode.Toggle);
+        timeline.PointerUp();
+
+        timeline.SetClipSpeed(2d);
+
+        timeline.Sequence.Video.Clips.Should().OnlyContain(clip => Math.Abs(clip.Speed - 2d) < 0.0001);
+    }
+
+    [Fact]
+    public void Speed_of_a_single_clip_does_not_touch_the_others()
+    {
+        var timeline = Attached();
+
+        timeline.PointerDown(X(2), VideoY);
+        timeline.PointerUp();
+
+        timeline.SetClipSpeed(2d);
+
+        timeline.Sequence.Video.Clips[0].Speed.Should().Be(2d);
+        timeline.Sequence.Video.Clips[1].Speed.Should().Be(1d);
+    }
+
+    [Fact]
     public void Nothing_is_pasted_from_an_empty_clipboard()
     {
         var timeline = Attached();

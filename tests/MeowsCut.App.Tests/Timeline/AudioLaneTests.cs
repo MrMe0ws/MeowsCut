@@ -102,6 +102,30 @@ public class AudioEditingTests
     }
 
     [Fact]
+    public void The_add_track_button_wakes_up_when_a_project_is_open()
+    {
+        var timeline = new TimelineViewModel();
+
+        timeline.AddAudioTrackCommand.CanExecute(null).Should().BeFalse("проекта ещё нет");
+
+        timeline.Attach(Fake.Project(10));
+
+        // Без пересчёта доступности кнопка оставалась серой навсегда: её условие
+        // проверяется один раз при создании модели, когда проекта ещё нет.
+        timeline.AddAudioTrackCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public void A_second_track_can_be_added_for_layering()
+    {
+        var timeline = Attached(soundStart: 0);
+
+        timeline.AddAudioTrackCommand.Execute(null);
+
+        timeline.AudioTracks.Should().HaveCount(2);
+    }
+
+    [Fact]
     public void Adding_sound_creates_a_track_and_selects_the_clip()
     {
         var timeline = Attached(soundStart: 0);

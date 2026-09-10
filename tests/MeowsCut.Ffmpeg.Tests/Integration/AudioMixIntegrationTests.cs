@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Editing;
@@ -115,6 +115,32 @@ public sealed class AudioMixIntegrationTests : IDisposable
 
         result.Status.Should().Be(JobStatus.Completed, result.Error?.Message);
         (await ProbeAsync(output)).HasAudio.Should().BeTrue();
+    }
+
+    [FfmpegFact]
+    public async Task Music_longer_than_the_video_extends_it_with_black()
+    {
+        var project = await CreateProjectAsync(seconds: 3);
+        var music = await AddAudioSourceAsync(project, "длинная музыка.m4a", seconds: 7, frequency: 330);
+
+        var track = AudioTrack.Empty("Музыка") with
+        {
+            Clips = [AudioClip.FromSource(music.Source, TimeSpan.Zero)]
+        };
+
+        var withMusic = music.Project.WithSequence(music.Project.Sequence.WithTracks([track]));
+
+        var output = Path.Combine(_workDirectory, "с хвостом.mp4");
+        var result = await RunAsync(withMusic, Settings(output));
+
+        result.Status.Should().Be(JobStatus.Completed, result.Error?.Message);
+
+        var info = await ProbeAsync(output);
+
+        // Под музыку досматривают чёрный экран: обрывать её на последнем кадре
+        // картинки — не то, чего ждёт пользователь.
+        info.Duration.Should().BeCloseTo(TimeSpan.FromSeconds(7), TimeSpan.FromMilliseconds(600));
+        info.HasVideo.Should().BeTrue("хвост — это чёрный кадр, а не отсутствие картинки");
     }
 
     private static ExportSettings Settings(string outputPath) =>

@@ -19,6 +19,8 @@ public static class Strings
 
     public static string FilterVideoFiles => Get(nameof(FilterVideoFiles));
 
+    public static string FieldSpeedCustomHint => Get(nameof(FieldSpeedCustomHint));
+
     public static string SectionSources => Get(nameof(SectionSources));
 
     public static string SourceKindVideo => Get(nameof(SourceKindVideo));

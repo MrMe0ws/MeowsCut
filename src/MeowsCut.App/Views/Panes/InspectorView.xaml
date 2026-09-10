@@ -41,7 +41,8 @@
                                VerticalAlignment="Center"
                                Style="{StaticResource Text.Muted}"
                                Text="{loc:Tr FieldSpeed}" />
-                    <ItemsControl VerticalAlignment="Center" ItemsSource="{x:Static vm:InspectorViewModel.SpeedPresets}">
+                    <ItemsControl VerticalAlignment="Center"
+                                  ItemsSource="{x:Static vm:InspectorViewModel.SpeedPresets}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <!-- Тоже с переносом: в узкой колонке справа восемь кнопок
@@ -62,26 +63,37 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
+                    <TextBox Width="54"
+                             Margin="4,0,0,0"
+                             VerticalAlignment="Center"
+                             Padding="6,4"
+                             Text="{Binding SpeedText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="{loc:Tr FieldSpeedCustomHint}" />
+
                     <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
 
-                    <CheckBox VerticalAlignment="Center"
-                              Content="{loc:Tr ClipAudioEnabled}"
-                              IsChecked="{Binding AudioEnabled}" />
-                    <Slider Width="90"
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center"
-                            IsEnabled="{Binding AudioEnabled}"
-                            IsSnapToTickEnabled="True"
-                            Maximum="200"
-                            Minimum="0"
-                            TickFrequency="5"
-                            ToolTip="{loc:Tr FieldVolume}"
-                            Value="{Binding VolumePercent}" />
-                    <TextBlock Width="40"
-                               Margin="6,0,0,0"
-                               VerticalAlignment="Center"
-                               Style="{StaticResource Text.Muted}"
-                               Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
+                    <!-- Ползунок и его число — одной группой: при переносе строки
+                         они обязаны остаться вместе, иначе «100%» повисает отдельно. -->
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox VerticalAlignment="Center"
+                                  Content="{loc:Tr ClipAudioEnabled}"
+                                  IsChecked="{Binding AudioEnabled}" />
+                        <Slider Width="90"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center"
+                                IsEnabled="{Binding AudioEnabled}"
+                                IsSnapToTickEnabled="True"
+                                Maximum="200"
+                                Minimum="0"
+                                TickFrequency="5"
+                                ToolTip="{loc:Tr FieldVolume}"
+                                Value="{Binding VolumePercent}" />
+                        <TextBlock Width="40"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
+                    </StackPanel>
 
                     <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
 
@@ -96,44 +108,48 @@
                            Orientation="Horizontal"
                            Visibility="{Binding IsChecked, ElementName=FrameToggle,
                                Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldZoom}" />
-                    <Slider Width="110"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Center"
-                            IsSnapToTickEnabled="True"
-                            Maximum="300"
-                            Minimum="50"
-                            TickFrequency="5"
-                            Value="{Binding ZoomPercent}" />
-                    <TextBlock Width="44"
-                               Margin="6,0,0,0"
-                               VerticalAlignment="Center"
-                               Style="{StaticResource Text.Muted}"
-                               Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldZoom}" />
+                        <Slider Width="110"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                IsSnapToTickEnabled="True"
+                                Maximum="300"
+                                Minimum="50"
+                                TickFrequency="5"
+                                Value="{Binding ZoomPercent}" />
+                        <TextBlock Width="44"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
+                    </StackPanel>
 
-                    <TextBlock Margin="12,0,0,0"
-                               VerticalAlignment="Center"
-                               Style="{StaticResource Text.Muted}"
-                               Text="{loc:Tr FieldOffsetX}" />
-                    <Slider Width="90"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Center"
-                            Maximum="50"
-                            Minimum="-50"
-                            TickFrequency="5"
-                            Value="{Binding OffsetXPercent}" />
+                    <StackPanel Margin="12,0,0,0" Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{loc:Tr FieldOffsetX}" />
+                        <Slider Width="90"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Maximum="50"
+                                Minimum="-50"
+                                TickFrequency="5"
+                                Value="{Binding OffsetXPercent}" />
+                    </StackPanel>
 
-                    <TextBlock Margin="12,0,0,0"
-                               VerticalAlignment="Center"
-                               Style="{StaticResource Text.Muted}"
-                               Text="{loc:Tr FieldOffsetY}" />
-                    <Slider Width="90"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Center"
-                            Maximum="50"
-                            Minimum="-50"
-                            TickFrequency="5"
-                            Value="{Binding OffsetYPercent}" />
+                    <StackPanel Margin="12,0,0,0" Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{loc:Tr FieldOffsetY}" />
+                        <Slider Width="90"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Maximum="50"
+                                Minimum="-50"
+                                TickFrequency="5"
+                                Value="{Binding OffsetYPercent}" />
+                    </StackPanel>
 
                     <Button Margin="12,0,0,0"
                             Command="{Binding ResetTransformCommand}"

@@ -3,67 +3,103 @@ using MeowsCut.Core.Editing.Timeline;
 namespace MeowsCut.Core.Editing.Commands;
 
 /// <summary>
-/// Скорость отдельного клипа: 0.25×, 2×, произвольная.
+/// Общая часть правок, меняющих свойство сразу у нескольких выделенных клипов.
 /// </summary>
-public sealed class SetClipSpeedCommand(ClipId clipId, double speed) : IEditCommand
+/// <remarks>
+/// Команда берёт набор клипов, а не один: выделив три куска и нажав «2×»,
+/// пользователь ждёт, что ускорятся все три и что Ctrl+Z вернёт их разом,
+/// а не по одному. Один клип — частный случай набора из одного элемента.
+/// </remarks>
+public abstract class ClipPropertyCommand(IReadOnlyList<ClipId> clipIds) : IEditCommand
 {
-    public string Title => "Изменить скорость клипа";
+    public IReadOnlyList<ClipId> ClipIds { get; } = clipIds;
 
-    public ClipId ClipId { get; } = clipId;
-
-    public double Speed { get; } = speed;
+    public abstract string Title { get; }
 
     public Sequence Apply(Sequence sequence)
     {
-        var clip = sequence.Video.Require(ClipId);
-        return sequence.WithTrack(sequence.Video.Replace(clip.WithSpeed(Speed)));
-    }
+        var track = sequence.Video;
 
-    /// <summary>Ползунок скорости шлёт значения непрерывно — в истории это одна правка.</summary>
-    public bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
-    {
-        if (previous is SetClipSpeedCommand other && other.ClipId == ClipId)
+        foreach (var id in ClipIds)
         {
-            merged = this;
-            return true;
+            track = track.Replace(Change(track.Require(id)));
         }
 
+        return sequence.WithTrack(track);
+    }
+
+    protected abstract Clip Change(Clip clip);
+
+    /// <summary>Тот же набор клипов и то же свойство — одна запись в истории.</summary>
+    public virtual bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
+    {
         merged = this;
-        return false;
+        return previous.GetType() == GetType() &&
+               previous is ClipPropertyCommand other &&
+               SameClips(other.ClipIds);
+    }
+
+    protected bool SameClips(IReadOnlyList<ClipId> other)
+    {
+        if (other.Count != ClipIds.Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < other.Count; i++)
+        {
+            if (other[i] != ClipIds[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
 /// <summary>
-/// Звук клипа: включение и громкость.
+/// Скорость клипов: 0.25×, 2×, произвольная.
 /// </summary>
-public sealed class SetClipAudioCommand(ClipId clipId, ClipAudio audio) : IEditCommand
+public sealed class SetClipSpeedCommand(IReadOnlyList<ClipId> clipIds, double speed)
+    : ClipPropertyCommand(clipIds)
 {
-    public string Title => Audio.Enabled ? "Изменить звук клипа" : "Выключить звук клипа";
+    public SetClipSpeedCommand(ClipId clipId, double speed) : this([clipId], speed)
+    {
+    }
 
-    public ClipId ClipId { get; } = clipId;
+    public override string Title => "Изменить скорость клипа";
+
+    public double Speed { get; } = speed;
+
+    protected override Clip Change(Clip clip) => clip.WithSpeed(Speed);
+}
+
+/// <summary>
+/// Звук клипов: включение и громкость.
+/// </summary>
+public sealed class SetClipAudioCommand(IReadOnlyList<ClipId> clipIds, ClipAudio audio)
+    : ClipPropertyCommand(clipIds)
+{
+    public SetClipAudioCommand(ClipId clipId, ClipAudio audio) : this([clipId], audio)
+    {
+    }
+
+    public override string Title => Audio.Enabled ? "Изменить звук клипа" : "Выключить звук клипа";
 
     public ClipAudio Audio { get; } = audio;
 
-    public Sequence Apply(Sequence sequence)
-    {
-        var clip = sequence.Video.Require(ClipId);
-        return sequence.WithTrack(sequence.Video.Replace(clip.WithAudio(Audio)));
-    }
+    protected override Clip Change(Clip clip) => clip.WithAudio(Audio);
 
-    public bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
+    public override bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
     {
+        merged = this;
+
         // Склеиваем только тягание громкости; включение и выключение звука —
         // отдельные осознанные действия, каждое должно отменяться само по себе.
-        if (previous is SetClipAudioCommand other &&
-            other.ClipId == ClipId &&
-            other.Audio.Enabled == Audio.Enabled)
-        {
-            merged = this;
-            return true;
-        }
-
-        merged = this;
-        return false;
+        return previous is SetClipAudioCommand other &&
+               other.Audio.Enabled == Audio.Enabled &&
+               SameClips(other.ClipIds);
     }
 }
 
@@ -72,29 +108,16 @@ public sealed class SetClipAudioCommand(ClipId clipId, ClipAudio audio) : IEditC
 /// Нужно для стикеров: произвольное видео приводится к квадрату, и пользователь
 /// выбирает, какую часть кадра оставить.
 /// </summary>
-public sealed class SetClipTransformCommand(ClipId clipId, ClipTransform transform) : IEditCommand
+public sealed class SetClipTransformCommand(IReadOnlyList<ClipId> clipIds, ClipTransform transform)
+    : ClipPropertyCommand(clipIds)
 {
-    public string Title => "Изменить кадрирование";
+    public SetClipTransformCommand(ClipId clipId, ClipTransform transform) : this([clipId], transform)
+    {
+    }
 
-    public ClipId ClipId { get; } = clipId;
+    public override string Title => "Изменить кадрирование";
 
     public ClipTransform Transform { get; } = transform;
 
-    public Sequence Apply(Sequence sequence)
-    {
-        var clip = sequence.Video.Require(ClipId);
-        return sequence.WithTrack(sequence.Video.Replace(clip.WithTransform(Transform)));
-    }
-
-    public bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
-    {
-        if (previous is SetClipTransformCommand other && other.ClipId == ClipId)
-        {
-            merged = this;
-            return true;
-        }
-
-        merged = this;
-        return false;
-    }
+    protected override Clip Change(Clip clip) => clip.WithTransform(Transform);
 }

@@ -34,6 +34,9 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     private bool _onImage;
     private string? _lastImagePath;
 
+    /// <summary>Под курсором пустое место: зазор между клипами или хвост под музыку.</summary>
+    private bool _onBlackScreen;
+
     private long _lastTickStamp;
 
     public bool IsPlaying { get; private set; }
@@ -53,6 +56,9 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     /// то есть кадр снова показывает проигрыватель.
     /// </summary>
     public event EventHandler<string?>? StillImageChanged;
+
+    /// <summary>Под курсором пустое место — картинку показывать нечем.</summary>
+    public event EventHandler<bool>? BlackScreenChanged;
 
     public void Attach(Project project)
     {
@@ -80,6 +86,7 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         _sequence = Sequence.Empty;
         _currentClip = null;
         _onImage = false;
+        _onBlackScreen = false;
         _lastImagePath = null;
         Position = TimeSpan.Zero;
     }
@@ -134,7 +141,7 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
         IsPlaying = true;
         _lastTickStamp = Stopwatch.GetTimestamp();
 
-        if (!_onImage)
+        if (!_onImage && !_onBlackScreen)
         {
             player.Play();
         }
@@ -174,10 +181,22 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
 
         var placed = _sequence.ClipAt(clamped);
 
-        // На самом конце последовательности показываем последний кадр последнего клипа.
-        if (placed is null && _sequence.ClipCount > 0)
+        if (placed is null)
         {
-            placed = _sequence.EnumeratePlaced().Last();
+            // Ровно на конце ролика — последний кадр: пустой экран здесь выглядел бы
+            // сбоем перемотки. В зазоре и в хвосте после видеоряда, наоборот, пусто
+            // и должно быть: именно это увидят в готовом файле.
+            var atVeryEnd = clamped >= _sequence.Duration && !_sequence.HasVideoTail;
+
+            if (atVeryEnd && _sequence.ClipCount > 0)
+            {
+                placed = _sequence.EnumeratePlaced().Last();
+            }
+            else
+            {
+                EnterBlackScreen();
+                return;
+            }
         }
 
         if (placed is not { } target)
@@ -208,6 +227,8 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
             _lastTickStamp = Stopwatch.GetTimestamp();
             return;
         }
+
+        LeaveBlackScreen();
 
         if (_onImage)
         {
@@ -253,7 +274,20 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
     /// </summary>
     public void Tick()
     {
-        if (!IsPlaying || _project is null || _currentClip is not { } clipId)
+        if (!IsPlaying || _project is null)
+        {
+            return;
+        }
+
+        // Пустое место — зазор или хвост под музыку: картинки нет, и время идёт
+        // по часам. Иначе плейхед застревал бы в пустоте навсегда.
+        if (_onBlackScreen)
+        {
+            AdvanceBlackScreen();
+            return;
+        }
+
+        if (_currentClip is not { } clipId)
         {
             return;
         }
@@ -292,6 +326,84 @@ public sealed class SequencePlaybackController(IMediaPlayer player)
 
         Position = Clamp(timelinePosition);
         PositionChanged?.Invoke(this, Position);
+    }
+
+    /// <summary>
+    /// Пустое место на ролике: чёрный экран вместо кадра.
+    /// </summary>
+    /// <remarks>
+    /// Проигрыватель ставится на паузу, а не закрывается: следующий клип чаще всего
+    /// из того же файла, и повторное открытие стоило бы заметной задержки.
+    /// </remarks>
+    private void EnterBlackScreen()
+    {
+        _currentClip = null;
+        _lastTickStamp = Stopwatch.GetTimestamp();
+
+        if (_onBlackScreen)
+        {
+            return;
+        }
+
+        _onBlackScreen = true;
+        player.Pause();
+
+        if (_onImage)
+        {
+            _onImage = false;
+            _lastImagePath = null;
+        }
+
+        StillImageChanged?.Invoke(this, null);
+        BlackScreenChanged?.Invoke(this, true);
+    }
+
+    private void LeaveBlackScreen()
+    {
+        if (!_onBlackScreen)
+        {
+            return;
+        }
+
+        _onBlackScreen = false;
+        BlackScreenChanged?.Invoke(this, false);
+    }
+
+    /// <summary>Ход времени в пустоте: как на фотографии, по часам.</summary>
+    private void AdvanceBlackScreen()
+    {
+        var now = Stopwatch.GetTimestamp();
+        var next = Position + Stopwatch.GetElapsedTime(_lastTickStamp, now);
+        _lastTickStamp = now;
+
+        if (next >= _sequence.Duration)
+        {
+            Position = _sequence.Duration;
+            PositionChanged?.Invoke(this, Position);
+            Pause();
+            return;
+        }
+
+        Position = next;
+        PositionChanged?.Invoke(this, Position);
+
+        // Дошли до следующего клипа — возвращаем картинку.
+        if (_sequence.ClipAt(Position) is not null)
+        {
+            var wasPlaying = IsPlaying;
+            Seek(Position);
+
+            if (wasPlaying)
+            {
+                IsPlaying = true;
+                _lastTickStamp = Stopwatch.GetTimestamp();
+
+                if (!_onImage && !_onBlackScreen)
+                {
+                    player.Play();
+                }
+            }
+        }
     }
 
     /// <summary>Ход времени на фотографии: отсчитывается по часам, а не проигрывателем.</summary>

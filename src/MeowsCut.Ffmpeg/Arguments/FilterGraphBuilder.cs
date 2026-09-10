@@ -69,7 +69,7 @@ public sealed class FilterGraphBuilder
         // появляется что-то сгенерированное: concat требует совпадения размера,
         // формата пикселя и SAR, а чёрная вставка и кадр фотографии рождаются
         // заново и параметров источника знать не могут.
-        var normalize = sequence.Video.HasGaps || sequence.HasImages;
+        var normalize = sequence.Video.HasGaps || sequence.HasImages || sequence.HasVideoTail;
 
         for (var i = 0; i < clips.Count; i++)
         {
@@ -89,6 +89,20 @@ public sealed class FilterGraphBuilder
             }
         }
 
+        // Звук, выходящий за видеоряд, продлевает ролик чёрным кадром. Без этого
+        // amix обрезал бы музыку по последнему кадру картинки.
+        if (sequence.HasVideoTail)
+        {
+            AppendGapChains(
+                builder,
+                sequence,
+                sequence.VideoTail,
+                clips.Count,
+                videoLabels,
+                audioLabels,
+                wantsAudio);
+        }
+
         var videoOut = AppendConcat(builder, videoLabels, audioLabels, wantsAudio, out var audioOut);
 
         videoOut = AppendOutputVideoChain(builder, sequence, settings, videoOut);
@@ -104,12 +118,14 @@ public sealed class FilterGraphBuilder
     }
 
     /// <summary>
-    /// Пустое место на дорожке: чёрный кадр и тишина ровно на длину зазора.
+    /// Пустое место: чёрный кадр и тишина ровно на нужную длину.
     /// </summary>
     /// <remarks>
-    /// Зазор — такой же участок ролика, как клип, и concat обязан получить его
-    /// отдельной частью. Размер и частота кадров берутся у последовательности:
-    /// у пустоты своего источника нет, а разъехавшийся размер ломает склейку.
+    /// Так рисуются и зазор между клипами, и хвост после последнего клипа, когда
+    /// звук длиннее видеоряда. Пустота — такой же участок ролика, как клип, и concat
+    /// обязан получить её отдельной частью. Размер и частота кадров берутся
+    /// у последовательности: своего источника у пустоты нет, а разъехавшийся размер
+    /// ломает склейку.
     /// </remarks>
     private static void AppendGapChains(
         StringBuilder builder,
