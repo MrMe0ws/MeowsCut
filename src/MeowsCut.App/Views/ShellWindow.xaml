@@ -197,7 +197,16 @@
             <panes:PreviewPaneView Grid.Row="0" DataContext="{Binding Preview}" />
             <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
             <panes:TimelinePaneView Grid.Row="2" DataContext="{Binding Timeline}" />
-            <panes:InspectorView Grid.Row="3" DataContext="{Binding Inspector}" />
+            <Grid Grid.Row="3">
+                <panes:InspectorView DataContext="{Binding Inspector}"
+                                     Visibility="{Binding DataContext.Timeline.HasAudioSelection,
+                                         RelativeSource={RelativeSource AncestorType=Window},
+                                         Converter={StaticResource InverseBoolToVisibility}}" />
+                <panes:AudioInspectorView DataContext="{Binding AudioInspector}"
+                                          Visibility="{Binding DataContext.Timeline.HasAudioSelection,
+                                              RelativeSource={RelativeSource AncestorType=Window},
+                                              Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
 
             <!-- Финальный шаг. Настройки вывода живут в своём окне: за монтажом
                  они не нужны, а места занимали треть экрана. -->

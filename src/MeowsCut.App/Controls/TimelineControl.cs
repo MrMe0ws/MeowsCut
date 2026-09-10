@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using MeowsCut.App.Timeline;
 using MeowsCut.App.ViewModels;
+using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.App.Controls;
 
@@ -23,6 +24,8 @@ public sealed class TimelineControl : Control
     private const double ClipGap = 1.5d;
 
     private static readonly Typeface LabelTypeface = new("Segoe UI");
+
+    private readonly TimelineLayout _layout = new();
 
     private TimelineViewModel? _model;
     private Point _lastHoverPosition;
@@ -49,6 +52,12 @@ public sealed class TimelineControl : Control
     private Brush MutedBrush => (Brush)FindResource("Brush.TextMuted");
 
     private Brush RazorBrush => (Brush)FindResource("Brush.Danger");
+
+    private Brush LaneFill => (Brush)FindResource("Brush.Surface");
+
+    private Brush AudioFill => (Brush)FindResource("Brush.AudioClip");
+
+    private Brush MutedAudioFill => (Brush)FindResource("Brush.SurfaceRaised");
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
@@ -95,6 +104,7 @@ public sealed class TimelineControl : Control
         if (_model is not null)
         {
             _model.Metrics.ViewportWidth = ActualWidth;
+            _model.ViewportHeight = ActualHeight;
             _model.EnsureInitialFit();
             InvalidateVisual();
         }
@@ -115,16 +125,111 @@ public sealed class TimelineControl : Control
 
         DrawRuler(context, metrics);
 
-        var trackTop = RulerHeight + TrackPadding;
-        var trackHeight = Math.Max(40d, ActualHeight - trackTop - TrackPadding);
+        var tracks = _model.AudioTracks;
+        var lanes = _layout.Build(ActualHeight, [.. tracks.Select(track => track.Id)]);
+        var video = lanes[0];
 
         foreach (var clip in _model.Clips)
         {
-            DrawClip(context, clip, metrics, trackTop, trackHeight);
+            DrawClip(context, clip, metrics, video.Top, video.Height);
         }
 
-        DrawRazorGuide(context, metrics, trackTop, trackHeight);
+        for (var i = 0; i < tracks.Count && i + 1 < lanes.Count; i++)
+        {
+            DrawAudioLane(context, metrics, tracks[i], lanes[i + 1]);
+        }
+
+        DrawRazorGuide(context, metrics, video.Top, ActualHeight - video.Top - TrackPadding);
         DrawPlayhead(context, metrics);
+    }
+
+    /// <summary>
+    /// Полоса звука: подложка, подпись дорожки и её куски.
+    /// </summary>
+    /// <remarks>
+    /// Волны нет намеренно — её расчёт требует отдельного прохода ffmpeg по всему
+    /// файлу. Пока вместо неё длительность, громкость и сдвиг тональности текстом:
+    /// этого хватает, чтобы понять, что именно лежит на дорожке.
+    /// </remarks>
+    private void DrawAudioLane(DrawingContext context, TimelineMetrics metrics, AudioTrack track, TimelineLane lane)
+    {
+        var laneRect = new Rect(0, lane.Top, ActualWidth, lane.Height);
+        context.DrawRoundedRectangle(LaneFill, null, laneRect, 4, 4);
+
+        var muted = track.IsMuted;
+
+        foreach (var clip in track.Clips)
+        {
+            var left = metrics.TimeToX(clip.TimelineStart);
+            var right = metrics.TimeToX(clip.TimelineEnd);
+
+            if (right < 0 || left > ActualWidth)
+            {
+                continue;
+            }
+
+            var rect = new Rect(left + ClipGap, lane.Top + 3, Math.Max(2d, right - left - (ClipGap * 2)), lane.Height - 6);
+            var selected = _model?.SelectedAudioClip?.Id == clip.Id;
+
+            var pen = new Pen(selected ? Accent : ClipBorder, selected ? 2 : 1);
+            context.DrawRoundedRectangle(muted ? MutedAudioFill : AudioFill, pen, rect, 4, 4);
+
+            DrawAudioCaption(context, clip, track, rect);
+        }
+
+        // Имя дорожки рисуется последним и на подложке: кусок звука может начинаться
+        // с нуля, и без подложки подпись сливалась бы с его названием.
+        var title = new FormattedText(
+            muted ? track.Title + "  ·  " + Localization.Strings.TrackMuted : track.Title,
+            CultureInfo.CurrentUICulture,
+            FlowDirection.LeftToRight,
+            LabelTypeface,
+            10,
+            MutedBrush,
+            VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+        var badge = new Rect(4, lane.Top + 2, title.Width + 10, title.Height + 3);
+        context.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(210, 10, 10, 12)), null, badge, 3, 3);
+        context.DrawText(title, new Point(9, lane.Top + 3));
+    }
+
+    private void DrawAudioCaption(DrawingContext context, AudioClip clip, AudioTrack track, Rect rect)
+    {
+        if (rect.Width < 40)
+        {
+            return;
+        }
+
+        var caption = clip.Title.Length > 0 ? clip.Title : Localization.Strings.SectionSound;
+
+        if (clip.IsPitchShifted)
+        {
+            caption += "  ·  " + string.Format(
+                CultureInfo.CurrentUICulture,
+                Localization.Strings.PitchSemitones,
+                clip.PitchSemitones);
+        }
+
+        if (clip.IsGainChanged || Math.Abs(track.Gain - 1d) > 0.0001)
+        {
+            caption += $"  ·  {clip.Gain * track.Gain * 100:0}%";
+        }
+
+        var text = new FormattedText(
+            caption,
+            CultureInfo.CurrentUICulture,
+            FlowDirection.LeftToRight,
+            LabelTypeface,
+            10,
+            TextBrush,
+            VisualTreeHelper.GetDpi(this).PixelsPerDip)
+        {
+            MaxTextWidth = Math.Max(10, rect.Width - 10),
+            MaxLineCount = 1,
+            Trimming = TextTrimming.CharacterEllipsis
+        };
+
+        context.DrawText(text, new Point(rect.X + 6, rect.Bottom - text.Height - 4));
     }
 
     /// <summary>
@@ -417,7 +522,8 @@ public sealed class TimelineControl : Control
         return kind switch
         {
             TimelineHitKind.ClipStartEdge or TimelineHitKind.ClipEndEdge => Cursors.SizeWE,
-            TimelineHitKind.ClipBody => Cursors.Hand,
+            TimelineHitKind.AudioClipStartEdge or TimelineHitKind.AudioClipEndEdge => Cursors.SizeWE,
+            TimelineHitKind.ClipBody or TimelineHitKind.AudioClipBody => Cursors.Hand,
             _ => Cursors.Arrow
         };
     }

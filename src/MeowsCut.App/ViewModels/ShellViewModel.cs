@@ -56,6 +56,7 @@ public sealed partial class ShellViewModel : ObservableObject
         TimelineViewModel timeline,
         PreviewViewModel preview,
         InspectorViewModel inspector,
+        AudioInspectorViewModel audioInspector,
         PresetsViewModel presets,
         TimelineThumbnailLoader thumbnailLoader,
         IErrorPresenter errorPresenter,
@@ -73,6 +74,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Timeline = timeline;
         Preview = preview;
         Inspector = inspector;
+        AudioInspector = audioInspector;
         Presets = presets;
         _logger = logger;
 
@@ -101,6 +103,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
     /// <summary>Свойства выделенного клипа.</summary>
     public InspectorViewModel Inspector { get; }
+
+    /// <summary>Свойства выбранного куска звука.</summary>
+    public AudioInspectorViewModel AudioInspector { get; }
 
     /// <summary>Пресеты площадок, включая Telegram.</summary>
     public PresetsViewModel Presets { get; }
@@ -250,6 +255,53 @@ public sealed partial class ShellViewModel : ObservableObject
         catch (MeowsCutException ex)
         {
             _logger.LogWarning(ex, "Не удалось добавить {Path}", path);
+            _dialogService.ShowError(_errorPresenter.Present(ex));
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Положить звук из файла на аудиодорожку.</summary>
+    [RelayCommand]
+    private async Task AddSoundAsync(CancellationToken cancellationToken)
+    {
+        if (Project is null || IsBusy || !IsToolsetReady)
+        {
+            return;
+        }
+
+        var path = _fileDialogService.PickAudioFile();
+        if (path is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var info = await _mediaProbe.ProbeAsync(path, cancellationToken).ConfigureAwait(true);
+
+            if (!info.HasAudio)
+            {
+                _dialogService.ShowError(Strings.AddSound, Strings.FileHasNoSound);
+                return;
+            }
+
+            var (project, source) = Project.WithSource(info);
+
+            Project = project;
+            Preview.UpdateProject(project);
+            Timeline.AppendAudioSource(project, source);
+        }
+        catch (OperationCanceledException)
+        {
+            // Отмена — не ошибка.
+        }
+        catch (MeowsCutException ex)
+        {
+            _logger.LogWarning(ex, "Не удалось добавить звук {Path}", path);
             _dialogService.ShowError(_errorPresenter.Present(ex));
         }
         finally

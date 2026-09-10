@@ -143,6 +143,46 @@ public static class Strings
 
     public static string TimelineSummary => Get(nameof(TimelineSummary));
 
+    public static string AudioTrackDefaultName => Get(nameof(AudioTrackDefaultName));
+
+    public static string AudioTrackNumbered => Get(nameof(AudioTrackNumbered));
+
+    public static string AddSound => Get(nameof(AddSound));
+
+    public static string AddSoundHint => Get(nameof(AddSoundHint));
+
+    public static string AddAudioTrack => Get(nameof(AddAudioTrack));
+
+    public static string AddAudioTrackHint => Get(nameof(AddAudioTrackHint));
+
+    public static string DetachAudio => Get(nameof(DetachAudio));
+
+    public static string DetachAudioHint => Get(nameof(DetachAudioHint));
+
+    public static string SectionSound => Get(nameof(SectionSound));
+
+    public static string FieldPitch => Get(nameof(FieldPitch));
+
+    public static string FieldGain => Get(nameof(FieldGain));
+
+    public static string FieldFadeIn => Get(nameof(FieldFadeIn));
+
+    public static string FieldFadeOut => Get(nameof(FieldFadeOut));
+
+    public static string PitchSemitones => Get(nameof(PitchSemitones));
+
+    public static string TrackMuted => Get(nameof(TrackMuted));
+
+    public static string RemoveTrack => Get(nameof(RemoveTrack));
+
+    public static string AudioPreviewNote => Get(nameof(AudioPreviewNote));
+
+    public static string FilterAudioFiles => Get(nameof(FilterAudioFiles));
+
+    public static string OpenAudioDialogTitle => Get(nameof(OpenAudioDialogTitle));
+
+    public static string FileHasNoSound => Get(nameof(FileHasNoSound));
+
     public static string ToolSelect => Get(nameof(ToolSelect));
 
     public static string ToolRazor => Get(nameof(ToolRazor));

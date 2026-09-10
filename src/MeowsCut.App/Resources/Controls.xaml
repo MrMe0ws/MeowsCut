@@ -256,10 +256,77 @@
         </Setter>
     </Style>
 
+    <!-- Ползунок целиком свой: системный светлый в тёмном окне выглядел белой полосой,
+         и это было заметнее всего на громкости и тональности. -->
     <Style TargetType="Slider">
         <Setter Property="Foreground" Value="{StaticResource Brush.Accent}" />
         <Setter Property="Background" Value="{StaticResource Brush.SurfaceRaised}" />
         <Setter Property="Height" Value="22" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid VerticalAlignment="Center" Background="Transparent">
+                        <Border Height="4"
+                                VerticalAlignment="Center"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="2" />
+
+                        <Track x:Name="PART_Track">
+                            <!-- Пройденная часть закрашивается акцентом. Рисуется кнопкой
+                                 «уменьшить»: Track сам растягивает её ровно до бегунка,
+                                 и ширину не приходится считать вручную. -->
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton x:Name="Decrease" Command="Slider.DecreaseLarge">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Background="Transparent">
+                                                <Border Height="4"
+                                                        VerticalAlignment="Center"
+                                                        Background="{StaticResource Brush.Accent}"
+                                                        CornerRadius="2" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="Slider.IncreaseLarge" Opacity="0">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Background="Transparent" />
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb x:Name="Grip">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border Width="12"
+                                                    Height="12"
+                                                    Background="{StaticResource Brush.Text}"
+                                                    BorderBrush="{StaticResource Brush.Background}"
+                                                    BorderThickness="2"
+                                                    CornerRadius="6" />
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Grip" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Decrease" Property="Opacity" Value="0.4" />
+                            <Setter TargetName="Grip" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Тонкая полоса прокрутки: системная в тёмной панели выглядит инородно

@@ -25,14 +25,29 @@ public enum TimelineHitKind
     Ruler,
     ClipBody,
     ClipStartEdge,
-    ClipEndEdge
+    ClipEndEdge,
+
+    /// <summary>Пустое место на аудиодорожке — там просто тишина.</summary>
+    AudioEmpty,
+    AudioClipBody,
+    AudioClipStartEdge,
+    AudioClipEndEdge
 }
 
 public readonly record struct TimelineHit(TimelineHitKind Kind, PlacedClip? Clip, TimeSpan Time)
 {
+    /// <summary>Аудиодорожка под курсором, если он над полосой звука.</summary>
+    public AudioTrackId TrackId { get; init; }
+
+    public AudioClip? AudioClip { get; init; }
+
     public static TimelineHit Nothing(TimeSpan time) => new(TimelineHitKind.Empty, null, time);
 
-    public bool IsEdge => Kind is TimelineHitKind.ClipStartEdge or TimelineHitKind.ClipEndEdge;
+    public bool IsEdge => Kind is TimelineHitKind.ClipStartEdge or TimelineHitKind.ClipEndEdge
+        or TimelineHitKind.AudioClipStartEdge or TimelineHitKind.AudioClipEndEdge;
+
+    public bool IsAudio => Kind is TimelineHitKind.AudioEmpty or TimelineHitKind.AudioClipBody
+        or TimelineHitKind.AudioClipStartEdge or TimelineHitKind.AudioClipEndEdge;
 }
 
 /// <summary>
@@ -46,7 +61,12 @@ public sealed class TimelineHitTester
 {
     public const double EdgeGripPixels = 7d;
 
-    public double RulerHeight { get; set; } = 24d;
+    private readonly TimelineLayout _layout = new();
+
+    public double RulerHeight { get; set; } = TimelineLayout.RulerHeight;
+
+    /// <summary>Высота контрола: без неё не разложить полосы, а значит и не понять, куда попали.</summary>
+    public double ViewportHeight { get; set; } = 240d;
 
     public TimelineHit Test(double x, double y, Sequence sequence, TimelineMetrics metrics)
     {
@@ -55,6 +75,14 @@ public sealed class TimelineHitTester
         if (y < RulerHeight)
         {
             return new TimelineHit(TimelineHitKind.Ruler, null, time);
+        }
+
+        var lanes = _layout.Build(ViewportHeight, [.. sequence.AudioTracks.Select(track => track.Id)]);
+        var lane = _layout.LaneAt(lanes, y);
+
+        if (lane is { Kind: LaneKind.Audio } audioLane)
+        {
+            return TestAudio(x, time, audioLane, sequence, metrics);
         }
 
         foreach (var placed in sequence.EnumeratePlaced())
@@ -84,6 +112,46 @@ public sealed class TimelineHitTester
         }
 
         return TimelineHit.Nothing(time);
+    }
+
+    private TimelineHit TestAudio(
+        double x,
+        TimeSpan time,
+        TimelineLane lane,
+        Sequence sequence,
+        TimelineMetrics metrics)
+    {
+        var track = sequence.FindTrack(lane.TrackId);
+
+        var miss = new TimelineHit(TimelineHitKind.AudioEmpty, null, time) { TrackId = lane.TrackId };
+
+        if (track is null)
+        {
+            return miss;
+        }
+
+        foreach (var clip in track.Clips)
+        {
+            var left = metrics.TimeToX(clip.TimelineStart);
+            var right = metrics.TimeToX(clip.TimelineEnd);
+
+            if (x < left || x > right)
+            {
+                continue;
+            }
+
+            var grip = Math.Min(EdgeGripPixels, (right - left) / 3d);
+
+            var kind = x - left <= grip
+                ? TimelineHitKind.AudioClipStartEdge
+                : right - x <= grip
+                    ? TimelineHitKind.AudioClipEndEdge
+                    : TimelineHitKind.AudioClipBody;
+
+            return new TimelineHit(kind, null, time) { TrackId = lane.TrackId, AudioClip = clip };
+        }
+
+        return miss;
     }
 
     /// <summary>Индекс, на который встанет перетаскиваемый клип при отпускании в точке x.</summary>

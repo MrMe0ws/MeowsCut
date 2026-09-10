@@ -57,7 +57,29 @@ public sealed partial class TimelineViewModel : ObservableObject
     [ObservableProperty]
     private ClipViewModel? _selectedClip;
 
+    /// <summary>
+    /// Выбранный кусок звука. Отдельно от видеовыделения: инспектор показывает
+    /// либо одно, либо другое, и держать их вместе значило бы каждый раз гадать,
+    /// к чему относится «громкость».
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAudioSelection))]
+    private AudioClip? _selectedAudioClip;
+
+    [ObservableProperty]
+    private AudioTrackId _selectedAudioTrack;
+
     public TimelineMetrics Metrics { get; } = new();
+
+    /// <summary>
+    /// Высота доски. Нужна тесту попаданий: полосы раскладываются по высоте,
+    /// и без неё щелчок по звуку считался бы щелчком по видео.
+    /// </summary>
+    public double ViewportHeight
+    {
+        get => _hitTester.ViewportHeight;
+        set => _hitTester.ViewportHeight = value;
+    }
 
     public SnapEngine Snap { get; } = new();
 
@@ -81,6 +103,13 @@ public sealed partial class TimelineViewModel : ObservableObject
     public int SelectionCount => _selection.Count;
 
     public bool HasMultipleSelected => _selection.Count > 1;
+
+    public bool HasAudioSelection => SelectedAudioClip is not null;
+
+    /// <summary>Дорожки звука для отрисовки и панели свойств.</summary>
+    public IReadOnlyList<AudioTrack> AudioTracks => Sequence.AudioTracks;
+
+    public bool HasAudioTracks => Sequence.AudioTracks.Count > 0;
 
     /// <summary>Выделенные клипы в порядке дорожки.</summary>
     public IReadOnlyList<ClipViewModel> SelectedClips =>
@@ -139,6 +168,123 @@ public sealed partial class TimelineViewModel : ObservableObject
         SelectedClip = Clips.LastOrDefault();
         ApplySelectionToClips();
     }
+
+    /// <summary>
+    /// Кладёт звук из файла на аудиодорожку, начиная с плейхеда.
+    /// </summary>
+    /// <remarks>
+    /// Новая дорожка создаётся, только если ни одной ещё нет: иначе каждый
+    /// добавленный звук плодил бы полосу, и доска уехала бы за край экрана.
+    /// Наложение делается второй дорожкой осознанно — кнопкой «Дорожка».
+    /// </remarks>
+    public void AppendAudioSource(Project project, MediaSource source)
+    {
+        _project = project;
+
+        if (_history is null)
+        {
+            return;
+        }
+
+        var clip = AudioClip.FromSource(source, Playhead);
+
+        if (Sequence.AudioTracks.Count == 0)
+        {
+            var track = AudioTrack.Empty(Localization.Strings.AudioTrackDefaultName) with { Clips = [clip] };
+            Execute(new AddAudioTrackCommand(track));
+            SelectAudio(track.Id, clip);
+        }
+        else
+        {
+            var trackId = Sequence.AudioTracks[^1].Id;
+            Execute(new AddAudioClipCommand(trackId, clip));
+            SelectAudio(trackId, clip);
+        }
+
+        _history.EndMergeGroup();
+    }
+
+    /// <summary>Добавляет пустую дорожку — под неё кладут второй слой звука.</summary>
+    [RelayCommand(CanExecute = nameof(HasProject))]
+    private void AddAudioTrack()
+    {
+        var title = string.Format(
+            System.Globalization.CultureInfo.CurrentUICulture,
+            Localization.Strings.AudioTrackNumbered,
+            Sequence.AudioTracks.Count + 1);
+
+        Execute(new AddAudioTrackCommand(AudioTrack.Empty(title)));
+        _history?.EndMergeGroup();
+    }
+
+    /// <summary>Снять звук с выбранного видеоклипа на отдельную дорожку.</summary>
+    [RelayCommand(CanExecute = nameof(CanDetachAudio))]
+    private void DetachAudio()
+    {
+        if (SelectedClip is not { } clip)
+        {
+            return;
+        }
+
+        Execute(new DetachClipAudioCommand(clip.Id));
+        _history?.EndMergeGroup();
+    }
+
+    private bool CanDetachAudio() => SelectedClip is { } clip && clip.Clip.SourceHasAudio;
+
+    [RelayCommand]
+    private void RemoveAudioTrack(AudioTrackId trackId)
+    {
+        Execute(new RemoveAudioTrackCommand(trackId));
+        _history?.EndMergeGroup();
+
+        if (SelectedAudioTrack == trackId)
+        {
+            SelectedAudioClip = null;
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleAudioTrackMuted(AudioTrackId trackId)
+    {
+        if (Sequence.FindTrack(trackId) is not { } track)
+        {
+            return;
+        }
+
+        Execute(new SetAudioTrackPropertiesCommand(trackId, muted: !track.IsMuted));
+        _history?.EndMergeGroup();
+    }
+
+    /// <summary>Громкость дорожки целиком — ползунок на её заголовке.</summary>
+    public void SetAudioTrackGain(AudioTrackId trackId, double gain)
+    {
+        if (Sequence.FindTrack(trackId) is not { } track || Math.Abs(track.Gain - gain) < 0.0001)
+        {
+            return;
+        }
+
+        Execute(new SetAudioTrackPropertiesCommand(trackId, gain: gain));
+    }
+
+    /// <summary>Свойства выбранного куска звука: громкость, тональность, затухания.</summary>
+    public void SetAudioClipProperties(
+        double? gain = null,
+        int? pitch = null,
+        TimeSpan? fadeIn = null,
+        TimeSpan? fadeOut = null)
+    {
+        if (SelectedAudioClip is not { } clip)
+        {
+            return;
+        }
+
+        Execute(new SetAudioClipPropertiesCommand(SelectedAudioTrack, clip.Id, gain, pitch, fadeIn, fadeOut));
+        RefreshAudioSelection();
+    }
+
+    /// <summary>Завершает серию правок ползунком — дальше история начнёт новую запись.</summary>
+    public void EndAudioEdit() => _history?.EndMergeGroup();
 
     /// <summary>
     /// Вписывает последовательность в окно, когда контрол наконец знает свою ширину.
@@ -229,12 +375,24 @@ public sealed partial class TimelineViewModel : ObservableObject
             Playhead = Duration;
         }
 
+        RefreshAudioSelection();
+        OnPropertyChanged(nameof(AudioTracks));
+        OnPropertyChanged(nameof(HasAudioTracks));
+
         ThumbnailsRequested?.Invoke(this, EventArgs.Empty);
         VisualInvalidated?.Invoke(this, EventArgs.Empty);
     }
 
+    partial void OnSelectedAudioClipChanged(AudioClip? value)
+    {
+        DeleteSelectedCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(HasAudioSelection));
+    }
+
     partial void OnSelectedClipChanged(ClipViewModel? value)
     {
+        DetachAudioCommand.NotifyCanExecuteChanged();
+
         // Основной клип — тот, что показывает инспектор. Само выделение живёт
         // в _selection: сбрасывать его здесь значило бы терять множественный выбор.
         if (value is not null)
@@ -269,6 +427,14 @@ public sealed partial class TimelineViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void DeleteSelected()
     {
+        if (SelectedAudioClip is { } audio)
+        {
+            Execute(new RemoveAudioClipCommand(SelectedAudioTrack, audio.Id));
+            _history?.EndMergeGroup();
+            SelectedAudioClip = null;
+            return;
+        }
+
         if (_selection.Count == 0)
         {
             return;
@@ -307,7 +473,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
-    private bool HasSelection() => SelectedClip is not null;
+    private bool HasSelection() => SelectedClip is not null || SelectedAudioClip is not null;
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
     private void Undo() => _history?.Undo();
@@ -413,7 +579,10 @@ public sealed partial class TimelineViewModel : ObservableObject
         MoveClip,
         TrimStart,
         TrimEnd,
-        Pan
+        Pan,
+        MoveAudio,
+        TrimAudioStart,
+        TrimAudioEnd
     }
 
     public void PointerDown(double x, double y, PointerMode mode = PointerMode.Normal)
@@ -431,6 +600,14 @@ public sealed partial class TimelineViewModel : ObservableObject
         if (mode == PointerMode.Pan)
         {
             _drag = DragState.Pan;
+            return;
+        }
+
+        // Полоса звука разбирается своими правилами, включая ножницы: иначе
+        // разрез по звуку уходил бы в ветку видеоряда и молча ничего не делал.
+        if (hit.IsAudio)
+        {
+            HandleAudioPointerDown(hit);
             return;
         }
 
@@ -477,6 +654,49 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
+    private void HandleAudioPointerDown(TimelineHit hit)
+    {
+        if (ActiveTool == TimelineTool.Razor)
+        {
+            if (hit.AudioClip is not null)
+            {
+                Execute(new SplitAudioClipCommand(hit.TrackId, hit.Time));
+                _history?.EndMergeGroup();
+            }
+
+            return;
+        }
+
+        SelectAudio(hit.TrackId, hit.AudioClip);
+
+        if (hit.AudioClip is null)
+        {
+            return;
+        }
+
+        _drag = hit.Kind switch
+        {
+            TimelineHitKind.AudioClipStartEdge => DragState.TrimAudioStart,
+            TimelineHitKind.AudioClipEndEdge => DragState.TrimAudioEnd,
+            _ => DragState.MoveAudio
+        };
+
+        _dragReferenceTime = hit.Time - hit.AudioClip.TimelineStart;
+    }
+
+    private void SelectAudio(AudioTrackId trackId, AudioClip? clip)
+    {
+        // Выделения не складываются: выбрав звук, пользователь перестаёт
+        // целиться в видеоклип, и наоборот.
+        _selection.Clear();
+        SelectedClip = null;
+        ApplySelectionToClips();
+
+        SelectedAudioTrack = trackId;
+        SelectedAudioClip = clip;
+        RequestRedraw();
+    }
+
     public void PointerMove(double x, double y)
     {
         if (_history is null || _drag == DragState.None)
@@ -506,12 +726,79 @@ public sealed partial class TimelineViewModel : ObservableObject
             case DragState.MoveClip:
                 DragClip(x);
                 break;
+
+            case DragState.MoveAudio:
+                DragAudioClip(x);
+                break;
+
+            case DragState.TrimAudioStart:
+            case DragState.TrimAudioEnd:
+                DragAudioEdge(x);
+                break;
         }
+    }
+
+    /// <summary>Тянут кусок звука: он встаёт туда, где отпустили, с прилипанием.</summary>
+    private void DragAudioClip(double x)
+    {
+        if (SelectedAudioClip is not { } clip)
+        {
+            return;
+        }
+
+        var start = Snap.Snap(Metrics.XToTime(x) - _dragReferenceTime, Sequence, Metrics, Playhead);
+
+        if (start < TimeSpan.Zero)
+        {
+            start = TimeSpan.Zero;
+        }
+
+        if (start == clip.TimelineStart)
+        {
+            return;
+        }
+
+        Execute(new MoveAudioClipCommand(SelectedAudioTrack, clip.Id, start));
+        RefreshAudioSelection();
+    }
+
+    private void DragAudioEdge(double x)
+    {
+        if (SelectedAudioClip is not { } clip)
+        {
+            return;
+        }
+
+        var edge = _drag == DragState.TrimAudioStart ? ClipEdge.Start : ClipEdge.End;
+        var target = Snap.Snap(Metrics.XToTime(x), Sequence, Metrics, Playhead);
+
+        var current = edge == ClipEdge.Start ? clip.TimelineStart : clip.TimelineEnd;
+        var delta = target - current;
+
+        if (Math.Abs(delta.TotalMilliseconds) < 1)
+        {
+            return;
+        }
+
+        Execute(new TrimAudioClipEdgeCommand(SelectedAudioTrack, clip.Id, edge, delta));
+        RefreshAudioSelection();
+    }
+
+    /// <summary>После правки объект куска другой — выделение надо перечитать из модели.</summary>
+    private void RefreshAudioSelection()
+    {
+        if (SelectedAudioClip is not { } clip)
+        {
+            return;
+        }
+
+        SelectedAudioClip = Sequence.FindTrack(SelectedAudioTrack)?.Find(clip.Id);
     }
 
     public void PointerUp()
     {
-        if (_drag is DragState.TrimStart or DragState.TrimEnd or DragState.MoveClip)
+        if (_drag is DragState.TrimStart or DragState.TrimEnd or DragState.MoveClip
+            or DragState.MoveAudio or DragState.TrimAudioStart or DragState.TrimAudioEnd)
         {
             _history?.EndMergeGroup();
         }

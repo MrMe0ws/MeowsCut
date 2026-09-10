@@ -41,6 +41,9 @@ public interface IFileDialogService
     /// <summary>Один или несколько файлов: из них собирается видеоряд.</summary>
     IReadOnlyList<string> PickVideoFiles();
 
+    /// <summary>Файл со звуком: музыка, запись голоса или видео, из которого нужен звук.</summary>
+    string? PickAudioFile();
+
     string? PickFolder(string title);
 }
 
@@ -61,6 +64,22 @@ public sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog() == true
             ? [.. dialog.FileNames.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)]
             : [];
+    }
+
+    public string? PickAudioFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.OpenAudioDialogTitle,
+            Filter = MediaFileTypes.BuildAudioDialogFilter(
+                Strings.FilterAudioFiles,
+                Strings.FilterVideoFiles,
+                Strings.FilterAllFiles),
+            CheckFileExists = true,
+            Multiselect = false
+        };
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
     public string? PickFolder(string title)

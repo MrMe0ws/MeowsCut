@@ -263,6 +263,66 @@
   <data name="TimelineSummary" xml:space="preserve">
     <value>Клипов: {0} · длительность {1}</value>
   </data>
+  <data name="AudioTrackDefaultName" xml:space="preserve">
+    <value>Дорожка 1</value>
+  </data>
+  <data name="AudioTrackNumbered" xml:space="preserve">
+    <value>Дорожка {0}</value>
+  </data>
+  <data name="AddSound" xml:space="preserve">
+    <value>Звук</value>
+  </data>
+  <data name="AddSoundHint" xml:space="preserve">
+    <value>Добавить музыку или запись голоса с позиции плейхеда</value>
+  </data>
+  <data name="AddAudioTrack" xml:space="preserve">
+    <value>Дорожка</value>
+  </data>
+  <data name="AddAudioTrackHint" xml:space="preserve">
+    <value>Ещё одна дорожка — чтобы накладывать звуки друг на друга</value>
+  </data>
+  <data name="DetachAudio" xml:space="preserve">
+    <value>Отделить звук</value>
+  </data>
+  <data name="DetachAudioHint" xml:space="preserve">
+    <value>Снять звук выбранного клипа на отдельную дорожку: его можно будет двигать и резать отдельно от картинки</value>
+  </data>
+  <data name="SectionSound" xml:space="preserve">
+    <value>Звук</value>
+  </data>
+  <data name="FieldPitch" xml:space="preserve">
+    <value>Тональность</value>
+  </data>
+  <data name="FieldGain" xml:space="preserve">
+    <value>Громкость</value>
+  </data>
+  <data name="FieldFadeIn" xml:space="preserve">
+    <value>Нарастание</value>
+  </data>
+  <data name="FieldFadeOut" xml:space="preserve">
+    <value>Затухание</value>
+  </data>
+  <data name="PitchSemitones" xml:space="preserve">
+    <value>{0:+#;-#;0} полутонов</value>
+  </data>
+  <data name="TrackMuted" xml:space="preserve">
+    <value>Тишина</value>
+  </data>
+  <data name="RemoveTrack" xml:space="preserve">
+    <value>Убрать дорожку</value>
+  </data>
+  <data name="AudioPreviewNote" xml:space="preserve">
+    <value>Наложенный звук слышен в экспорте и в проверке фрагмента</value>
+  </data>
+  <data name="FilterAudioFiles" xml:space="preserve">
+    <value>Звук</value>
+  </data>
+  <data name="OpenAudioDialogTitle" xml:space="preserve">
+    <value>Выберите музыку или запись голоса</value>
+  </data>
+  <data name="FileHasNoSound" xml:space="preserve">
+    <value>В этом файле нет звука — брать нечего.</value>
+  </data>
   <data name="ToolSelect" xml:space="preserve">
     <value>Выделение</value>
   </data>

@@ -28,6 +28,8 @@
     <!-- Текст на акцентной кнопке: на ярко-зелёном читается только тёмный -->
     <SolidColorBrush x:Key="Brush.OnAccent" Color="{StaticResource Color.Background}" />
     <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}" />
+    <!-- Кусок звука: холодный оттенок, чтобы полоса звука не спорила с кадрами -->
+    <SolidColorBrush x:Key="Brush.AudioClip" Color="#FF2B3A46" />
     <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
     <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
 

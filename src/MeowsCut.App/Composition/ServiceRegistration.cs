@@ -69,6 +69,7 @@ public static class ServiceRegistration
         services.AddSingleton<TimelineViewModel>();
         services.AddSingleton<PreviewViewModel>();
         services.AddSingleton<InspectorViewModel>();
+        services.AddSingleton<AudioInspectorViewModel>();
         services.AddSingleton<ExportViewModel>();
         services.AddSingleton<PresetsViewModel>();
         services.AddSingleton<Func<PresetsViewModel>>(provider => provider.GetRequiredService<PresetsViewModel>);

@@ -67,6 +67,24 @@
                             </StackPanel>
                         </Button>
 
+                        <Button Margin="6,0,0,0"
+                                Command="{Binding DataContext.AddSoundCommand,
+                                    RelativeSource={RelativeSource AncestorType=Window}}"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="{loc:Tr AddSoundHint}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Note}" Style="{StaticResource ToolIconStroke}" />
+                                <TextBlock Text="{loc:Tr AddSound}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Margin="6,0,0,0"
+                                Command="{Binding AddAudioTrackCommand}"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="{loc:Tr AddAudioTrackHint}">
+                            <Path Data="{StaticResource Icon.Layers}" Style="{StaticResource ToolIconOnly}" />
+                        </Button>
+
                         <Border Width="1"
                                 Margin="8,2"
                                 Background="{StaticResource Brush.Border}" />

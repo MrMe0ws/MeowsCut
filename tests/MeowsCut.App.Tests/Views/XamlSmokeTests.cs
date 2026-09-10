@@ -80,6 +80,7 @@ public class XamlSmokeTests
     {
         new ExportPanelView().Should().NotBeNull();
         new InspectorView().Should().NotBeNull();
+        new AudioInspectorView().Should().NotBeNull();
         new PresetsView().Should().NotBeNull();
         new TimelinePaneView().Should().NotBeNull();
         new PreviewPaneView().Should().NotBeNull();
