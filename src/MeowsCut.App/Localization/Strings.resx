@@ -90,7 +90,10 @@
     <value>Громкость всей дорожки — поверх громкости каждого куска</value>
   </data>
   <data name="FieldSpeedCustomHint" xml:space="preserve">
-    <value>Своя скорость: от 0.1 до 16</value>
+    <value>Точное значение: от 0.1 до 16</value>
+  </data>
+  <data name="FieldSpeedHint" xml:space="preserve">
+    <value>Шаг ползунка — вдвое; около 1× он прилипает к обычной скорости</value>
   </data>
   <data name="SectionSources" xml:space="preserve">
     <value>Файлы проекта</value>
@@ -287,11 +290,11 @@
   <data name="DeleteClipHint" xml:space="preserve">
     <value>Удалить выбранный клип (Delete)</value>
   </data>
-  <data name="AddVideo" xml:space="preserve">
-    <value>Видео</value>
+  <data name="AddFile" xml:space="preserve">
+    <value>Файл</value>
   </data>
-  <data name="AddVideoHint" xml:space="preserve">
-    <value>Добавить файл в конец видеоряда. Файл можно и перетащить на окно</value>
+  <data name="AddFileHint" xml:space="preserve">
+    <value>Добавить видео или фотографию в конец видеоряда. Файл можно и перетащить на окно</value>
   </data>
   <data name="OpenExportStep" xml:space="preserve">
     <value>Экспорт видео  →</value>

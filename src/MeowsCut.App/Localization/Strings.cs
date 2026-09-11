@@ -33,6 +33,8 @@ public static class Strings
 
     public static string FieldSpeedCustomHint => Get(nameof(FieldSpeedCustomHint));
 
+    public static string FieldSpeedHint => Get(nameof(FieldSpeedHint));
+
     public static string SectionSources => Get(nameof(SectionSources));
 
     public static string SourceKindVideo => Get(nameof(SourceKindVideo));
@@ -159,9 +161,9 @@ public static class Strings
 
     public static string DeleteClipHint => Get(nameof(DeleteClipHint));
 
-    public static string AddVideo => Get(nameof(AddVideo));
+    public static string AddFile => Get(nameof(AddFile));
 
-    public static string AddVideoHint => Get(nameof(AddVideoHint));
+    public static string AddFileHint => Get(nameof(AddFileHint));
 
     public static string OpenExportStep => Get(nameof(OpenExportStep));
 

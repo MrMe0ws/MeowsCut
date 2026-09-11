@@ -60,10 +60,10 @@
                         <Button Command="{Binding DataContext.AddFileCommand,
                                     RelativeSource={RelativeSource AncestorType=Window}}"
                                 Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr AddVideoHint}">
+                                ToolTip="{loc:Tr AddFileHint}">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="{StaticResource Icon.Plus}" Style="{StaticResource ToolIconStroke}" />
-                                <TextBlock Text="{loc:Tr AddVideo}" />
+                                <TextBlock Text="{loc:Tr AddFile}" />
                             </StackPanel>
                         </Button>
 

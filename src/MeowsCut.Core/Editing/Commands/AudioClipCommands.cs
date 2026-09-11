@@ -128,14 +128,15 @@ public sealed class SplitAudioClipCommand(AudioTrackId trackId, TimeSpan timelin
     }
 }
 
-/// <summary>Громкость, тональность и затухания одного куска звука.</summary>
+/// <summary>Громкость, тональность, скорость и затухания одного куска звука.</summary>
 public sealed class SetAudioClipPropertiesCommand(
     AudioTrackId trackId,
     AudioClipId clipId,
     double? gain = null,
     int? pitchSemitones = null,
     TimeSpan? fadeIn = null,
-    TimeSpan? fadeOut = null) : IEditCommand
+    TimeSpan? fadeOut = null,
+    double? speed = null) : IEditCommand
 {
     public string Title => "Изменить звук";
 
@@ -152,6 +153,8 @@ public sealed class SetAudioClipPropertiesCommand(
 
     public TimeSpan? FadeOut { get; } = fadeOut;
 
+    public double? Speed { get; } = speed;
+
     public Sequence Apply(Sequence sequence)
     {
         var track = sequence.RequireTrack(TrackId);
@@ -165,6 +168,12 @@ public sealed class SetAudioClipPropertiesCommand(
         if (PitchSemitones is { } semitones)
         {
             clip = clip.WithPitch(semitones);
+        }
+
+        // Скорость меняем до затуханий: она задаёт длительность, по которой их обрезают
+        if (Speed is { } newSpeed)
+        {
+            clip = clip.WithSpeed(newSpeed);
         }
 
         if (FadeIn is not null || FadeOut is not null)
@@ -198,7 +207,8 @@ public sealed class SetAudioClipPropertiesCommand(
             Gain ?? other.Gain,
             PitchSemitones ?? other.PitchSemitones,
             FadeIn ?? other.FadeIn,
-            FadeOut ?? other.FadeOut);
+            FadeOut ?? other.FadeOut,
+            Speed ?? other.Speed);
 
         return true;
     }

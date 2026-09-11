@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:fmt="clr-namespace:MeowsCut.App.Formatting"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
              xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -80,6 +81,35 @@
                                VerticalAlignment="Center"
                                Style="{StaticResource Text.Muted}"
                                Text="{Binding PitchSemitones, StringFormat={}{0:+#;-#;0} пт}" />
+                </StackPanel>
+
+                <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+
+                <!-- Скорость звука отдельно от скорости клипа: музыку подгоняют под
+                     монтаж, а не наоборот, и от картинки она не зависит. -->
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Margin="0,0,8,0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{loc:Tr FieldSpeed}" />
+                    <Slider Width="120"
+                            VerticalAlignment="Center"
+                            LargeChange="1"
+                            Maximum="{x:Static fmt:SpeedScale.Max}"
+                            Minimum="{x:Static fmt:SpeedScale.Min}"
+                            SmallChange="0.08"
+                            ToolTip="{loc:Tr FieldSpeedHint}"
+                            Value="{Binding SpeedSlider}" />
+                    <TextBox Width="54"
+                             Margin="8,0,0,0"
+                             VerticalAlignment="Center"
+                             Padding="6,4"
+                             Text="{Binding SpeedText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="{loc:Tr FieldSpeedCustomHint}" />
+                    <TextBlock Margin="4,0,0,0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="×" />
                 </StackPanel>
 
                 <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />

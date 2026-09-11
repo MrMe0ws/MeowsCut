@@ -106,6 +106,17 @@ public sealed record AudioClip(
     public AudioClip WithPitch(int semitones) =>
         this with { PitchSemitones = Math.Clamp(semitones, -MaxPitchSemitones, MaxPitchSemitones) };
 
+    /// <summary>
+    /// Меняет скорость куска. Пределы те же, что у видео: ускоренный звук тянет
+    /// за собой длительность, поэтому затухания пересчитываются под новую длину —
+    /// иначе затухание длиннее самого куска съело бы его целиком.
+    /// </summary>
+    public AudioClip WithSpeed(double speed)
+    {
+        var clamped = Math.Clamp(speed, Clip.MinSpeed, Clip.MaxSpeed);
+        return (this with { Speed = clamped }).WithFades(FadeIn, FadeOut);
+    }
+
     public AudioClip WithFades(TimeSpan fadeIn, TimeSpan fadeOut)
     {
         var limit = Duration;

@@ -31,8 +31,6 @@ public sealed partial class InspectorViewModel : ObservableObject
         _timeline.SequenceChanged += (_, _) => Refresh();
     }
 
-    public static IReadOnlyList<double> SpeedPresets { get; } = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 4];
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
     private ClipViewModel? _clip;
@@ -51,6 +49,13 @@ public sealed partial class InspectorViewModel : ObservableObject
 
     [ObservableProperty]
     private double _speed = 1d;
+
+    /// <summary>
+    /// Положение ползунка — логарифм скорости, см. <see cref="SpeedScale"/>.
+    /// Отдельным свойством, потому что ползунок и число живут в разных шкалах.
+    /// </summary>
+    [ObservableProperty]
+    private double _speedSlider;
 
     /// <summary>
     /// Скорость, набранная вручную. Кнопок-заготовок не хватает: замедление до 0.4
@@ -90,7 +95,8 @@ public sealed partial class InspectorViewModel : ObservableObject
             SourceRangeText =
                 $"{DisplayFormat.Duration(clip.Clip.SourceRange.Start)} → {DisplayFormat.Duration(clip.Clip.SourceRange.End)}";
             Speed = clip.Clip.Speed;
-            SpeedText = FormatSpeed(clip.Clip.Speed);
+            SpeedText = SpeedScale.Format(clip.Clip.Speed);
+            SpeedSlider = SpeedScale.ToSlider(clip.Clip.Speed);
             AudioEnabled = clip.Clip.Audio.Enabled;
             VolumePercent = Math.Round(clip.Clip.Audio.Volume * 100);
             ZoomPercent = Math.Round(clip.Clip.Transform.Zoom * 100);
@@ -102,6 +108,7 @@ public sealed partial class InspectorViewModel : ObservableObject
             StartText = EndText = DurationText = SourceRangeText = string.Empty;
             Speed = 1d;
             SpeedText = "1";
+            SpeedSlider = 0d;
             AudioEnabled = true;
             VolumePercent = 100d;
             ZoomPercent = 100d;
@@ -119,7 +126,7 @@ public sealed partial class InspectorViewModel : ObservableObject
     /// </summary>
     partial void OnSpeedTextChanged(string value)
     {
-        if (_updating || !TryParseSpeed(value, out var speed))
+        if (_updating || !SpeedScale.TryParse(value, out var speed))
         {
             return;
         }
@@ -127,41 +134,15 @@ public sealed partial class InspectorViewModel : ObservableObject
         Speed = speed;
     }
 
-    private static bool TryParseSpeed(string value, out double speed)
+    partial void OnSpeedSliderChanged(double value)
     {
-        speed = 1d;
-
-        if (string.IsNullOrWhiteSpace(value))
+        if (_updating)
         {
-            return false;
+            return;
         }
 
-        // И точка, и запятая: раскладка у пользователя русская, а на клавиатуре
-        // цифрового блока запятая, и заставлять его помнить об этом незачем.
-        var normalized = value.Trim().Replace(',', '.');
-
-        if (!double.TryParse(
-                normalized,
-                System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out var parsed))
-        {
-            return false;
-        }
-
-        // Полное имя типа: у самой модели есть свойство Clip, и короткое имя
-        // разрешилось бы в него.
-        if (parsed < Core.Editing.Timeline.Clip.MinSpeed || parsed > Core.Editing.Timeline.Clip.MaxSpeed)
-        {
-            return false;
-        }
-
-        speed = parsed;
-        return true;
+        Speed = SpeedScale.FromSlider(value);
     }
-
-    private static string FormatSpeed(double speed) =>
-        speed.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 
     partial void OnSpeedChanged(double value)
     {
@@ -172,9 +153,10 @@ public sealed partial class InspectorViewModel : ObservableObject
 
         _timeline.SetClipSpeed(value);
 
-        // Поле подписи держим в согласии с кнопками-заготовками.
+        // Поле и ползунок держим в согласии друг с другом.
         _updating = true;
-        SpeedText = FormatSpeed(value);
+        SpeedText = SpeedScale.Format(value);
+        SpeedSlider = SpeedScale.ToSlider(value);
         _updating = false;
     }
 
@@ -248,6 +230,4 @@ public sealed partial class InspectorViewModel : ObservableObject
     [RelayCommand]
     private void EndInteraction() => _timeline.EndInteraction();
 
-    [RelayCommand]
-    private void ApplySpeed(double value) => Speed = value;
 }

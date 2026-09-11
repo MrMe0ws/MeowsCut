@@ -117,14 +117,15 @@ public sealed partial class TimelineViewModel
         double? gain = null,
         int? pitch = null,
         TimeSpan? fadeIn = null,
-        TimeSpan? fadeOut = null)
+        TimeSpan? fadeOut = null,
+        double? speed = null)
     {
         if (SelectedAudioClip is not { } clip)
         {
             return;
         }
 
-        Execute(new SetAudioClipPropertiesCommand(SelectedAudioTrack, clip.Id, gain, pitch, fadeIn, fadeOut));
+        Execute(new SetAudioClipPropertiesCommand(SelectedAudioTrack, clip.Id, gain, pitch, fadeIn, fadeOut, speed));
         RefreshAudioSelection();
     }
 

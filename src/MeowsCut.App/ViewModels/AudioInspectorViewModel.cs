@@ -53,6 +53,17 @@ public sealed partial class AudioInspectorViewModel : ObservableObject
     private int _pitchSemitones;
 
     [ObservableProperty]
+    private double _speed = 1d;
+
+    /// <summary>Положение ползунка скорости — логарифм, см. <see cref="SpeedScale"/>.</summary>
+    [ObservableProperty]
+    private double _speedSlider;
+
+    /// <summary>Скорость, набранная вручную: 1.15 или 2.35 ползунком не поймать.</summary>
+    [ObservableProperty]
+    private string _speedText = "1";
+
+    [ObservableProperty]
     private double _fadeInSeconds;
 
     [ObservableProperty]
@@ -82,6 +93,9 @@ public sealed partial class AudioInspectorViewModel : ObservableObject
             RangeText = $"{DisplayFormat.Duration(clip.TimelineStart)} → {DisplayFormat.Duration(clip.TimelineEnd)}";
             GainPercent = Math.Round(clip.Gain * 100);
             PitchSemitones = clip.PitchSemitones;
+            Speed = clip.Speed;
+            SpeedText = SpeedScale.Format(clip.Speed);
+            SpeedSlider = SpeedScale.ToSlider(clip.Speed);
             FadeInSeconds = Math.Round(clip.FadeIn.TotalSeconds, 2);
             FadeOutSeconds = Math.Round(clip.FadeOut.TotalSeconds, 2);
         }
@@ -112,6 +126,42 @@ public sealed partial class AudioInspectorViewModel : ObservableObject
         }
 
         _timeline.SetAudioClipProperties(pitch: value);
+    }
+
+    partial void OnSpeedSliderChanged(double value)
+    {
+        if (_updating)
+        {
+            return;
+        }
+
+        Speed = SpeedScale.FromSlider(value);
+    }
+
+    /// <summary>Применяется по мере набора: «2» даёт 2×, следующая «.35» — 2.35×.</summary>
+    partial void OnSpeedTextChanged(string value)
+    {
+        if (_updating || !SpeedScale.TryParse(value, out var speed))
+        {
+            return;
+        }
+
+        Speed = speed;
+    }
+
+    partial void OnSpeedChanged(double value)
+    {
+        if (_updating || Clip is not { } clip || Math.Abs(clip.Speed - value) < 0.0001)
+        {
+            return;
+        }
+
+        _timeline.SetAudioClipProperties(speed: value);
+
+        _updating = true;
+        SpeedText = SpeedScale.Format(value);
+        SpeedSlider = SpeedScale.ToSlider(value);
+        _updating = false;
     }
 
     partial void OnFadeInSecondsChanged(double value) => ApplyFades();
