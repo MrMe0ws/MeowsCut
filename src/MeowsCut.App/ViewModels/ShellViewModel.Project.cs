@@ -83,6 +83,7 @@ public sealed partial class ShellViewModel
             return;
         }
 
+        BusyText = Strings.BusyOpeningProject;
         IsBusy = true;
         try
         {

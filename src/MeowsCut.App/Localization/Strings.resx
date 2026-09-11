@@ -69,7 +69,7 @@
     <value>или</value>
   </data>
   <data name="OpenVideo" xml:space="preserve">
-    <value>Открыть видео</value>
+    <value>Открыть</value>
   </data>
   <data name="OpenDialogTitle" xml:space="preserve">
     <value>Выберите видеофайл</value>
@@ -119,6 +119,18 @@
   <data name="FilterImageFiles" xml:space="preserve">
     <value>Фотографии</value>
   </data>
+  <data name="WindowMinimize" xml:space="preserve">
+    <value>Свернуть</value>
+  </data>
+  <data name="WindowMaximize" xml:space="preserve">
+    <value>Развернуть</value>
+  </data>
+  <data name="WindowRestore" xml:space="preserve">
+    <value>Восстановить</value>
+  </data>
+  <data name="WindowClose" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
   <data name="MenuFile" xml:space="preserve">
     <value>Файл</value>
   </data>
@@ -166,6 +178,15 @@
   </data>
   <data name="MenuDelete" xml:space="preserve">
     <value>Удалить кусок</value>
+  </data>
+  <data name="BusyOpeningFile" xml:space="preserve">
+    <value>Читаю файл…</value>
+  </data>
+  <data name="BusyAddingFile" xml:space="preserve">
+    <value>Добавляю файл…</value>
+  </data>
+  <data name="BusyOpeningProject" xml:space="preserve">
+    <value>Открываю черновик…</value>
   </data>
   <data name="ProjectSaved" xml:space="preserve">
     <value>Черновик сохранён: {0}</value>
@@ -424,6 +445,9 @@
   </data>
   <data name="TrackMuted" xml:space="preserve">
     <value>Тишина</value>
+  </data>
+  <data name="TrackUnmute" xml:space="preserve">
+    <value>Включить звук дорожки</value>
   </data>
   <data name="RemoveTrack" xml:space="preserve">
     <value>Убрать дорожку</value>

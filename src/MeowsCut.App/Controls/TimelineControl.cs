@@ -469,6 +469,62 @@ public sealed class TimelineControl : Control
     }
 
     /// <summary>
+    /// Правая кнопка по звуковой дорожке открывает её меню. Кнопку-корзину пришлось бы
+    /// рисовать в плашке заголовка размером с ноготь, и промах по ней удалял бы дорожку
+    /// целиком; правый клик к тому же работает и на пустой дорожке, где выбирать нечего.
+    /// </summary>
+    protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseRightButtonDown(e);
+
+        ContextMenu = null;
+
+        if (_model is null)
+        {
+            return;
+        }
+
+        var position = e.GetPosition(this);
+        var lanes = _layout.Build(ActualHeight, [.. _model.Sequence.AudioTracks.Select(track => track.Id)]);
+        var lane = lanes.FirstOrDefault(item => item.Kind == LaneKind.Audio && item.Contains(position.Y));
+
+        if (lane.Kind != LaneKind.Audio || _model.Sequence.FindTrack(lane.TrackId) is not { } track)
+        {
+            return;
+        }
+
+        Focus();
+        e.Handled = true;
+
+        ContextMenu = BuildTrackMenu(track);
+        ContextMenu.IsOpen = true;
+    }
+
+    private ContextMenu BuildTrackMenu(AudioTrack track)
+    {
+        var menu = new ContextMenu { DataContext = _model };
+
+        var mute = new MenuItem
+        {
+            Header = track.IsMuted ? Localization.Strings.TrackUnmute : Localization.Strings.TrackMuted,
+            Command = _model!.ToggleAudioTrackMutedCommand,
+            CommandParameter = track.Id
+        };
+
+        var remove = new MenuItem
+        {
+            Header = Localization.Strings.RemoveTrack,
+            Command = _model.RemoveAudioTrackCommand,
+            CommandParameter = track.Id
+        };
+
+        menu.Items.Add(mute);
+        menu.Items.Add(remove);
+
+        return menu;
+    }
+
+    /// <summary>
     /// Средняя кнопка тянет доску каким угодно инструментом — она и заменила
     /// отдельную «руку». Ctrl добавляет клип к выделению, Shift берёт ряд.
     /// </summary>

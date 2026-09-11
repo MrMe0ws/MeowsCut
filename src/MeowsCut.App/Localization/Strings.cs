@@ -51,6 +51,14 @@ public static class Strings
 
     public static string FilterImageFiles => Get(nameof(FilterImageFiles));
 
+    public static string WindowMinimize => Get(nameof(WindowMinimize));
+
+    public static string WindowMaximize => Get(nameof(WindowMaximize));
+
+    public static string WindowRestore => Get(nameof(WindowRestore));
+
+    public static string WindowClose => Get(nameof(WindowClose));
+
     public static string MenuFile => Get(nameof(MenuFile));
 
     public static string MenuEdit => Get(nameof(MenuEdit));
@@ -82,6 +90,12 @@ public static class Strings
     public static string MenuDuplicate => Get(nameof(MenuDuplicate));
 
     public static string MenuDelete => Get(nameof(MenuDelete));
+
+    public static string BusyOpeningFile => Get(nameof(BusyOpeningFile));
+
+    public static string BusyAddingFile => Get(nameof(BusyAddingFile));
+
+    public static string BusyOpeningProject => Get(nameof(BusyOpeningProject));
 
     public static string ProjectSaved => Get(nameof(ProjectSaved));
 
@@ -250,6 +264,8 @@ public static class Strings
     public static string PitchSemitones => Get(nameof(PitchSemitones));
 
     public static string TrackMuted => Get(nameof(TrackMuted));
+
+    public static string TrackUnmute => Get(nameof(TrackUnmute));
 
     public static string RemoveTrack => Get(nameof(RemoveTrack));
 

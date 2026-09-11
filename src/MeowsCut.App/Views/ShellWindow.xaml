@@ -17,6 +17,7 @@
         Background="{DynamicResource Brush.Background}"
         FontFamily="{StaticResource Font.Ui}"
         WindowStartupLocation="CenterScreen"
+        StateChanged="OnWindowStateChanged"
         DragOver="OnDragOver"
         Drop="OnDrop"
         d:DataContext="{d:DesignInstance vm:ShellViewModel}"
@@ -24,10 +25,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
 
+    <!--
+        Строка меню заменяет собой заголовок окна: отдельная полоса с одним
+        названием программы занимала высоту ни за чем. Перетаскивание и двойной
+        клик по свободному месту строки работают как у обычного заголовка.
+    -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30"
+                      CornerRadius="0"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="6"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
     <!-- Горячие клавиши доски монтажа -->
     <Window.InputBindings>
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenFileCommand}" />
-        <KeyBinding Key="E" Modifiers="Control" Command="{Binding Export.StartCommand}" />
+        <KeyBinding Key="E" Modifiers="Control" Command="{Binding OpenExportCommand}" />
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveProjectCommand}" />
         <KeyBinding Key="Z" Modifiers="Control" Command="{Binding Timeline.UndoCommand}" />
         <KeyBinding Key="Z" Modifiers="Control+Shift" Command="{Binding Timeline.RedoCommand}" />
@@ -81,7 +95,7 @@
                 Background="{DynamicResource Brush.Surface}"
                 BorderBrush="{DynamicResource Brush.Border}"
                 BorderThickness="0,0,0,1"
-                Padding="8,2">
+                Padding="8,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -96,7 +110,9 @@
                        RenderOptions.BitmapScalingMode="HighQuality"
                        Source="../Assets/logo.png" />
 
-                <Menu Grid.Column="1" VerticalAlignment="Center">
+                <Menu Grid.Column="1"
+                      VerticalAlignment="Center"
+                      WindowChrome.IsHitTestVisibleInChrome="True">
                     <MenuItem Header="{loc:Tr MenuFile}">
                         <MenuItem Command="{Binding AddFileCommand}"
                                   Header="{loc:Tr MenuAddFile}"
@@ -109,7 +125,7 @@
                                   InputGestureText="Ctrl+S" />
                         <MenuItem Command="{Binding SaveProjectAsCommand}" Header="{loc:Tr MenuSaveProjectAs}" />
                         <Separator Style="{StaticResource MenuSeparator}" />
-                        <MenuItem Command="{Binding Export.StartCommand}"
+                        <MenuItem Command="{Binding OpenExportCommand}"
                                   Header="{loc:Tr MenuExport}"
                                   InputGestureText="Ctrl+E" />
                         <Separator Style="{StaticResource MenuSeparator}" />
@@ -139,13 +155,32 @@
                     </MenuItem>
                 </Menu>
 
-                <!-- Имя черновика: единственное, что стоит держать на виду сверху -->
-                <TextBlock Grid.Column="2"
-                           Margin="12,0,8,0"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource Text.Muted}"
-                           Text="{Binding ProjectFileName}"
-                           TextTrimming="CharacterEllipsis" />
+                <!-- Имя черновика и кнопки окна -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <TextBlock Margin="12,0,12,0"
+                               VerticalAlignment="Center"
+                               MaxWidth="240"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{Binding ProjectFileName}"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <Button Click="OnMinimize"
+                            Style="{StaticResource WindowButton}"
+                            Tag="{StaticResource Icon.WindowMinimize}"
+                            ToolTip="{loc:Tr WindowMinimize}"
+                            WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button x:Name="MaximizeButton"
+                            Click="OnMaximizeOrRestore"
+                            Style="{StaticResource WindowButton}"
+                            Tag="{StaticResource Icon.WindowMaximize}"
+                            ToolTip="{loc:Tr WindowMaximize}"
+                            WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button Click="OnExit"
+                            Style="{StaticResource WindowButton.Close}"
+                            Tag="{StaticResource Icon.WindowClose}"
+                            ToolTip="{loc:Tr WindowClose}"
+                            WindowChrome.IsHitTestVisibleInChrome="True" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -354,6 +389,26 @@
                         Style="{StaticResource Button.Ghost}"
                         Visibility="{Binding IsToolsetReady, Converter={StaticResource InverseBoolToVisibility}}" />
             </Grid>
+        </Border>
+
+        <!--
+            Ожидание поверх всего окна. Чтение файла и открытие черновика занимают
+            секунды, и без этого экран просто замирает — выглядит как зависшая
+            программа. Панель перехватывает и клики: править то, что сейчас
+            перечитывается, всё равно нельзя.
+        -->
+        <Border Grid.Row="0"
+                Grid.RowSpan="3"
+                Background="{DynamicResource Brush.Background}"
+                Opacity="0.88"
+                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <Path Style="{StaticResource Spinner}" />
+                <TextBlock Margin="12,0,0,0"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource Text.Base}"
+                           Text="{Binding BusyText}" />
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

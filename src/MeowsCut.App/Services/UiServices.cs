@@ -68,7 +68,8 @@ public sealed class FileDialogService : IFileDialogService
                 Strings.FilterMediaFiles,
                 Strings.FilterVideoFiles,
                 Strings.FilterImageFiles,
-                Strings.FilterAllFiles),
+                Strings.FilterAllFiles,
+                IProjectStore.Extension),
             CheckFileExists = true,
             Multiselect = true
         };

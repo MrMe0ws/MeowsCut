@@ -60,14 +60,16 @@ public static class MediaFileTypes
         string mediaFilesLabel,
         string videoFilesLabel,
         string imageFilesLabel,
-        string allFilesLabel)
+        string allFilesLabel,
+        string? projectExtension = null)
     {
         var video = string.Join(";", VideoExtensions.Select(x => "*" + x));
         var images = string.Join(";", ImageExtensions.Select(x => "*" + x));
+        var projects = projectExtension is null ? string.Empty : ";*" + projectExtension;
 
         // Первым — общий фильтр: чаще всего в папке лежит и то, и другое,
         // и заставлять переключать список ради одной фотографии незачем.
-        return $"{mediaFilesLabel}|{video};{images}|" +
+        return $"{mediaFilesLabel}|{video};{images}{projects}|" +
                $"{videoFilesLabel}|{video}|" +
                $"{imageFilesLabel}|{images}|" +
                $"{allFilesLabel}|*.*";

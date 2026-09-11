@@ -40,6 +40,14 @@ public sealed partial class ShellViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsStatusBarVisible))]
     private bool _isBusy;
 
+    /// <summary>
+    /// Чем занято приложение прямо сейчас. Показывается поверх окна вместе
+    /// с ожиданием: чтение файла занимает секунды, и без надписи это выглядит
+    /// зависанием.
+    /// </summary>
+    [ObservableProperty]
+    private string _busyText = string.Empty;
+
     [ObservableProperty]
     private string _toolsetStatus = Strings.FfmpegSearching;
 
@@ -186,6 +194,12 @@ public sealed partial class ShellViewModel : ObservableObject
             return;
         }
 
+        if (Path.GetExtension(paths[0]).Equals(IProjectStore.Extension, StringComparison.OrdinalIgnoreCase))
+        {
+            await OpenProjectFileAsync(paths[0], cancellationToken).ConfigureAwait(true);
+            return;
+        }
+
         // Первый файл открывает проект, остальные встают следом: выбрать сразу
         // несколько роликов и собрать из них один — обычный сценарий, а не редкость.
         await OpenAsync(paths[0], cancellationToken).ConfigureAwait(true);
@@ -213,6 +227,7 @@ public sealed partial class ShellViewModel : ObservableObject
             return;
         }
 
+        BusyText = Strings.BusyOpeningFile;
         IsBusy = true;
         try
         {
@@ -270,6 +285,7 @@ public sealed partial class ShellViewModel : ObservableObject
             return;
         }
 
+        BusyText = Strings.BusyAddingFile;
         IsBusy = true;
         try
         {

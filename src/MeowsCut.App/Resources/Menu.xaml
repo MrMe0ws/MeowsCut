@@ -79,8 +79,39 @@
                     </Border>
 
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsHighlighted" Value="True">
+                        <!--
+                            Подсветка своя для каждого уровня: «Файл» лежит на панели
+                            цвета Surface, пункты внутри списка — на SurfaceRaised.
+                            Один цвет на оба случая сливался бы с фоном на одном из них,
+                            и наведение оставалось незаметным.
+                        -->
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsHighlighted" Value="True" />
+                                <Condition Property="Role" Value="TopLevelHeader" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceRaised}" />
+                        </MultiTrigger>
+
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsHighlighted" Value="True" />
+                                <Condition Property="Role" Value="SubmenuItem" />
+                            </MultiTrigger.Conditions>
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Surface}" />
+                        </MultiTrigger>
+
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsHighlighted" Value="True" />
+                                <Condition Property="Role" Value="SubmenuHeader" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Surface}" />
+                        </MultiTrigger>
+
+                        <!-- Раскрытый список оставляет свой заголовок подсвеченным -->
+                        <Trigger Property="IsSubmenuOpen" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceRaised}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />
@@ -92,6 +123,66 @@
                         </Trigger>
                         <Trigger Property="Role" Value="SubmenuHeader">
                             <Setter Property="Tag" Value="Right" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Кнопки окна в строке меню. Прямоугольные и без скруглений — так они
+        выглядят в самой Windows, и рука попадает в них у самого края экрана.
+    -->
+    <Style x:Key="WindowButton" TargetType="Button">
+        <Setter Property="Width" Value="44" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root" Background="{TemplateBinding Background}">
+                        <Path x:Name="Glyph"
+                              Width="11"
+                              Height="11"
+                              Data="{TemplateBinding Tag}"
+                              Stretch="Uniform"
+                              Stroke="{TemplateBinding Foreground}"
+                              StrokeThickness="1.3" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceRaised}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Закрытие краснеет под курсором: единственная кнопка, чьё нажатие необратимо -->
+    <Style x:Key="WindowButton.Close" TargetType="Button" BasedOn="{StaticResource WindowButton}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="White" />
+            </Trigger>
+        </Style.Triggers>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root" Background="{TemplateBinding Background}">
+                        <Path Width="11"
+                              Height="11"
+                              Data="{TemplateBinding Tag}"
+                              Stretch="Uniform"
+                              Stroke="{TemplateBinding Foreground}"
+                              StrokeThickness="1.3" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Danger}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

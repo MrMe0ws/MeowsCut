@@ -97,6 +97,9 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<ThemeOption> Themes { get; } = ThemeOption.All;
 
+    /// <summary>Настройки записаны — окну пора закрыться.</summary>
+    public event EventHandler? Saved;
+
     partial void OnThemeChanged(ThemeOption value) => _themes.Apply(value.Value);
 
     [RelayCommand]
@@ -154,6 +157,8 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         Status = Strings.SettingsSaved;
         _logger.LogInformation("Настройки сохранены");
+
+        Saved?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
