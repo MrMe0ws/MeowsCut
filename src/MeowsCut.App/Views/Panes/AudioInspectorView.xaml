@@ -44,6 +44,7 @@
                 <!-- Ползунок и его число — одной группой: при переносе строки
                      они обязаны остаться вместе. -->
                 <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource Icon.Volume}" Style="{StaticResource FieldIcon}" />
                     <TextBlock Margin="0,0,8,0"
                                VerticalAlignment="Center"
                                Style="{StaticResource Text.Muted}"
@@ -65,6 +66,7 @@
                 <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
 
                 <StackPanel Orientation="Horizontal" ToolTip="{loc:Tr FieldPitchHint}">
+                    <Path Data="{StaticResource Icon.Note}" Style="{StaticResource FieldIcon}" />
                     <TextBlock Margin="0,0,8,0"
                                VerticalAlignment="Center"
                                Style="{StaticResource Text.Muted}"
@@ -88,6 +90,7 @@
                 <!-- Скорость звука отдельно от скорости клипа: музыку подгоняют под
                      монтаж, а не наоборот, и от картинки она не зависит. -->
                 <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource Icon.Speed}" Style="{StaticResource FieldIcon}" />
                     <TextBlock Margin="0,0,8,0"
                                VerticalAlignment="Center"
                                Style="{StaticResource Text.Muted}"
@@ -129,6 +132,7 @@
                 <!-- У каждого ползунка своё число рядом: без него непонятно,
                      сколько именно секунд нарастания получилось. -->
                 <StackPanel Orientation="Horizontal" ToolTip="{loc:Tr FieldFadeInHint}">
+                    <Path Data="{StaticResource Icon.Fade}" Style="{StaticResource FieldIcon}" />
                     <TextBlock VerticalAlignment="Center"
                                Style="{StaticResource Text.Muted}"
                                Text="{loc:Tr FieldFadeIn}" />
@@ -148,6 +152,7 @@
                 </StackPanel>
 
                 <StackPanel Margin="12,0,0,0" Orientation="Horizontal" ToolTip="{loc:Tr FieldFadeOutHint}">
+                    <Path Data="{StaticResource Icon.FadeOut}" Style="{StaticResource FieldIcon}" />
                     <TextBlock VerticalAlignment="Center"
                                Style="{StaticResource Text.Muted}"
                                Text="{loc:Tr FieldFadeOut}" />

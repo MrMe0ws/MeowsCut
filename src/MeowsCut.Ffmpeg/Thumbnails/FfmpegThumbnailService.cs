@@ -69,13 +69,22 @@ public sealed class FfmpegThumbnailService(
             // и файл вида "кадр.jpg.tmp" он записать отказывается.
             var temporaryPath = cachePath + ".part.jpg";
 
-            var arguments = FfmpegArgumentBuilder.Create()
+            var builder = FfmpegArgumentBuilder.Create()
                 .HideBanner()
                 .OverwriteOutput()
                 .NoStdin()
-                .LogLevel("error")
-                // -ss до -i даёт быстрый поиск: для миниатюры точность до кадра не нужна.
-                .InputSeek(position)
+                .LogLevel("error");
+
+            // -ss до -i даёт быстрый поиск: для миниатюры точность до кадра не нужна.
+            // На нуле его не ставим вовсе: у фотографии кадр один, и перемотка
+            // к нулю выбрасывала его целиком — ffmpeg возвращал успех, но файла
+            // не создавал, и полоса кадров у фотографий оставалась пустой.
+            if (position > TimeSpan.Zero)
+            {
+                builder = builder.InputSeek(position);
+            }
+
+            var arguments = builder
                 .Input(sourcePath)
                 .Option("-frames:v", "1")
                 .Option("-vf", $"scale={width.ToString(CultureInfo.InvariantCulture)}:-2")

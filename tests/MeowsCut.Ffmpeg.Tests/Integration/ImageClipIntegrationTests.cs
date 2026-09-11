@@ -10,6 +10,7 @@ using MeowsCut.Ffmpeg.Execution;
 using MeowsCut.Ffmpeg.Planning;
 using MeowsCut.Ffmpeg.Probing;
 using MeowsCut.Ffmpeg.Rendering;
+using MeowsCut.Ffmpeg.Thumbnails;
 using MeowsCut.Ffmpeg.Toolset;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -123,6 +124,27 @@ public sealed class ImageClipIntegrationTests : IDisposable
 
         (await ProbeAsync(settings.OutputPath!)).Duration
             .Should().BeCloseTo(MediaInfo.DefaultImageClipDuration, TimeSpan.FromMilliseconds(600));
+    }
+
+    [FfmpegFact]
+    public async Task A_photo_gives_the_board_its_frame()
+    {
+        // Полоса кадров у фотографий оставалась пустой: таймлайн просит кадр на нуле,
+        // а «-ss 0» перед «-i» выбрасывал единственный кадр изображения — ffmpeg
+        // возвращал успех и не создавал файла, и так по кругу на каждой перерисовке.
+        var photo = await CreateImageAsync("полоса.jpg", 640, 480);
+
+        var service = new FfmpegThumbnailService(
+            new AppPaths(_workDirectory, _workDirectory, _workDirectory),
+            CreateToolsetProvider(),
+            _runner,
+            NullLogger<FfmpegThumbnailService>.Instance);
+
+        var frame = await service.GetFrameAsync(photo, TimeSpan.Zero, 192, CancellationToken.None);
+
+        frame.Should().NotBeNull("без кадра клип фотографии выглядит пустым прямоугольником");
+        File.Exists(frame!).Should().BeTrue();
+        new FileInfo(frame!).Length.Should().BeGreaterThan(0);
     }
 
     private static ExportSettings Settings(string outputPath) =>

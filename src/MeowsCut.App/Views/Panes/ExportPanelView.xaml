@@ -51,13 +51,19 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldContainerFormat}" />
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Box}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldContainerFormat}" />
+                        </StackPanel>
                         <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
                                   ItemsSource="{Binding Containers}"
                                   SelectedItem="{Binding Container}"
                                   Style="{StaticResource FieldBox}" />
 
-                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldVideoCodec}" />
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Film}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldVideoCodec}" />
+                        </StackPanel>
                         <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
                                   ItemsSource="{Binding VideoCodecs}"
                                   SelectedItem="{Binding VideoCodec}"
@@ -71,7 +77,10 @@
                                    Visibility="{Binding CodecNotice, Converter={StaticResource NullToVisibility}}" />
 
                         <!-- Качество -->
-                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldQuality}" />
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Sliders}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldQuality}" />
+                        </StackPanel>
                         <ComboBox ItemsSource="{Binding QualityModes}"
                                   SelectedItem="{Binding QualityMode}"
                                   Style="{StaticResource FieldBox}" />
@@ -112,7 +121,10 @@
                         </StackPanel>
 
                         <!-- Разрешение и частота кадров -->
-                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldResolution}" />
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Frame}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldResolution}" />
+                        </StackPanel>
                         <ComboBox ItemsSource="{Binding Resolutions}"
                                   SelectedItem="{Binding Resolution}"
                                   Style="{StaticResource FieldBox}" />
@@ -138,7 +150,10 @@
                                   Style="{StaticResource FieldBox}"
                                   Visibility="{Binding IsCustomResolution, Converter={StaticResource BoolToVisibility}}" />
 
-                        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldFrameRate}" />
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Speed}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldFrameRate}" />
+                        </StackPanel>
                         <ComboBox ItemsSource="{Binding FrameRates}"
                                   SelectedItem="{Binding FrameRate}"
                                   Style="{StaticResource FieldBox}" />
@@ -156,7 +171,10 @@
                                   IsChecked="{Binding KeepAudio}" />
 
                         <StackPanel Visibility="{Binding KeepAudio, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldAudioCodec}" />
+                            <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Volume}" Style="{StaticResource FieldIcon}" />
+                                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldAudioCodec}" />
+                            </StackPanel>
                             <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
                                       ItemsSource="{Binding AvailableAudioCodecs}"
                                       SelectedItem="{Binding AudioCodec}"
@@ -192,9 +210,10 @@
                         </StackPanel>
 
                         <!-- Субтитры -->
-                        <TextBlock Margin="0,4,0,6"
-                                   Style="{StaticResource Text.Section}"
-                                   Text="{loc:Tr SectionSubtitles}" />
+                        <StackPanel Margin="0,4,0,6" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Subtitles}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr SectionSubtitles}" />
+                        </StackPanel>
 
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
@@ -244,7 +263,10 @@
 
                         <StackPanel Visibility="{Binding ShowAdvanced, Converter={StaticResource BoolToVisibility}}">
                             <StackPanel Visibility="{Binding HasHardwareChoice, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldHardware}" />
+                                <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                                    <Path Data="{StaticResource Icon.Chip}" Style="{StaticResource FieldIcon}" />
+                                    <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldHardware}" />
+                                </StackPanel>
                                 <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}"
                                           ItemsSource="{Binding HardwareOptions}"
                                           SelectedItem="{Binding Hardware}"
@@ -255,7 +277,10 @@
                                            TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldEncodingSpeed}" />
+                            <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Speed}" Style="{StaticResource FieldIcon}" />
+                                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldEncodingSpeed}" />
+                            </StackPanel>
                             <ComboBox ItemsSource="{Binding EncodingSpeeds}"
                                       SelectedItem="{Binding EncodingSpeed}"
                                       Style="{StaticResource FieldBox}" />

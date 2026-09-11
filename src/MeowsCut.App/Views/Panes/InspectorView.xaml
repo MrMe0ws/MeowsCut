@@ -51,6 +51,7 @@
                     <!-- Ползунок и число — одной группой: порознь при переносе строки
                          число повисает отдельно от того, чем его меняют. -->
                     <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource Icon.Speed}" Style="{StaticResource FieldIcon}" />
                         <TextBlock Margin="0,0,8,0"
                                    VerticalAlignment="Center"
                                    Style="{StaticResource Text.Muted}"
@@ -80,6 +81,7 @@
                     <!-- Ползунок и его число — одной группой: при переносе строки
                          они обязаны остаться вместе, иначе «100%» повисает отдельно. -->
                     <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource Icon.Volume}" Style="{StaticResource FieldIcon}" />
                         <CheckBox VerticalAlignment="Center"
                                   Content="{loc:Tr ClipAudioEnabled}"
                                   IsChecked="{Binding AudioEnabled}" />
@@ -103,9 +105,13 @@
                     <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
 
                     <ToggleButton x:Name="FrameToggle"
-                                  Content="{loc:Tr SectionFrame}"
                                   Style="{StaticResource ToolButton}"
-                                  ToolTip="{loc:Tr SectionFrameHint}" />
+                                  ToolTip="{loc:Tr SectionFrameHint}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Frame}" Style="{StaticResource ToolIconStroke}" />
+                            <TextBlock Text="{loc:Tr SectionFrame}" />
+                        </StackPanel>
+                    </ToggleButton>
                 </WrapPanel>
 
                 <!-- Кадрирование прячется: нужно редко, а места занимает как всё остальное -->

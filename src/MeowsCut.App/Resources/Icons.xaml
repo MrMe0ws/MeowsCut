@@ -43,4 +43,57 @@
     <PathGeometry x:Key="Icon.Folder"
                   Figures="M 2,5.5 C 2,4.7 2.7,4 3.5,4 L 9,4 L 11,6.5 L 20.5,6.5 C 21.3,6.5 22,7.2 22,8 L 22,18.5 C 22,19.3 21.3,20 20.5,20 L 3.5,20 C 2.7,20 2,19.3 2,18.5 Z" />
 
+    <!-- Спидометр: скорость клипа и скорость кодирования -->
+    <PathGeometry x:Key="Icon.Speed"
+                  Figures="M 3.5,17.5 A 9.5,9.5 0 1 1 20.5,17.5 M 12,13 L 16.5,8.5" />
+
+    <!-- Динамик с волнами: громкость -->
+    <PathGeometry x:Key="Icon.Volume"
+                  Figures="M 3,9.5 L 6.5,9.5 L 11,5.5 L 11,18.5 L 6.5,14.5 L 3,14.5 Z M 14.5,9 A 4,4 0 0 1 14.5,15 M 17.5,6 A 8,8 0 0 1 17.5,18" />
+
+    <!-- Клин вверх: нарастание звука. Зеркальный — затухание -->
+    <PathGeometry x:Key="Icon.Fade" Figures="M 3,19 L 21,5 L 21,19 Z" />
+
+    <PathGeometry x:Key="Icon.FadeOut" Figures="M 21,19 L 3,5 L 3,19 Z" />
+
+    <!-- Плёнка: всё, что про картинку в экспорте -->
+    <PathGeometry x:Key="Icon.Film"
+                  Figures="M 3,5 L 21,5 L 21,19 L 3,19 Z M 7,5 L 7,19 M 17,5 L 17,19 M 3,12 L 7,12 M 17,12 L 21,12 M 3,8.5 L 7,8.5 M 3,15.5 L 7,15.5 M 17,8.5 L 21,8.5 M 17,15.5 L 21,15.5" />
+
+    <!-- Рамка с углами: разрешение и кадрирование -->
+    <PathGeometry x:Key="Icon.Frame"
+                  Figures="M 3,8 L 3,5 L 6,5 M 18,5 L 21,5 L 21,8 M 21,16 L 21,19 L 18,19 M 6,19 L 3,19 L 3,16" />
+
+    <!-- Ползунки: качество и прочие настройки -->
+    <PathGeometry x:Key="Icon.Sliders"
+                  Figures="M 4,7 L 20,7 M 4,12 L 20,12 M 4,17 L 20,17 M 9,7 A 1.8,1.8 0 1 0 9.01,7 M 15,12 A 1.8,1.8 0 1 0 15.01,12 M 7,17 A 1.8,1.8 0 1 0 7.01,17" />
+
+    <!-- Экран с двумя строками внизу: субтитры -->
+    <PathGeometry x:Key="Icon.Subtitles"
+                  Figures="M 3,5 L 21,5 L 21,19 L 3,19 Z M 6,14.5 L 11,14.5 M 13.5,14.5 L 18,14.5 M 6,11 L 9,11 M 11.5,11 L 18,11" />
+
+    <!-- Кристалл с ножками: аппаратное кодирование -->
+    <PathGeometry x:Key="Icon.Chip"
+                  Figures="M 7,7 L 17,7 L 17,17 L 7,17 Z M 10,3.5 L 10,7 M 14,3.5 L 14,7 M 10,17 L 10,20.5 M 14,17 L 14,20.5 M 3.5,10 L 7,10 M 3.5,14 L 7,14 M 17,10 L 20.5,10 M 17,14 L 20.5,14" />
+
+    <!-- Коробка: контейнер файла -->
+    <PathGeometry x:Key="Icon.Box"
+                  Figures="M 12,3 L 21,7.5 L 21,16.5 L 12,21 L 3,16.5 L 3,7.5 Z M 3,7.5 L 12,12 L 21,7.5 M 12,12 L 12,21" />
+
+    <!--
+        Значок перед подписью поля. Обводка приглушённым цветом: значок помогает
+        найти нужную строку взглядом, но спорить с самой подписью не должен.
+    -->
+    <Style x:Key="FieldIcon" TargetType="Path">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Stroke" Value="{StaticResource Brush.TextMuted}" />
+        <Setter Property="StrokeThickness" Value="1.6" />
+        <Setter Property="StrokeStartLineCap" Value="Round" />
+        <Setter Property="StrokeEndLineCap" Value="Round" />
+    </Style>
+
 </ResourceDictionary>

@@ -1,4 +1,4 @@
-{
+﻿{
   "schemaVersion": 1,
   "group": {
     "id": "general",
@@ -25,6 +25,54 @@
       },
       "constraints": {},
       "notes": []
+    },
+    {
+      "id": "general.web-1440",
+      "title": "Для интернета · 2K",
+      "description": "2560×1440, H.264 — заметно чётче 1080p, открывается везде",
+      "order": 15,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "crf": 21,
+        "width": 2560,
+        "height": 1440,
+        "fit": "Contain",
+        "pixelFormat": "yuv420p",
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 192
+      },
+      "constraints": {},
+      "notes": [
+        "Из исходника 1080p чётче не станет: 2K имеет смысл, когда съёмка была в 2K или выше"
+      ]
+    },
+    {
+      "id": "general.youtube-1080",
+      "title": "YouTube · 1080p",
+      "description": "Настройки загрузки, которые рекомендует сам YouTube",
+      "order": 18,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "bitrateKbps": 12000,
+        "width": 1920,
+        "height": 1080,
+        "fit": "Contain",
+        "pixelFormat": "yuv420p",
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 384,
+        "audioSampleRateHz": 48000,
+        "audioChannels": 2
+      },
+      "constraints": {},
+      "notes": [
+        "YouTube просит 8 Мбит/с для 30 кадров и 12 для 60; взято 12, чтобы не гадать о частоте",
+        "Площадка всё равно пережмёт ролик заново — запас битрейта уходит в качество её копии",
+        "Звук 384 кбит/с, 48 кГц, стерео — тоже требование YouTube"
+      ]
     },
     {
       "id": "general.small-file",
