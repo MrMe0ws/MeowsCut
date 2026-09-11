@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using MeowsCut.App.Services;
 using MeowsCut.App.Timeline;
+using MeowsCut.App.Theming;
 using MeowsCut.App.ViewModels;
 using MeowsCut.App.Views;
 using MeowsCut.Core.Abstractions;
@@ -58,6 +59,7 @@ public static class ServiceRegistration
     public static IServiceCollection AddMeowsCutUi(this IServiceCollection services)
     {
         services.AddSingleton<IUiDispatcher>(_ => new UiDispatcher(Application.Current.Dispatcher));
+        services.AddSingleton(_ => new ThemeManager(Application.Current.Resources));
         services.AddSingleton<IFileDialogService, FileDialogService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddTransient<SettingsViewModel>();

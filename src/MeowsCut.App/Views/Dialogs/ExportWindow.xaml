@@ -8,7 +8,7 @@
         Height="760"
         MinWidth="860"
         MinHeight="560"
-        Background="{StaticResource Brush.Background}"
+        Background="{DynamicResource Brush.Background}"
         FontFamily="{StaticResource Font.Ui}"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">

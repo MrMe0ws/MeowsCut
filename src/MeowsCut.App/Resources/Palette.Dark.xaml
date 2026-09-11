@@ -1,0 +1,52 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Тёмная палитра. Только цвета: кисти из них собирает Theme.xaml, а смена темы
+        перекрашивает уже существующие кисти, поэтому набор ключей здесь и в светлой
+        палитре обязан совпадать один в один.
+    -->
+
+    <Color x:Key="Color.Background">#FF141416</Color>
+    <Color x:Key="Color.Surface">#FF1C1C1F</Color>
+    <Color x:Key="Color.SurfaceRaised">#FF232327</Color>
+    <Color x:Key="Color.Border">#FF3A3A41</Color>
+    <Color x:Key="Color.Text">#FFEDEDF0</Color>
+    <!-- Подписи полей и пояснения. Были #9A9AA3 — на тёмном фоне читались
+         как «тёмный текст»; замерено 5.3:1, теперь около 8:1. -->
+    <Color x:Key="Color.TextMuted">#FFBFBFC8</Color>
+    <!-- Недоступный элемент: заметно тише обычного текста, но всё ещё читается -->
+    <Color x:Key="Color.TextDisabled">#FF85858F</Color>
+    <Color x:Key="Color.Accent">#FF5FE06B</Color>
+    <Color x:Key="Color.AccentHover">#FF7BEA85</Color>
+    <!-- Текст на акцентной кнопке: на ярко-зелёном читается только тёмный -->
+    <Color x:Key="Color.OnAccent">#FF141416</Color>
+    <Color x:Key="Color.Warning">#FFE0B341</Color>
+    <Color x:Key="Color.Danger">#FFE06C6C</Color>
+    <!-- Кусок звука: холодный оттенок, чтобы полоса звука не спорила с кадрами -->
+    <Color x:Key="Color.AudioClip">#FF2B3A46</Color>
+    <!-- Подложка подписей поверх кадров: они лежат на самой картинке,
+         поэтому тёмная в обеих темах -->
+    <Color x:Key="Color.Scrim">#D20A0A0C</Color>
+
+    <!--
+        Кисти живут рядом со своими цветами: смена темы подменяет этот словарь
+        целиком, и ссылки DynamicResource в разметке подхватывают новые кисти сами.
+        Перекрасить кисти на месте нельзя — WPF замораживает те, что пришли из разметки.
+    -->
+    <SolidColorBrush x:Key="Brush.Background" Color="{StaticResource Color.Background}" />
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}" />
+    <SolidColorBrush x:Key="Brush.SurfaceRaised" Color="{StaticResource Color.SurfaceRaised}" />
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.Text" Color="{StaticResource Color.Text}" />
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}" />
+    <SolidColorBrush x:Key="Brush.TextDisabled" Color="{StaticResource Color.TextDisabled}" />
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
+    <SolidColorBrush x:Key="Brush.OnAccent" Color="{StaticResource Color.OnAccent}" />
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}" />
+    <SolidColorBrush x:Key="Brush.AudioClip" Color="{StaticResource Color.AudioClip}" />
+    <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
+    <SolidColorBrush x:Key="Brush.Scrim" Color="{StaticResource Color.Scrim}" />
+
+</ResourceDictionary>

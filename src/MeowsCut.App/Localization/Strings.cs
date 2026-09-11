@@ -339,6 +339,16 @@ public static class Strings
 
     public static string NameTemplateHint => Get(nameof(NameTemplateHint));
 
+    public static string FieldTheme => Get(nameof(FieldTheme));
+
+    public static string ThemeDark => Get(nameof(ThemeDark));
+
+    public static string ThemeLight => Get(nameof(ThemeLight));
+
+    public static string ThemeSystem => Get(nameof(ThemeSystem));
+
+    public static string ThemeHint => Get(nameof(ThemeHint));
+
     public static string VerboseLogging => Get(nameof(VerboseLogging));
 
     public static string SaveSettings => Get(nameof(SaveSettings));

@@ -20,8 +20,8 @@
     </UserControl.Resources>
 
     <Border Padding="12,8"
-            Background="{StaticResource Brush.Surface}"
-            BorderBrush="{StaticResource Brush.Border}"
+            Background="{DynamicResource Brush.Surface}"
+            BorderBrush="{DynamicResource Brush.Border}"
             BorderThickness="0,1,0,0">
         <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
             <WrapPanel Orientation="Horizontal">
@@ -39,7 +39,7 @@
                            Style="{StaticResource Text.Muted}"
                            Text="{Binding RangeText}" />
 
-                <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                 <!-- Ползунок и его число — одной группой: при переносе строки
                      они обязаны остаться вместе. -->
@@ -63,7 +63,7 @@
                                Text="{Binding GainPercent, StringFormat={}{0:0}%}" />
                 </StackPanel>
 
-                <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                 <StackPanel Orientation="Horizontal" ToolTip="{loc:Tr FieldPitchHint}">
                     <Path Data="{StaticResource Icon.Note}" Style="{StaticResource FieldIcon}" />
@@ -85,7 +85,7 @@
                                Text="{Binding PitchSemitones, StringFormat={}{0:+#;-#;0} пт}" />
                 </StackPanel>
 
-                <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                 <!-- Скорость звука отдельно от скорости клипа: музыку подгоняют под
                      монтаж, а не наоборот, и от картинки она не зависит. -->
@@ -115,7 +115,7 @@
                                Text="×" />
                 </StackPanel>
 
-                <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                 <CheckBox VerticalAlignment="Center"
                           Content="{loc:Tr TrackMuted}"
@@ -171,7 +171,7 @@
                                Text="{Binding FadeOutSeconds, StringFormat={}{0:0.0} с}" />
                 </StackPanel>
 
-                <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                 <StackPanel Orientation="Horizontal" ToolTip="{loc:Tr FieldTrackGainHint}">
                     <TextBlock VerticalAlignment="Center"

@@ -10,7 +10,7 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:PreviewViewModel}">
 
-    <Grid Background="{StaticResource Brush.Background}">
+    <Grid Background="{DynamicResource Brush.Background}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />

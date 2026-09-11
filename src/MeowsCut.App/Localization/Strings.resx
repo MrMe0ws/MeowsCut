@@ -551,6 +551,21 @@
   <data name="NameTemplateHint" xml:space="preserve">
     <value>{name} — имя исходника, {ext} — расширение выбранного формата</value>
   </data>
+  <data name="FieldTheme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>Тёмная</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="ThemeSystem" xml:space="preserve">
+    <value>Как в системе</value>
+  </data>
+  <data name="ThemeHint" xml:space="preserve">
+    <value>«Как в системе» следит за настройкой Windows и переключается вместе с ней</value>
+  </data>
   <data name="VerboseLogging" xml:space="preserve">
     <value>Подробные логи (пригодятся при разборе ошибок)</value>
   </data>

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MeowsCut.App.Localization;
 using MeowsCut.App.Services;
+using MeowsCut.App.Theming;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Presets;
@@ -23,6 +24,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IFileDialogService _fileDialogs;
     private readonly IShellIntegration _shell;
     private readonly AppPaths _paths;
+    private readonly ThemeManager _themes;
     private readonly ILogger<SettingsViewModel> _logger;
 
     public SettingsViewModel(
@@ -34,6 +36,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IFileDialogService fileDialogs,
         IShellIntegration shell,
         AppPaths paths,
+        ThemeManager themes,
         ILogger<SettingsViewModel> logger)
     {
         _store = store;
@@ -44,6 +47,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _fileDialogs = fileDialogs;
         _shell = shell;
         _paths = paths;
+        _themes = themes;
         _logger = logger;
 
         Load();
@@ -60,6 +64,14 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _verboseLogging;
+
+    /// <summary>
+    /// Тема применяется сразу при выборе, а не по кнопке «Сохранить»: выбирают её
+    /// глазами, и посмотреть на светлую тему надо раньше, чем решить оставить её.
+    /// Не сохранённый выбор доживёт до закрытия приложения.
+    /// </summary>
+    [ObservableProperty]
+    private ThemeOption _theme = ThemeOption.All[0];
 
     [ObservableProperty]
     private string _status = string.Empty;
@@ -80,7 +92,12 @@ public sealed partial class SettingsViewModel : ObservableObject
         OutputDirectory = settings.DefaultOutputDirectory ?? string.Empty;
         OutputNameTemplate = settings.OutputNameTemplate;
         VerboseLogging = settings.VerboseLogging;
+        Theme = ThemeOption.For(settings.Theme);
     }
+
+    public IReadOnlyList<ThemeOption> Themes { get; } = ThemeOption.All;
+
+    partial void OnThemeChanged(ThemeOption value) => _themes.Apply(value.Value);
 
     [RelayCommand]
     private void BrowseFfmpeg()
@@ -129,6 +146,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             OutputNameTemplate = string.IsNullOrWhiteSpace(OutputNameTemplate)
                 ? "{name}_meows{ext}"
                 : OutputNameTemplate.Trim(),
+            Theme = Theme.Value,
             VerboseLogging = VerboseLogging
         };
 

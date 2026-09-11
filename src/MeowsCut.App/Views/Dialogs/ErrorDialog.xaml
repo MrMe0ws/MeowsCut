@@ -6,7 +6,7 @@
         Width="560"
         MaxHeight="620"
         SizeToContent="Height"
-        Background="{StaticResource Brush.Background}"
+        Background="{DynamicResource Brush.Background}"
         FontFamily="{StaticResource Font.Ui}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -22,7 +22,7 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0"
-                   Foreground="{StaticResource Brush.Danger}"
+                   Foreground="{DynamicResource Brush.Danger}"
                    Style="{StaticResource Text.Title}"
                    Text="{Binding Title}"
                    TextWrapping="Wrap" />
@@ -43,12 +43,12 @@
         <!-- Технические подробности: доступны, но не лезут вперёд -->
         <Expander Grid.Row="3"
                   Margin="0,14,0,0"
-                  Foreground="{StaticResource Brush.TextMuted}"
+                  Foreground="{DynamicResource Brush.TextMuted}"
                   Header="{loc:Tr ErrorDetails}"
                   Visibility="{Binding Details, Converter={StaticResource NullToVisibility}}">
             <Border Margin="0,8,0,0"
-                    Background="{StaticResource Brush.SurfaceRaised}"
-                    BorderBrush="{StaticResource Brush.Border}"
+                    Background="{DynamicResource Brush.SurfaceRaised}"
+                    BorderBrush="{DynamicResource Brush.Border}"
                     BorderThickness="1"
                     CornerRadius="6"
                     Padding="10">
@@ -57,7 +57,7 @@
                              BorderThickness="0"
                              FontFamily="Consolas"
                              FontSize="12"
-                             Foreground="{StaticResource Brush.Text}"
+                             Foreground="{DynamicResource Brush.Text}"
                              IsReadOnly="True"
                              Text="{Binding Details, Mode=OneWay}"
                              TextWrapping="Wrap" />

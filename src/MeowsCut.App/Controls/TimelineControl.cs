@@ -59,6 +59,9 @@ public sealed class TimelineControl : Control
 
     private Brush MutedAudioFill => (Brush)FindResource("Brush.SurfaceRaised");
 
+    /// <summary>Подложка подписей, лежащих поверх кадров.</summary>
+    private Brush ScrimBrush => (Brush)FindResource("Brush.Scrim");
+
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (_model is not null)
@@ -190,7 +193,7 @@ public sealed class TimelineControl : Control
             VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
         var badge = new Rect(4, lane.Top + 2, title.Width + 10, title.Height + 3);
-        context.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(210, 10, 10, 12)), null, badge, 3, 3);
+        context.DrawRoundedRectangle(ScrimBrush, null, badge, 3, 3);
         context.DrawText(title, new Point(9, lane.Top + 3));
     }
 
@@ -413,7 +416,7 @@ public sealed class TimelineControl : Control
 
         // Подложка под подписью: поверх кадров белый текст иначе не читается.
         var background = new Rect(rect.X + 4, rect.Bottom - text.Height - 6, text.Width + 8, text.Height + 4);
-        context.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(190, 10, 10, 12)), null, background, 4, 4);
+        context.DrawRoundedRectangle(ScrimBrush, null, background, 4, 4);
         context.DrawText(text, new Point(rect.X + 8, rect.Bottom - text.Height - 4));
     }
 

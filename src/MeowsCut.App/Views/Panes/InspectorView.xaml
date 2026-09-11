@@ -22,8 +22,8 @@
     <!-- Годится и полосой под доской монтажа, и колонкой справа: строки переносятся
          по ширине. Полосой поля стоят в ряд, колонкой — складываются в столбик. -->
     <Border Padding="12,8"
-            Background="{StaticResource Brush.Surface}"
-            BorderBrush="{StaticResource Brush.Border}"
+            Background="{DynamicResource Brush.Surface}"
+            BorderBrush="{DynamicResource Brush.Border}"
             BorderThickness="0,1,0,0">
         <StackPanel>
             <TextBlock Style="{StaticResource Text.Muted}"
@@ -46,7 +46,7 @@
                         <Run Text="{Binding EndText, Mode=OneWay}" />
                     </TextBlock>
 
-                    <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                    <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                     <!-- Ползунок и число — одной группой: порознь при переносе строки
                          число повисает отдельно от того, чем его меняют. -->
@@ -76,7 +76,7 @@
                                    Text="×" />
                     </StackPanel>
 
-                    <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                    <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                     <!-- Ползунок и его число — одной группой: при переносе строки
                          они обязаны остаться вместе, иначе «100%» повисает отдельно. -->
@@ -102,7 +102,7 @@
                                    Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
                     </StackPanel>
 
-                    <Border Width="1" Margin="12,2" Background="{StaticResource Brush.Border}" />
+                    <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                     <ToggleButton x:Name="FrameToggle"
                                   Style="{StaticResource ToolButton}"

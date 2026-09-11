@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using MeowsCut.App.Composition;
 using MeowsCut.App.Localization;
 using MeowsCut.App.Services;
+using MeowsCut.App.Theming;
 using MeowsCut.App.ViewModels;
 using MeowsCut.App.Views;
 using MeowsCut.Core.Abstractions;
@@ -51,8 +52,13 @@ public partial class App : Application
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
 
+        // Настройки читаем до показа окна: и язык, и тема нужны раньше первой отрисовки,
+        // а до загрузки хранилище отдаёт значения по умолчанию.
         var settings = _host.Services.GetRequiredService<IAppSettingsStore>();
-        LocalizationManager.UseCulture(settings.Current.Language);
+        var current = await settings.LoadAsync(_shutdown.Token);
+
+        LocalizationManager.UseCulture(current.Language);
+        _host.Services.GetRequiredService<ThemeManager>().Apply(current.Theme);
 
         var window = _host.Services.GetRequiredService<ShellWindow>();
         MainWindow = window;

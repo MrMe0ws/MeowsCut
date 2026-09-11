@@ -8,7 +8,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:ExportViewModel}"
-             Background="{StaticResource Brush.Surface}">
+             Background="{DynamicResource Brush.Surface}">
 
     <UserControl.Resources>
         <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
@@ -70,7 +70,7 @@
                                   Style="{StaticResource FieldBox}" />
 
                         <TextBlock Margin="0,0,0,12"
-                                   Foreground="{StaticResource Brush.Warning}"
+                                   Foreground="{DynamicResource Brush.Warning}"
                                    Style="{StaticResource Text.Base}"
                                    Text="{Binding CodecNotice}"
                                    TextWrapping="Wrap"
@@ -334,7 +334,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Margin="0,0,0,6"
-                                               Foreground="{StaticResource Brush.Warning}"
+                                               Foreground="{DynamicResource Brush.Warning}"
                                                Style="{StaticResource Text.Base}"
                                                Text="{Binding}"
                                                TextWrapping="Wrap" />
@@ -373,7 +373,7 @@
 
                     <!-- Результат -->
                     <StackPanel Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Foreground="{StaticResource Brush.Accent}"
+                        <TextBlock Foreground="{DynamicResource Brush.Accent}"
                                    Style="{StaticResource Text.Title}"
                                    Text="{loc:Tr ExportDone}" />
                         <TextBlock Margin="0,4,0,0"
@@ -386,7 +386,7 @@
                     </StackPanel>
 
                     <TextBlock Margin="0,12,0,0"
-                               Foreground="{StaticResource Brush.Danger}"
+                               Foreground="{DynamicResource Brush.Danger}"
                                Style="{StaticResource Text.Base}"
                                Text="{Binding ErrorMessage}"
                                TextWrapping="Wrap" />

@@ -14,7 +14,7 @@
         MinWidth="900"
         MinHeight="600"
         AllowDrop="True"
-        Background="{StaticResource Brush.Background}"
+        Background="{DynamicResource Brush.Background}"
         FontFamily="{StaticResource Font.Ui}"
         WindowStartupLocation="CenterScreen"
         DragOver="OnDragOver"
@@ -76,8 +76,8 @@
 
         <!-- Шапка -->
         <Border Grid.Row="0"
-                Background="{StaticResource Brush.Surface}"
-                BorderBrush="{StaticResource Brush.Border}"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
                 BorderThickness="0,0,0,1"
                 Padding="20,14">
             <Grid>
@@ -125,10 +125,10 @@
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Border Width="520"
                         Height="240"
-                        BorderBrush="{StaticResource Brush.Border}"
+                        BorderBrush="{DynamicResource Brush.Border}"
                         BorderThickness="2"
                         CornerRadius="14"
-                        Background="{StaticResource Brush.Surface}">
+                        Background="{DynamicResource Brush.Surface}">
                     <Border.Resources>
                         <Style TargetType="Border">
                             <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -232,7 +232,7 @@
                 <GridSplitter Grid.Column="1" Style="{StaticResource Splitter.Vertical}" />
 
                 <Border Grid.Column="2"
-                        BorderBrush="{StaticResource Brush.Border}"
+                        BorderBrush="{DynamicResource Brush.Border}"
                         BorderThickness="1,0,0,0">
                     <!-- Свойства и файлы делят колонку по вертикали: у одного бывает
                          десяток полей, у другого десяток файлов, и что важнее сейчас,
@@ -272,8 +272,8 @@
             <!-- Финальный шаг. Настройки вывода живут в своём окне: за монтажом
                  они не нужны, а места занимали треть экрана. -->
             <Border Grid.Row="3"
-                    Background="{StaticResource Brush.Surface}"
-                    BorderBrush="{StaticResource Brush.Border}"
+                    Background="{DynamicResource Brush.Surface}"
+                    BorderBrush="{DynamicResource Brush.Border}"
                     BorderThickness="0,1,0,0"
                     Padding="12,10">
                 <Grid>
@@ -294,8 +294,8 @@
              или идёт чтение файла. В обычной работе это техническая строка,
              занимающая высоту у доски монтажа. -->
         <Border Grid.Row="2"
-                Background="{StaticResource Brush.Surface}"
-                BorderBrush="{StaticResource Brush.Border}"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
                 BorderThickness="0,1,0,0"
                 Padding="20,8"
                 Visibility="{Binding IsStatusBarVisible, Converter={StaticResource BoolToVisibility}}">

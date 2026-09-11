@@ -57,7 +57,7 @@ internal static class WpfRunner
 
         var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
 
-        foreach (var source in new[] { "Theme.xaml", "Icons.xaml", "Controls.xaml", "Busy.xaml", "Templates.xaml" })
+        foreach (var source in new[] { "Palette.Dark.xaml", "Theme.xaml", "Icons.xaml", "Controls.xaml", "Busy.xaml", "Templates.xaml" })
         {
             application.Resources.MergedDictionaries.Add(new ResourceDictionary
             {

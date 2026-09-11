@@ -9,7 +9,7 @@
     <Style x:Key="Spinner" TargetType="Path">
         <Setter Property="Width" Value="22" />
         <Setter Property="Height" Value="22" />
-        <Setter Property="Stroke" Value="{StaticResource Brush.Accent}" />
+        <Setter Property="Stroke" Value="{DynamicResource Brush.Accent}" />
         <Setter Property="StrokeThickness" Value="2.4" />
         <Setter Property="StrokeStartLineCap" Value="Round" />
         <Setter Property="StrokeEndLineCap" Value="Round" />

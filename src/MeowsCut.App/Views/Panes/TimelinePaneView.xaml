@@ -10,8 +10,8 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:TimelineViewModel}">
 
-    <Border Background="{StaticResource Brush.Surface}"
-            BorderBrush="{StaticResource Brush.Border}"
+    <Border Background="{DynamicResource Brush.Surface}"
+            BorderBrush="{DynamicResource Brush.Border}"
             BorderThickness="0,1,0,0">
         <Grid>
             <Grid.RowDefinitions>
@@ -55,7 +55,7 @@
 
                         <Border Width="1"
                                 Margin="8,2"
-                                Background="{StaticResource Brush.Border}" />
+                                Background="{DynamicResource Brush.Border}" />
 
                         <Button Command="{Binding DataContext.AddFileCommand,
                                     RelativeSource={RelativeSource AncestorType=Window}}"
@@ -90,7 +90,7 @@
 
                         <Border Width="1"
                                 Margin="8,2"
-                                Background="{StaticResource Brush.Border}" />
+                                Background="{DynamicResource Brush.Border}" />
 
                         <Button Command="{Binding SplitAtPlayheadCommand}"
                                 Style="{StaticResource Button.Ghost}"
@@ -106,7 +106,7 @@
 
                         <Border Width="1"
                                 Margin="8,2"
-                                Background="{StaticResource Brush.Border}" />
+                                Background="{DynamicResource Brush.Border}" />
 
                         <Button Command="{Binding UndoCommand}"
                                 Content="↶"

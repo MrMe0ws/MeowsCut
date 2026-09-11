@@ -90,7 +90,7 @@
         <Setter Property="Margin" Value="0,0,6,0" />
         <Setter Property="Stretch" Value="Uniform" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Stroke" Value="{StaticResource Brush.TextMuted}" />
+        <Setter Property="Stroke" Value="{DynamicResource Brush.TextMuted}" />
         <Setter Property="StrokeThickness" Value="1.6" />
         <Setter Property="StrokeStartLineCap" Value="Round" />
         <Setter Property="StrokeEndLineCap" Value="Round" />

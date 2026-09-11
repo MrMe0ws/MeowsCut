@@ -10,7 +10,7 @@
         Title="{loc:Tr Settings}"
         Width="620"
         SizeToContent="Height"
-        Background="{StaticResource Brush.Background}"
+        Background="{DynamicResource Brush.Background}"
         FontFamily="{StaticResource Font.Ui}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -69,6 +69,20 @@
                    Text="{loc:Tr NameTemplateHint}"
                    TextWrapping="Wrap" />
 
+        <!-- Вид -->
+        <TextBlock Margin="0,18,0,6" Style="{StaticResource Text.Section}" Text="{loc:Tr FieldTheme}" />
+
+        <ComboBox Width="220"
+                  HorizontalAlignment="Left"
+                  ItemTemplate="{StaticResource TitleTemplate}"
+                  ItemsSource="{Binding Themes}"
+                  SelectedItem="{Binding Theme}" />
+
+        <TextBlock Margin="0,6,0,0"
+                   Style="{StaticResource Text.Muted}"
+                   Text="{loc:Tr ThemeHint}"
+                   TextWrapping="Wrap" />
+
         <!-- Обслуживание -->
         <TextBlock Margin="0,18,0,6" Style="{StaticResource Text.Section}" Text="{loc:Tr SectionMaintenance}" />
 
@@ -94,7 +108,7 @@
         </WrapPanel>
 
         <TextBlock Margin="0,6,0,0"
-                   Foreground="{StaticResource Brush.Accent}"
+                   Foreground="{DynamicResource Brush.Accent}"
                    Style="{StaticResource Text.Base}"
                    Text="{Binding Status}"
                    TextWrapping="Wrap" />
