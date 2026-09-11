@@ -88,6 +88,7 @@ public sealed partial class PresetsViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyPropertyChangedFor(nameof(HasDurationLimit))]
     private PresetDefinition? _selectedPreset;
 
     [ObservableProperty]
@@ -97,6 +98,15 @@ public sealed partial class PresetsViewModel : ObservableObject
     private PresetDefinition? _appliedPreset;
 
     public bool HasSelection => SelectedPreset is not null;
+
+    /// <summary>
+    /// Есть ли у пресета предел длительности. Выбор «обрезать или ускорить» имеет смысл
+    /// только там, где ролик может в этот предел не влезть: у видеостикеров Telegram он
+    /// есть, у общих пресетов — нет. Смотрим именно на лимит из JSON, а не на название
+    /// площадки: добавленный пользователем пресет со своим пределом получит этот выбор
+    /// сам, без правки интерфейса.
+    /// </summary>
+    public bool HasDurationLimit => SelectedPreset?.Constraints.MaxDuration is not null;
 
     public bool HasViolations => Violations.Count > 0;
 

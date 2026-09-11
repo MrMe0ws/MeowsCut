@@ -15,6 +15,10 @@ public static class Strings
 
     public static string OpenVideo => Get(nameof(OpenVideo));
 
+    public static string StartupPreparing => Get(nameof(StartupPreparing));
+
+    public static string StartupPreparingHint => Get(nameof(StartupPreparingHint));
+
     public static string OpenDialogTitle => Get(nameof(OpenDialogTitle));
 
     public static string FilterVideoFiles => Get(nameof(FilterVideoFiles));

@@ -155,7 +155,28 @@
                                 Command="{Binding OpenFileCommand}"
                                 Content="{loc:Tr OpenVideo}"
                                 IsEnabled="{Binding IsToolsetReady}"
-                                Style="{StaticResource Button.Primary}" />
+                                Style="{StaticResource Button.Primary}"
+                                Visibility="{Binding IsPreparing, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                        <!-- Пока идёт подготовка, вместо серой кнопки видно, чем занято приложение -->
+                        <StackPanel Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    Visibility="{Binding IsPreparing, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <Path Style="{StaticResource Spinner}" />
+                                <TextBlock Margin="10,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource Text.Base}"
+                                           Text="{loc:Tr StartupPreparing}" />
+                            </StackPanel>
+                            <TextBlock Margin="0,8,0,0"
+                                       HorizontalAlignment="Center"
+                                       MaxWidth="400"
+                                       Style="{StaticResource Text.Muted}"
+                                       Text="{loc:Tr StartupPreparingHint}"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

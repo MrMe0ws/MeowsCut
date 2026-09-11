@@ -86,9 +86,18 @@
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter />
                     </Border>
+                    <!--
+                        Выбранный пункт — самый тёмный, остальные светлее. Так в списке
+                        сразу видно, что уже выбрано: подсветка выделяла бы выбранное
+                        наравне с тем, на что просто навели мышь.
+                    -->
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.SurfaceRaised}" />
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Surface}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Background}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -154,11 +163,12 @@
                                Placement="Bottom"
                                PopupAnimation="Fade">
                             <Border Margin="0,4,0,0"
-                                    Background="{StaticResource Brush.Surface}"
+                                    Background="{StaticResource Brush.SurfaceRaised}"
                                     BorderBrush="{StaticResource Brush.Border}"
                                     BorderThickness="1"
                                     CornerRadius="6"
-                                    MinWidth="{TemplateBinding ActualWidth}">
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    Padding="0,4">
                                 <ScrollViewer MaxHeight="280">
                                     <ItemsPresenter />
                                 </ScrollViewer>

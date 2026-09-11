@@ -43,9 +43,11 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStatusBarVisible))]
+    [NotifyPropertyChangedFor(nameof(IsPreparing))]
     private bool _isToolsetReady;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPreparing))]
     private string? _toolsetProblem;
 
     public ShellViewModel(
@@ -127,6 +129,15 @@ public sealed partial class ShellViewModel : ObservableObject
     /// только пока идёт чтение файла или пока ffmpeg не найден.
     /// </summary>
     public bool IsStatusBarVisible => !IsToolsetReady || IsBusy;
+
+    /// <summary>
+    /// Идёт стартовая подготовка: ffmpeg ещё ищется, а каждый аппаратный кодировщик
+    /// проверяется пробным кадром — на машине без NVENC и Quick Sync это секунды
+    /// ожидания. Без явного индикатора серая кнопка «Открыть видео» выглядит поломкой,
+    /// поэтому на время подготовки она уступает место строке о том, что происходит.
+    /// Не найденный ffmpeg — это уже не подготовка, а ошибка со своим сообщением.
+    /// </summary>
+    public bool IsPreparing => !IsToolsetReady && ToolsetProblem is null;
 
     /// <summary>Проект целиком: источники и таймлайн. Доска монтажа появится на следующем этапе.</summary>
     public Project? Project { get; private set; }

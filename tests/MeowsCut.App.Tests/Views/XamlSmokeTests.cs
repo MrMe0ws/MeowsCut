@@ -57,7 +57,7 @@ internal static class WpfRunner
 
         var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
 
-        foreach (var source in new[] { "Theme.xaml", "Icons.xaml", "Controls.xaml", "Templates.xaml" })
+        foreach (var source in new[] { "Theme.xaml", "Icons.xaml", "Controls.xaml", "Busy.xaml", "Templates.xaml" })
         {
             application.Resources.MergedDictionaries.Add(new ResourceDictionary
             {
@@ -146,6 +146,41 @@ public class XamlSmokeTests
         Ancestors(button!).OfType<ScrollViewer>().Should().BeEmpty("кнопку не должно уносить прокруткой");
     });
 
+    [Fact]
+    public void Duration_fit_stays_hidden_without_a_limit() => WpfRunner.Run(() =>
+    {
+        // «Обрезать или ускорить» нечего, когда пресет не ограничивает длительность:
+        // в общих пресетах этот выбор только сбивал с толку.
+        var view = Layout(new PresetSelection { HasDurationLimit = false });
+
+        var label = Find<TextBlock>(view, block => block.Text == Strings.DurationFitLabel);
+
+        Ancestors(label!).Prepend(label!).OfType<UIElement>()
+            .Should().Contain(element => element.Visibility == Visibility.Collapsed);
+    });
+
+    [Fact]
+    public void Duration_fit_appears_when_the_preset_limits_duration() => WpfRunner.Run(() =>
+    {
+        var view = Layout(new PresetSelection { HasDurationLimit = true });
+
+        var label = Find<TextBlock>(view, block => block.Text == Strings.DurationFitLabel);
+
+        Ancestors(label!).Prepend(label!).OfType<UIElement>()
+            .Should().OnlyContain(element => element.Visibility == Visibility.Visible);
+    });
+
+    private static PresetsView Layout(object dataContext)
+    {
+        var view = new PresetsView { DataContext = dataContext };
+
+        view.Measure(new Size(340, 800));
+        view.Arrange(new Rect(0, 0, 340, 800));
+        view.UpdateLayout();
+
+        return view;
+    }
+
     private static T? Find<T>(DependencyObject root, Func<T, bool> match)
         where T : DependencyObject
     {
@@ -174,6 +209,12 @@ public class XamlSmokeTests
             yield return parent;
             node = parent;
         }
+    }
+
+    /// <summary>Выбранный пресет: разметка читает только наличие предела длительности.</summary>
+    private sealed class PresetSelection
+    {
+        public bool HasDurationLimit { get; init; }
     }
 
     /// <summary>Состояние «экспорт завершён»: разметка читает эти свойства по именам.</summary>

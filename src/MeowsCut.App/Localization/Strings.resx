@@ -188,6 +188,12 @@
   <data name="FfmpegSearching" xml:space="preserve">
     <value>Ищу FFmpeg…</value>
   </data>
+  <data name="StartupPreparing" xml:space="preserve">
+    <value>Подготовка</value>
+  </data>
+  <data name="StartupPreparingHint" xml:space="preserve">
+    <value>Ищу FFmpeg и проверяю доступные кодировщики</value>
+  </data>
   <data name="FfmpegReady" xml:space="preserve">
     <value>FFmpeg {0}</value>
   </data>

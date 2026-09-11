@@ -40,10 +40,14 @@
                        Text="{Binding SelectedPreset.Description}"
                        TextWrapping="Wrap" />
 
-            <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr DurationFitLabel}" />
-            <ComboBox Margin="0,4,0,10"
-                      ItemsSource="{Binding DurationFits}"
-                      SelectedItem="{Binding DurationFit}" />
+            <!-- Только для пресетов с пределом длительности: обрезать или ускорить
+                 нечего, когда лимита нет -->
+            <StackPanel Visibility="{Binding HasDurationLimit, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr DurationFitLabel}" />
+                <ComboBox Margin="0,4,0,10"
+                          ItemsSource="{Binding DurationFits}"
+                          SelectedItem="{Binding DurationFit}" />
+            </StackPanel>
 
             <Button Command="{Binding ApplyCommand}"
                     Content="{loc:Tr ApplyPreset}"
