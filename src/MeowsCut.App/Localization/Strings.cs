@@ -51,6 +51,52 @@ public static class Strings
 
     public static string FilterImageFiles => Get(nameof(FilterImageFiles));
 
+    public static string MenuFile => Get(nameof(MenuFile));
+
+    public static string MenuEdit => Get(nameof(MenuEdit));
+
+    public static string MenuAddFile => Get(nameof(MenuAddFile));
+
+    public static string MenuAddAudio => Get(nameof(MenuAddAudio));
+
+    public static string MenuOpenProject => Get(nameof(MenuOpenProject));
+
+    public static string MenuSaveProject => Get(nameof(MenuSaveProject));
+
+    public static string MenuSaveProjectAs => Get(nameof(MenuSaveProjectAs));
+
+    public static string MenuExport => Get(nameof(MenuExport));
+
+    public static string MenuCloseFile => Get(nameof(MenuCloseFile));
+
+    public static string MenuSettings => Get(nameof(MenuSettings));
+
+    public static string MenuExit => Get(nameof(MenuExit));
+
+    public static string MenuUndo => Get(nameof(MenuUndo));
+
+    public static string MenuRedo => Get(nameof(MenuRedo));
+
+    public static string MenuSplit => Get(nameof(MenuSplit));
+
+    public static string MenuDuplicate => Get(nameof(MenuDuplicate));
+
+    public static string MenuDelete => Get(nameof(MenuDelete));
+
+    public static string ProjectSaved => Get(nameof(ProjectSaved));
+
+    public static string ProjectSaveFailed => Get(nameof(ProjectSaveFailed));
+
+    public static string ProjectOpenFailed => Get(nameof(ProjectOpenFailed));
+
+    public static string ProjectOpenedWithProblems => Get(nameof(ProjectOpenedWithProblems));
+
+    public static string OpenProjectTitle => Get(nameof(OpenProjectTitle));
+
+    public static string SaveProjectTitle => Get(nameof(SaveProjectTitle));
+
+    public static string FilterProjectFiles => Get(nameof(FilterProjectFiles));
+
     public static string FilterAllFiles => Get(nameof(FilterAllFiles));
 
     public static string RecentFiles => Get(nameof(RecentFiles));

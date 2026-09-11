@@ -103,10 +103,11 @@
                             SmallChange="0.08"
                             ToolTip="{loc:Tr FieldSpeedHint}"
                             Value="{Binding SpeedSlider}" />
-                    <TextBox Width="54"
+                    <TextBox Width="44"
                              Margin="8,0,0,0"
                              VerticalAlignment="Center"
-                             Padding="6,4"
+                             Padding="5,2"
+                             TextAlignment="Center"
                              Text="{Binding SpeedText, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="{loc:Tr FieldSpeedCustomHint}" />
                     <TextBlock Margin="4,0,0,0"

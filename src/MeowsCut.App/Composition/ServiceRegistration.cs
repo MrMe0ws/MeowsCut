@@ -9,6 +9,7 @@ using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Jobs;
 using MeowsCut.Core.Presets;
+using MeowsCut.Core.Projects;
 using MeowsCut.Core.Processing;
 using MeowsCut.Ffmpeg.Execution;
 using MeowsCut.Ffmpeg.Planning;
@@ -36,6 +37,7 @@ public static class ServiceRegistration
         services.AddSingleton<IPresetValidator, PresetValidator>();
         services.AddSingleton<IPresetApplier, PresetApplier>();
         services.AddSingleton<IErrorPresenter, ErrorPresenter>();
+        services.AddSingleton<IProjectStore, JsonProjectStore>();
 
         return services;
     }

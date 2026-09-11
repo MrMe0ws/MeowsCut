@@ -9,6 +9,7 @@ using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Diagnostics;
 using MeowsCut.Core.Editing;
+using MeowsCut.Core.Projects;
 using Microsoft.Extensions.Logging;
 
 namespace MeowsCut.App.ViewModels;
@@ -27,6 +28,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly TimelineThumbnailLoader _thumbnailLoader;
     private readonly IErrorPresenter _errorPresenter;
+    private readonly IProjectStore _projectStore;
     private readonly IShellIntegration _shellIntegration;
     private readonly ILogger<ShellViewModel> _logger;
 
@@ -65,6 +67,7 @@ public sealed partial class ShellViewModel : ObservableObject
         PresetsViewModel presets,
         TimelineThumbnailLoader thumbnailLoader,
         IErrorPresenter errorPresenter,
+        IProjectStore projectStore,
         IShellIntegration shellIntegration,
         ILogger<ShellViewModel> logger)
     {
@@ -76,6 +79,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _dialogService = dialogService;
         _thumbnailLoader = thumbnailLoader;
         _errorPresenter = errorPresenter;
+        _projectStore = projectStore;
         _shellIntegration = shellIntegration;
         Export = export;
         Timeline = timeline;
@@ -158,10 +162,19 @@ public sealed partial class ShellViewModel : ObservableObject
         var result = await _toolsetLocator.LocateAsync(cancellationToken).ConfigureAwait(true);
         ApplyToolsetResult(result);
 
-        if (initialFile is not null && File.Exists(initialFile))
+        if (initialFile is null || !File.Exists(initialFile))
         {
-            await OpenAsync(initialFile, cancellationToken).ConfigureAwait(true);
+            return;
         }
+
+        // Черновик открывается как проект, всё остальное — как новый файл на доске
+        if (Path.GetExtension(initialFile).Equals(IProjectStore.Extension, StringComparison.OrdinalIgnoreCase))
+        {
+            await OpenProjectFileAsync(initialFile, cancellationToken).ConfigureAwait(true);
+            return;
+        }
+
+        await OpenAsync(initialFile, cancellationToken).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -205,15 +218,8 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             var info = await _mediaProbe.ProbeAsync(path, cancellationToken).ConfigureAwait(true);
 
-            Media = MediaSummaryViewModel.Create(info);
-            Project = Project.FromMedia(info);
-
-            Timeline.Attach(Project);
-            Preview.Attach(Project);
-            _thumbnailLoader.Attach(Timeline);
-            Export.Attach(Project);
-            Presets.Attach(Project);
-            Sources.Update(Project);
+            Attach(Project.FromMedia(info), MediaSummaryViewModel.Create(info));
+            ProjectPath = null;
 
             var settings = _settingsStore.Current.WithRecentFile(path);
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(true);
@@ -374,9 +380,27 @@ public sealed partial class ShellViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings() => _dialogService.ShowSettings();
 
+    /// <summary>
+    /// Ставит проект на доску и раздаёт его панелям. Общее место для обоих входов:
+    /// открытия файла и открытия черновика.
+    /// </summary>
+    private void Attach(Project project, MediaSummaryViewModel? media)
+    {
+        Media = media;
+        Project = project;
+
+        Timeline.Attach(project);
+        Preview.Attach(project);
+        _thumbnailLoader.Attach(Timeline);
+        Export.Attach(project);
+        Presets.Attach(project);
+        Sources.Update(project);
+    }
+
     [RelayCommand]
     private void CloseMedia()
     {
+        ProjectPath = null;
         Media = null;
         Project = null;
         Sources.Update(null);
@@ -446,5 +470,12 @@ public sealed partial class RecentFileViewModel(string path, ShellViewModel shel
     public string FileName { get; } = System.IO.Path.GetFileName(path);
 
     [RelayCommand]
-    private Task OpenAsync(CancellationToken cancellationToken) => shell.OpenAsync(Path, cancellationToken);
+    private Task OpenAsync(CancellationToken cancellationToken) =>
+        IsProject
+            ? shell.OpenProjectFileAsync(Path, cancellationToken)
+            : shell.OpenAsync(Path, cancellationToken);
+
+    /// <summary>Черновик в списке недавних открывается как проект, а не как новый файл.</summary>
+    private bool IsProject =>
+        System.IO.Path.GetExtension(Path).Equals(IProjectStore.Extension, StringComparison.OrdinalIgnoreCase);
 }

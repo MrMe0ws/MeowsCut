@@ -26,6 +26,9 @@ public partial class ShellWindow : Window
         e.Handled = true;
     }
 
+    /// <summary>Пункт «Выход»: закрыть окно — то же, что крестик.</summary>
+    private void OnExit(object sender, RoutedEventArgs e) => Close();
+
     private async void OnDrop(object sender, DragEventArgs e)
     {
         var files = DragDropFileValidator.ExtractFiles(e.Data);

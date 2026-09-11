@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Threading;
 using MeowsCut.Core.Media;
+using MeowsCut.Core.Projects;
 using MeowsCut.App.Localization;
 using Microsoft.Win32;
 
@@ -48,6 +49,12 @@ public interface IFileDialogService
     string? PickSubtitleFile();
 
     string? PickFolder(string title);
+
+    /// <summary>Черновик проекта, чтобы продолжить монтаж.</summary>
+    string? PickProjectToOpen();
+
+    /// <summary>Куда сохранить черновик. <paramref name="suggestedName"/> — имя без расширения.</summary>
+    string? PickProjectToSave(string suggestedName);
 }
 
 public sealed class FileDialogService : IFileDialogService
@@ -101,6 +108,36 @@ public sealed class FileDialogService : IFileDialogService
 
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
+
+    public string? PickProjectToOpen()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.OpenProjectTitle,
+            Filter = ProjectFilter,
+            CheckFileExists = true
+        };
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public string? PickProjectToSave(string suggestedName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.SaveProjectTitle,
+            Filter = ProjectFilter,
+            FileName = suggestedName,
+            DefaultExt = IProjectStore.Extension,
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    private static string ProjectFilter =>
+        $"{Strings.FilterProjectFiles}|*{IProjectStore.Extension}|{Strings.FilterAllFiles}|*.*";
 
     public string? PickFolder(string title)
     {

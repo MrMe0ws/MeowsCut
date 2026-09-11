@@ -119,6 +119,75 @@
   <data name="FilterImageFiles" xml:space="preserve">
     <value>Фотографии</value>
   </data>
+  <data name="MenuFile" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="MenuEdit" xml:space="preserve">
+    <value>Правка</value>
+  </data>
+  <data name="MenuAddFile" xml:space="preserve">
+    <value>Добавить видео или фото…</value>
+  </data>
+  <data name="MenuAddAudio" xml:space="preserve">
+    <value>Добавить звук…</value>
+  </data>
+  <data name="MenuOpenProject" xml:space="preserve">
+    <value>Открыть черновик…</value>
+  </data>
+  <data name="MenuSaveProject" xml:space="preserve">
+    <value>Сохранить черновик</value>
+  </data>
+  <data name="MenuSaveProjectAs" xml:space="preserve">
+    <value>Сохранить черновик как…</value>
+  </data>
+  <data name="MenuExport" xml:space="preserve">
+    <value>Экспорт видео…</value>
+  </data>
+  <data name="MenuCloseFile" xml:space="preserve">
+    <value>Закрыть проект</value>
+  </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>Настройки…</value>
+  </data>
+  <data name="MenuExit" xml:space="preserve">
+    <value>Выход</value>
+  </data>
+  <data name="MenuUndo" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="MenuRedo" xml:space="preserve">
+    <value>Вернуть</value>
+  </data>
+  <data name="MenuSplit" xml:space="preserve">
+    <value>Разрезать по курсору</value>
+  </data>
+  <data name="MenuDuplicate" xml:space="preserve">
+    <value>Дублировать кусок</value>
+  </data>
+  <data name="MenuDelete" xml:space="preserve">
+    <value>Удалить кусок</value>
+  </data>
+  <data name="ProjectSaved" xml:space="preserve">
+    <value>Черновик сохранён: {0}</value>
+  </data>
+  <data name="ProjectSaveFailed" xml:space="preserve">
+    <value>Не удалось сохранить черновик</value>
+  </data>
+  <data name="ProjectOpenFailed" xml:space="preserve">
+    <value>Не удалось открыть черновик</value>
+  </data>
+  <data name="ProjectOpenedWithProblems" xml:space="preserve">
+    <value>Черновик открыт не полностью</value>
+  </data>
+  <data name="OpenProjectTitle" xml:space="preserve">
+    <value>Открыть черновик проекта</value>
+  </data>
+  <data name="SaveProjectTitle" xml:space="preserve">
+    <value>Сохранить черновик проекта</value>
+  </data>
+  <data name="FilterProjectFiles" xml:space="preserve">
+    <value>Проект Meows Cut</value>
+  </data>
   <data name="FilterAllFiles" xml:space="preserve">
     <value>Все файлы</value>
   </data>

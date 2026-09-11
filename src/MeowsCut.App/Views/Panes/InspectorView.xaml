@@ -33,6 +33,14 @@
 
             <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
                 <WrapPanel Orientation="Horizontal">
+                    <WrapPanel.Resources>
+                        <!-- Зазор у каждой группы разом: колонкой справа они встают
+                             друг под другом, и без него настройки слипаются. -->
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Margin" Value="0,4" />
+                        </Style>
+                    </WrapPanel.Resources>
+
                     <TextBlock VerticalAlignment="Center"
                                Style="{StaticResource Text.Section}"
                                Text="{loc:Tr SectionClip}" />
@@ -64,10 +72,11 @@
                                 SmallChange="0.08"
                                 ToolTip="{loc:Tr FieldSpeedHint}"
                                 Value="{Binding SpeedSlider}" />
-                        <TextBox Width="54"
+                        <TextBox Width="44"
                                  Margin="8,0,0,0"
                                  VerticalAlignment="Center"
-                                 Padding="6,4"
+                                 Padding="5,2"
+                                 TextAlignment="Center"
                                  Text="{Binding SpeedText, UpdateSourceTrigger=PropertyChanged}"
                                  ToolTip="{loc:Tr FieldSpeedCustomHint}" />
                         <TextBlock Margin="4,0,0,0"
@@ -105,6 +114,7 @@
                     <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
 
                     <ToggleButton x:Name="FrameToggle"
+                                  Margin="0,4"
                                   Style="{StaticResource ToolButton}"
                                   ToolTip="{loc:Tr SectionFrameHint}">
                         <StackPanel Orientation="Horizontal">

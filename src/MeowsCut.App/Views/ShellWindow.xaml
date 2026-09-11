@@ -28,6 +28,7 @@
     <Window.InputBindings>
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenFileCommand}" />
         <KeyBinding Key="E" Modifiers="Control" Command="{Binding Export.StartCommand}" />
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveProjectCommand}" />
         <KeyBinding Key="Z" Modifiers="Control" Command="{Binding Timeline.UndoCommand}" />
         <KeyBinding Key="Z" Modifiers="Control+Shift" Command="{Binding Timeline.RedoCommand}" />
         <KeyBinding Key="Y" Modifiers="Control" Command="{Binding Timeline.RedoCommand}" />
@@ -74,12 +75,13 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Шапка -->
+        <!-- Строка меню. Характеристики файла отсюда убраны: они видны в списке
+             файлов проекта, а сверху занимали высоту у доски монтажа. -->
         <Border Grid.Row="0"
                 Background="{DynamicResource Brush.Surface}"
                 BorderBrush="{DynamicResource Brush.Border}"
                 BorderThickness="0,0,0,1"
-                Padding="20,14">
+                Padding="8,2">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -87,35 +89,63 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Image Width="26"
-                           Height="26"
-                           Margin="0,0,10,0"
-                           RenderOptions.BitmapScalingMode="HighQuality"
-                           Source="../Assets/logo.png" />
-                    <TextBlock VerticalAlignment="Center"
-                               Style="{StaticResource Text.Title}"
-                               Text="{loc:Tr AppTitle}" />
-                </StackPanel>
+                <Image Grid.Column="0"
+                       Width="18"
+                       Height="18"
+                       Margin="4,0,10,0"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       Source="../Assets/logo.png" />
 
-                <TextBlock Grid.Column="1"
-                           Margin="18,0,0,0"
+                <Menu Grid.Column="1" VerticalAlignment="Center">
+                    <MenuItem Header="{loc:Tr MenuFile}">
+                        <MenuItem Command="{Binding AddFileCommand}"
+                                  Header="{loc:Tr MenuAddFile}"
+                                  InputGestureText="Ctrl+O" />
+                        <MenuItem Command="{Binding AddSoundCommand}" Header="{loc:Tr MenuAddAudio}" />
+                        <Separator Style="{StaticResource MenuSeparator}" />
+                        <MenuItem Command="{Binding OpenProjectCommand}" Header="{loc:Tr MenuOpenProject}" />
+                        <MenuItem Command="{Binding SaveProjectCommand}"
+                                  Header="{loc:Tr MenuSaveProject}"
+                                  InputGestureText="Ctrl+S" />
+                        <MenuItem Command="{Binding SaveProjectAsCommand}" Header="{loc:Tr MenuSaveProjectAs}" />
+                        <Separator Style="{StaticResource MenuSeparator}" />
+                        <MenuItem Command="{Binding Export.StartCommand}"
+                                  Header="{loc:Tr MenuExport}"
+                                  InputGestureText="Ctrl+E" />
+                        <Separator Style="{StaticResource MenuSeparator}" />
+                        <MenuItem Command="{Binding CloseMediaCommand}" Header="{loc:Tr MenuCloseFile}" />
+                        <MenuItem Command="{Binding OpenSettingsCommand}" Header="{loc:Tr MenuSettings}" />
+                        <Separator Style="{StaticResource MenuSeparator}" />
+                        <MenuItem Click="OnExit" Header="{loc:Tr MenuExit}" />
+                    </MenuItem>
+
+                    <MenuItem Header="{loc:Tr MenuEdit}">
+                        <MenuItem Command="{Binding Timeline.UndoCommand}"
+                                  Header="{loc:Tr MenuUndo}"
+                                  InputGestureText="Ctrl+Z" />
+                        <MenuItem Command="{Binding Timeline.RedoCommand}"
+                                  Header="{loc:Tr MenuRedo}"
+                                  InputGestureText="Ctrl+Y" />
+                        <Separator Style="{StaticResource MenuSeparator}" />
+                        <MenuItem Command="{Binding Timeline.SplitAtPlayheadCommand}"
+                                  Header="{loc:Tr MenuSplit}"
+                                  InputGestureText="S" />
+                        <MenuItem Command="{Binding Timeline.DuplicateSelectedCommand}"
+                                  Header="{loc:Tr MenuDuplicate}"
+                                  InputGestureText="Ctrl+D" />
+                        <MenuItem Command="{Binding Timeline.DeleteSelectedCommand}"
+                                  Header="{loc:Tr MenuDelete}"
+                                  InputGestureText="Del" />
+                    </MenuItem>
+                </Menu>
+
+                <!-- Имя черновика: единственное, что стоит держать на виду сверху -->
+                <TextBlock Grid.Column="2"
+                           Margin="12,0,8,0"
                            VerticalAlignment="Center"
                            Style="{StaticResource Text.Muted}"
-                           TextTrimming="CharacterEllipsis"
-                           Text="{Binding Media.HeaderLine}" />
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Command="{Binding CloseMediaCommand}"
-                            Content="{loc:Tr CloseFile}"
-                            Style="{StaticResource Button.Ghost}"
-                            Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}" />
-                    <Button Margin="8,0,0,0"
-                            Command="{Binding OpenSettingsCommand}"
-                            Content="⚙"
-                            Style="{StaticResource Button.Ghost}"
-                            ToolTip="{loc:Tr Settings}" />
-                </StackPanel>
+                           Text="{Binding ProjectFileName}"
+                           TextTrimming="CharacterEllipsis" />
             </Grid>
         </Border>
 

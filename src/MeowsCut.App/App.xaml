@@ -11,6 +11,7 @@
                 <ResourceDictionary Source="Resources/Icons.xaml" />
                 <ResourceDictionary Source="Resources/Controls.xaml" />
                 <ResourceDictionary Source="Resources/Busy.xaml" />
+                <ResourceDictionary Source="Resources/Menu.xaml" />
                 <ResourceDictionary Source="Resources/Templates.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
