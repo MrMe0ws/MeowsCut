@@ -1,28 +1,32 @@
 # 10. Окружение разработки
 
-## Что установлено (2026-09-09, эта машина)
+## Что установлено (2026-09-11, эта машина)
 
 | Компонент | Версия | Где лежит |
 |---|---|---|
-| .NET SDK | **8.0.425** | `%LOCALAPPDATA%\Microsoft\dotnet` (установка per-user, без прав администратора) |
-| .NET runtime | 8.0.7 + WindowsDesktop 8.0.7 | `C:\Program Files\dotnet` (было в системе) |
-| FFmpeg / FFprobe | BtbN `win64-gpl`, N-126482 (2026-09-09) | `%LOCALAPPDATA%\MeowsCut\ffmpeg` |
+| .NET SDK | 8.0.101, **8.0.118** | `C:\Program Files\dotnet` (системная установка) |
+| .NET runtime | 8.0.18 + WindowsDesktop 8.0.18 | `C:\Program Files\dotnet` |
+| FFmpeg / FFprobe | BtbN `win64-gpl`, N-126492 (2026-09-10) | `%LOCALAPPDATA%\MeowsCut\ffmpeg` |
+| Inno Setup | 7.1.0 | `%LOCALAPPDATA%\Programs\Inno Setup 7` |
 | Git | 2.x | `C:\Program Files\Git` |
 
-Переменные окружения пользователя, добавленные при установке:
+Отдельной per-user установки SDK в `%LOCALAPPDATA%\Microsoft\dotnet` нет, особых переменных
+окружения проект не требует — хватает системного `dotnet` из `PATH`.
 
-```
-Path        += %LOCALAPPDATA%\Microsoft\dotnet   (в начало)
-DOTNET_ROOT  = %LOCALAPPDATA%\Microsoft\dotnet
-DOTNET_CLI_TELEMETRY_OPTOUT = 1
+`global.json` намеренно не привязан к feature band 8.0.4xx:
+
+```json
+{ "sdk": { "rollForward": "latestMinor", "version": "8.0.100" } }
 ```
 
-Открытые до установки терминалы новую переменную не увидят — нужен перезапуск оболочки.
+Требование `8.0.425` с `rollForward: latestFeature` означало бы, что на машине с любым
+другим band (скажем, 8.0.1xx) сборка падает с «A compatible .NET SDK was not found» —
+хотя на нём всё собирается без единого предупреждения. Достаточно любого SDK 8.0.
 
 ## Проверка
 
 ```powershell
-dotnet --version                       # 8.0.425
+dotnet --version                       # 8.0.118
 dotnet --list-sdks
 & "$env:LOCALAPPDATA\MeowsCut\ffmpeg\ffmpeg.exe" -hide_banner -version
 ```
@@ -52,14 +56,12 @@ dotnet --list-sdks
 ## Восстановление окружения на чистой машине
 
 ```powershell
-# .NET 8 SDK (per-user, без администратора)
+# .NET 8 SDK (per-user, без администратора) — если системного ещё нет
 curl.exe -sSL -o dotnet-install.ps1 https://dot.net/v1/dotnet-install.ps1
 ./dotnet-install.ps1 -Channel 8.0 -Quality GA -InstallDir "$env:LOCALAPPDATA\Microsoft\dotnet"
 
-# FFmpeg (то же сделает tools/get-ffmpeg.ps1, когда будет написан на M1)
-curl.exe -L -o ffmpeg.zip https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
-Expand-Archive ffmpeg.zip -DestinationPath .
-# ffmpeg.exe, ffprobe.exe, LICENSE.txt → %LOCALAPPDATA%\MeowsCut\ffmpeg
+# FFmpeg
+./tools/get-ffmpeg.ps1
 ```
 
 Альтернатива для SDK, если доступен winget с правами администратора:
@@ -134,7 +136,7 @@ innosetup-7.1.0-x64.exe /VERYSILENT /CURRENTUSER /SP- /NORESTART
 - **Скрипты `.ps1` с русским текстом тоже нужны с BOM**: Windows PowerShell 5.1
   без него читает файл как ANSI и падает на разборе строк.
 
-## Скрипты проекта (появятся по мере реализации)
+## Скрипты проекта
 
 | Скрипт | Этап | Назначение |
 |---|---|---|

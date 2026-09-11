@@ -42,9 +42,11 @@ Desktop-видеоредактор под Windows 10+: доска монтажа
 
 ## Окружение
 
-`dotnet` 8.0.425 (`%LOCALAPPDATA%\Microsoft\dotnet`), ffmpeg/ffprobe в
-`%LOCALAPPDATA%\MeowsCut\ffmpeg`. Бинарники ffmpeg в репозиторий не коммитятся (328 МБ,
-папка синхронизируется OneDrive) — в portable-релиз их кладёт `tools/publish-portable.ps1`.
+`dotnet` 8.0 — любой SDK этой версии, `global.json` не требует конкретного feature band
+(подробности в [docs/10-DEV-SETUP.md](docs/10-DEV-SETUP.md)). ffmpeg/ffprobe в
+`%LOCALAPPDATA%\MeowsCut\ffmpeg`, кладёт их `tools/get-ffmpeg.ps1`. Бинарники ffmpeg
+в репозиторий не коммитятся (328 МБ, папка синхронизируется OneDrive) —
+в portable-релиз их кладёт `tools/publish-portable.ps1`.
 
 ## Состояние
 
