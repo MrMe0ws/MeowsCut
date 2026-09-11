@@ -111,7 +111,8 @@
                        Source="../Assets/logo.png" />
 
                 <Menu Grid.Column="1"
-                      VerticalAlignment="Center"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Stretch"
                       WindowChrome.IsHitTestVisibleInChrome="True">
                     <MenuItem Header="{loc:Tr MenuFile}">
                         <MenuItem Command="{Binding AddFileCommand}"

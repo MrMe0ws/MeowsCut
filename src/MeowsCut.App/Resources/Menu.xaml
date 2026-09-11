@@ -32,7 +32,8 @@
         <Setter Property="FontFamily" Value="{StaticResource Font.Ui}" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
-        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
@@ -40,7 +41,8 @@
                     <Border x:Name="Root"
                             Background="Transparent"
                             CornerRadius="4"
-                            Padding="{TemplateBinding Padding}">
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -52,7 +54,8 @@
                                               ContentSource="Header" />
 
                             <!-- Горячая клавиша справа: подсказка, а не кнопка -->
-                            <TextBlock Grid.Column="1"
+                            <TextBlock x:Name="Gesture"
+                                       Grid.Column="1"
                                        Margin="24,0,0,0"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource Brush.TextDisabled}"
@@ -79,6 +82,24 @@
                     </Border>
 
                     <ControlTemplate.Triggers>
+                        <!-- Без горячей клавиши колонка под неё не занимает место -->
+                        <Trigger Property="InputGestureText" Value="">
+                            <Setter TargetName="Gesture" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+
+                        <!-- Корневой пункт тянется во всю высоту строки меню -->
+                        <Trigger Property="Role" Value="TopLevelHeader">
+                            <Setter TargetName="Root" Property="VerticalAlignment" Value="Stretch" />
+                            <Setter TargetName="Root" Property="MinHeight" Value="26" />
+                        </Trigger>
+
+                        <!-- В списке строки, наоборот, дышат: там их читают, а не целятся мышью -->
+                        <Trigger Property="Role" Value="SubmenuItem">
+                            <Setter Property="Padding" Value="10,6" />
+                        </Trigger>
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter Property="Padding" Value="10,6" />
+                        </Trigger>
                         <!--
                             Подсветка своя для каждого уровня: «Файл» лежит на панели
                             цвета Surface, пункты внутри списка — на SurfaceRaised.
