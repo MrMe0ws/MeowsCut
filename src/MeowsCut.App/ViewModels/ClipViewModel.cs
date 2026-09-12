@@ -34,10 +34,6 @@ public sealed partial class ClipViewModel : ObservableObject
 
     public string DurationText { get; private set; } = string.Empty;
 
-    public string? SpeedLabel { get; private set; }
-
-    public bool IsMuted { get; private set; }
-
     [ObservableProperty]
     private bool _isSelected;
 
@@ -53,10 +49,6 @@ public sealed partial class ClipViewModel : ObservableObject
         SourcePath = source?.FilePath;
         Title = source?.DisplayName ?? "клип";
         DurationText = DisplayFormat.Duration(placed.Clip.TimelineDuration);
-        SpeedLabel = placed.Clip.IsSpeedChanged
-            ? $"{placed.Clip.Speed:0.##}×".Replace(",", ".", StringComparison.Ordinal)
-            : null;
-        IsMuted = !placed.Clip.HasAudio;
     }
 
     /// <summary>Фотография: кадр у неё один, и полоса заполняется им целиком.</summary>

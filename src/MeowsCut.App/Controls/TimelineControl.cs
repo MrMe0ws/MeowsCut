@@ -62,6 +62,81 @@ public sealed class TimelineControl : Control
     /// <summary>Подложка подписей, лежащих поверх кадров.</summary>
     private Brush ScrimBrush => (Brush)FindResource("Brush.Scrim");
 
+    /// <summary>Сторона значка на куске. Меньше — перестают читаться фигуры.</summary>
+    private const double BadgeSize = 12d;
+
+    private const double BadgeGap = 4d;
+    private const double BadgePadding = 3d;
+
+    /// <summary>
+    /// Черта затухания. Всегда светлая: под ней чернота самого затухания,
+    /// одинаковая в обеих темах.
+    /// </summary>
+    private static readonly Pen FadeRampPen = CreateFrozenPen(
+        new SolidColorBrush(Color.FromArgb(190, 255, 255, 255)),
+        1.4);
+
+    private Pen? _badgeIconPen;
+    private Brush? _badgeIconBrush;
+
+    /// <summary>
+    /// Перо значков. Цвет берётся у темы: в светлой подложка почти белая,
+    /// и зашитые белые значки на ней пропадали бы целиком.
+    /// </summary>
+    /// <remarks>
+    /// Перо переживает перерисовки и меняется только со сменой темы: отрисовка
+    /// идёт на каждое движение мыши, а кусков на доске бывают десятки.
+    /// </remarks>
+    private Pen BadgeIconPen
+    {
+        get
+        {
+            var brush = TextBrush;
+
+            if (_badgeIconPen is null || !ReferenceEquals(_badgeIconBrush, brush))
+            {
+                _badgeIconBrush = brush;
+                _badgeIconPen = CreateFrozenPen(brush, 2.4);
+            }
+
+            return _badgeIconPen;
+        }
+    }
+
+    private static Pen CreateFrozenPen(Brush brush, double thickness)
+    {
+        var pen = new Pen(brush, thickness)
+        {
+            StartLineCap = PenLineCap.Round,
+            EndLineCap = PenLineCap.Round,
+            LineJoin = PenLineJoin.Round
+        };
+
+        // Кисть темы может быть незамороженной, и тогда перо заморозить нельзя:
+        // пытаться всё равно — значит получить исключение на ровном месте.
+        if (pen.CanFreeze)
+        {
+            pen.Freeze();
+        }
+
+        return pen;
+    }
+
+    /// <summary>
+    /// Тьма от края внутрь. Непрозрачна у самого края и сходит на нет там,
+    /// где затухание заканчивается, — как и в готовом файле.
+    /// </summary>
+    private static Brush FadeBrush(bool fromLeft)
+    {
+        var brush = new LinearGradientBrush(
+            Color.FromArgb(235, 0, 0, 0),
+            Color.FromArgb(0, 0, 0, 0),
+            fromLeft ? 0d : 180d);
+
+        brush.Freeze();
+        return brush;
+    }
+
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (_model is not null)
@@ -192,13 +267,29 @@ public sealed class TimelineControl : Control
             context.DrawRoundedRectangle(muted ? MutedAudioFill : AudioFill, pen, rect, 4, 4);
 
             DrawWaveform(context, clip, rect, muted);
+            DrawFades(context, metrics, rect, clip.FadeIn, clip.FadeOut);
             DrawAudioCaption(context, clip, track, rect);
+            DrawBadges(context, rect, ClipBadges.For(clip));
         }
 
         // Имя дорожки рисуется последним и на подложке: кусок звука может начинаться
         // с нуля, и без подложки подпись сливалась бы с его названием.
+        var trackLabel = track.Title;
+
+        if (muted)
+        {
+            trackLabel += "  ·  " + Localization.Strings.TrackMuted;
+        }
+        else if (Math.Abs(track.Gain - 1d) > 0.0001)
+        {
+            // Громкость дорожки лежит поверх громкости кусков, поэтому стоит
+            // у её имени: повторять её на каждом куске значило бы врать про то,
+            // что правку делали именно там.
+            trackLabel += $"  ·  {track.Gain * 100:0}%";
+        }
+
         var title = new FormattedText(
-            muted ? track.Title + "  ·  " + Localization.Strings.TrackMuted : track.Title,
+            trackLabel,
             CultureInfo.CurrentUICulture,
             FlowDirection.LeftToRight,
             LabelTypeface,
@@ -242,20 +333,8 @@ public sealed class TimelineControl : Control
             return;
         }
 
+        // Тональность и громкость ушли в значки, громкость дорожки — к её имени.
         var caption = clip.Title.Length > 0 ? clip.Title : Localization.Strings.SectionSound;
-
-        if (clip.IsPitchShifted)
-        {
-            caption += "  ·  " + string.Format(
-                CultureInfo.CurrentUICulture,
-                Localization.Strings.PitchSemitones,
-                clip.PitchSemitones);
-        }
-
-        if (clip.IsGainChanged || Math.Abs(track.Gain - 1d) > 0.0001)
-        {
-            caption += $"  ·  {clip.Gain * track.Gain * 100:0}%";
-        }
 
         var text = new FormattedText(
             caption,
@@ -464,7 +543,142 @@ public sealed class TimelineControl : Control
             context.Pop();
         }
 
+        DrawFades(context, metrics, rect, clip.Clip.EffectiveFadeIn, clip.Clip.EffectiveFadeOut);
         DrawClipCaption(context, clip, rect);
+        DrawBadges(context, rect, ClipBadges.For(clip.Clip));
+    }
+
+    /// <summary>
+    /// Затухания — прямо на кадрах: тьма от края внутрь ровно на их длину.
+    /// </summary>
+    /// <remarks>
+    /// Рисуется то, что эффект и делает, поэтому читается без легенды и говорит
+    /// не только «затухание есть», но и «вот такой длины». Значком этого
+    /// не передать: он сказал бы только «есть», а выставленные пять секунд
+    /// от выставленной половины не отличить.
+    ///
+    /// Поверх градиента идёт наклонная черта — та же рампа, что в больших
+    /// монтажках. Без неё тёмный край не отличить от просто тёмного кадра.
+    /// </remarks>
+    private void DrawFades(
+        DrawingContext context,
+        TimelineMetrics metrics,
+        Rect rect,
+        TimeSpan fadeIn,
+        TimeSpan fadeOut)
+    {
+        if (fadeIn <= TimeSpan.Zero && fadeOut <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        // Обрезаем по форме куска: градиент о скруглённых углах не знает.
+        context.PushClip(new RectangleGeometry(rect, 6, 6));
+
+        if (fadeIn > TimeSpan.Zero)
+        {
+            var width = Math.Min(metrics.DurationToWidth(fadeIn), rect.Width);
+            var area = new Rect(rect.X, rect.Y, width, rect.Height);
+
+            context.DrawRectangle(FadeBrush(fromLeft: true), null, area);
+            context.DrawLine(
+                FadeRampPen,
+                new Point(area.Left, area.Bottom - 2),
+                new Point(area.Right, area.Top + 2));
+        }
+
+        if (fadeOut > TimeSpan.Zero)
+        {
+            var width = Math.Min(metrics.DurationToWidth(fadeOut), rect.Width);
+            var area = new Rect(rect.Right - width, rect.Y, width, rect.Height);
+
+            context.DrawRectangle(FadeBrush(fromLeft: false), null, area);
+            context.DrawLine(
+                FadeRampPen,
+                new Point(area.Left, area.Top + 2),
+                new Point(area.Right, area.Bottom - 2));
+        }
+
+        context.Pop();
+    }
+
+    /// <summary>
+    /// Ряд значков: что применено к куску сверх умолчания.
+    /// </summary>
+    /// <remarks>
+    /// В правом верхнем углу — единственном, свободном и у видео, и у звука:
+    /// внизу слева стоит подпись, а вверху слева у полосы звука лежит имя
+    /// дорожки, и значки первого куска прятались бы под ним.
+    ///
+    /// На узком куске значки не рисуются вовсе: втиснутые в двадцать пикселей,
+    /// они превращаются в грязь и мешают видеть сам кадр.
+    /// </remarks>
+    private void DrawBadges(DrawingContext context, Rect rect, IReadOnlyList<ClipBadge> badges)
+    {
+        if (badges.Count == 0)
+        {
+            return;
+        }
+
+        var pillWidth = (badges.Count * BadgeSize) + ((badges.Count - 1) * BadgeGap) + (BadgePadding * 2);
+
+        if (rect.Width < pillWidth + 10 || rect.Height < BadgeSize + 10)
+        {
+            return;
+        }
+
+        var pill = new Rect(
+            rect.Right - pillWidth - 4,
+            rect.Y + 4,
+            pillWidth,
+            BadgeSize + (BadgePadding * 2));
+
+        context.DrawRoundedRectangle(ScrimBrush, null, pill, 4, 4);
+
+        var x = pill.X + BadgePadding;
+
+        foreach (var badge in badges)
+        {
+            if (IconOf(badge) is { } geometry)
+            {
+                DrawIcon(context, geometry, x, pill.Y + BadgePadding);
+            }
+
+            x += BadgeSize + BadgeGap;
+        }
+    }
+
+    /// <summary>
+    /// Рисует значок, нарисованный для кнопок, в размер значка на куске.
+    /// </summary>
+    /// <remarks>
+    /// Все фигуры нарисованы в квадрате 24×24, поэтому масштабируются одним
+    /// коэффициентом. Толщина пера задаётся в тех же единицах и уменьшается
+    /// вместе с ним — отсюда число заметно больше привычного.
+    /// </remarks>
+    private void DrawIcon(DrawingContext context, Geometry geometry, double x, double y)
+    {
+        const double scale = BadgeSize / 24d;
+
+        context.PushTransform(new MatrixTransform(scale, 0, 0, scale, x, y));
+        context.DrawGeometry(null, BadgeIconPen, geometry);
+        context.Pop();
+    }
+
+    private Geometry? IconOf(ClipBadge badge)
+    {
+        var key = badge switch
+        {
+            ClipBadge.Speed => "Icon.Speed",
+            ClipBadge.Muted => "Icon.VolumeOff",
+            ClipBadge.Volume => "Icon.Volume",
+            ClipBadge.Pitch => "Icon.Note",
+            ClipBadge.Rotation => "Icon.RotateRight",
+            ClipBadge.Framing => "Icon.Frame",
+            _ => null
+        };
+
+        return key is null ? null : TryFindResource(key) as Geometry;
     }
 
     private void DrawClipCaption(DrawingContext context, ClipViewModel clip, Rect rect)
@@ -474,14 +688,10 @@ public sealed class TimelineControl : Control
             return;
         }
 
-        var caption = clip.SpeedLabel is { } speed ? $"{clip.DurationText}  ·  {speed}" : clip.DurationText;
-        if (clip.IsMuted)
-        {
-            caption += "  ·  без звука";
-        }
-
+        // Только длительность: скорость и выключенный звук теперь показаны
+        // значками, а точные числа всё равно живут в свойствах клипа.
         var text = new FormattedText(
-            caption,
+            clip.DurationText,
             CultureInfo.CurrentUICulture,
             FlowDirection.LeftToRight,
             LabelTypeface,
