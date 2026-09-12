@@ -10,6 +10,22 @@ namespace MeowsCut.App.Formatting;
 /// </summary>
 public static class DisplayFormat
 {
+    /// <summary>
+    /// Когда это было: «сегодня в 14:32» для свежего, дата целиком для старого.
+    /// </summary>
+    /// <remarks>
+    /// Голая дата со временем в сообщении о восстановлении читается хуже:
+    /// про сегодняшнюю работу человеку нужен час, а не число месяца.
+    /// </remarks>
+    public static string DateTime(DateTimeOffset value)
+    {
+        var local = value.ToLocalTime();
+
+        return local.Date == DateTimeOffset.Now.Date
+            ? local.ToString("HH:mm")
+            : local.ToString("d MMMM, HH:mm");
+    }
+
     private static readonly CultureInfo Culture = CultureInfo.CurrentUICulture;
 
     public static string Duration(TimeSpan value) =>

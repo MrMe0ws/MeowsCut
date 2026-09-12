@@ -17,11 +17,26 @@ public static class ProjectDocumentWriter
             Width = project.Sequence.Format.Size.Width,
             Height = project.Sequence.Format.Size.Height,
             FrameRateNumerator = project.Sequence.Format.FrameRate.Numerator,
-            FrameRateDenominator = project.Sequence.Format.FrameRate.Denominator
+            FrameRateDenominator = project.Sequence.Format.FrameRate.Denominator,
+            Custom = project.Sequence.Format.IsCustom,
+            Fit = (int)project.Sequence.Format.Fit
         },
 
         Clips = project.Sequence.Video.Clips.Select(Write).ToArray(),
-        AudioTracks = project.Sequence.AudioTracks.Select(Write).ToArray()
+        AudioTracks = project.Sequence.AudioTracks.Select(Write).ToArray(),
+        Titles = project.Sequence.Titles.Select(Write).ToArray()
+    };
+
+    private static ProjectTitleDocument Write(TitleClip title) => new()
+    {
+        Text = title.Text,
+        StartMs = title.TimelineStart.TotalMilliseconds,
+        DurationMs = title.Duration.TotalMilliseconds,
+        Scale = title.Scale,
+        Anchor = (int)title.Anchor,
+        Color = title.Color,
+        Backdrop = title.Backdrop,
+        MarginShare = title.Margin
     };
 
     private static ProjectClipDocument Write(Clip clip) => new()
@@ -36,6 +51,9 @@ public static class ProjectDocumentWriter
         Zoom = clip.Transform.Zoom,
         OffsetX = clip.Transform.OffsetX,
         OffsetY = clip.Transform.OffsetY,
+        Rotation = clip.Transform.Rotation,
+        FadeInMs = clip.FadeIn.TotalMilliseconds,
+        FadeOutMs = clip.FadeOut.TotalMilliseconds,
         Label = clip.Label
     };
 

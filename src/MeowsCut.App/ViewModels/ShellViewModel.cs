@@ -30,6 +30,8 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IErrorPresenter _errorPresenter;
     private readonly IProjectStore _projectStore;
     private readonly IShellIntegration _shellIntegration;
+    private readonly AutosaveService _autosave;
+    private readonly ISilenceDetector _silenceDetector;
     private readonly ILogger<ShellViewModel> _logger;
 
     [ObservableProperty]
@@ -38,6 +40,12 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStatusBarVisible))]
+    [NotifyPropertyChangedFor(nameof(CanStartWork))]
+    [NotifyCanExecuteChangedFor(nameof(OpenFileCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddFileCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddSoundCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenProjectCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveSilenceCommand))]
     private bool _isBusy;
 
     /// <summary>
@@ -54,6 +62,12 @@ public sealed partial class ShellViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStatusBarVisible))]
     [NotifyPropertyChangedFor(nameof(IsPreparing))]
+    [NotifyPropertyChangedFor(nameof(CanStartWork))]
+    [NotifyCanExecuteChangedFor(nameof(OpenFileCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddFileCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddSoundCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenProjectCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveSilenceCommand))]
     private bool _isToolsetReady;
 
     [ObservableProperty]
@@ -72,11 +86,14 @@ public sealed partial class ShellViewModel : ObservableObject
         PreviewViewModel preview,
         InspectorViewModel inspector,
         AudioInspectorViewModel audioInspector,
+        TitleInspectorViewModel titleInspector,
         PresetsViewModel presets,
         TimelineThumbnailLoader thumbnailLoader,
         IErrorPresenter errorPresenter,
         IProjectStore projectStore,
         IShellIntegration shellIntegration,
+        AutosaveService autosave,
+        ISilenceDetector silenceDetector,
         ILogger<ShellViewModel> logger)
     {
         _mediaProbe = mediaProbe;
@@ -89,11 +106,14 @@ public sealed partial class ShellViewModel : ObservableObject
         _errorPresenter = errorPresenter;
         _projectStore = projectStore;
         _shellIntegration = shellIntegration;
+        _autosave = autosave;
+        _silenceDetector = silenceDetector;
         Export = export;
         Timeline = timeline;
         Preview = preview;
         Inspector = inspector;
         AudioInspector = audioInspector;
+        TitleInspector = titleInspector;
         Presets = presets;
         _logger = logger;
 
@@ -108,6 +128,9 @@ public sealed partial class ShellViewModel : ObservableObject
             Project = Project.WithSequence(sequence);
             Export.UpdateProject(Project);
             Presets.UpdateProject(Project);
+
+            // Правка на доске запускает отсчёт до автосохранения заново.
+            _autosave.Track(Project, ProjectPath);
         };
 
         Sources.AddToBoard = PlaceOnBoard;
@@ -128,6 +151,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
     /// <summary>Свойства выбранного куска звука.</summary>
     public AudioInspectorViewModel AudioInspector { get; }
+
+    /// <summary>Свойства выбранной надписи.</summary>
+    public TitleInspectorViewModel TitleInspector { get; }
 
     /// <summary>Пресеты площадок, включая Telegram.</summary>
     public PresetsViewModel Presets { get; }
@@ -151,6 +177,15 @@ public sealed partial class ShellViewModel : ObservableObject
     /// </summary>
     public bool IsPreparing => !IsToolsetReady && ToolsetProblem is null;
 
+    /// <summary>
+    /// Можно ли сейчас брать файлы в работу. Пока идёт стартовая подготовка, ffmpeg
+    /// ещё не найден, и открытие файла упиралось бы в сообщение «FFmpeg не найден» —
+    /// про программу, которая на самом деле просто не успела запуститься. Поэтому
+    /// пункты меню и перетаскивание на это время выключены, а чем занято приложение,
+    /// видно в строке состояния.
+    /// </summary>
+    public bool CanStartWork => IsToolsetReady && !IsBusy;
+
     /// <summary>Проект целиком: источники и таймлайн. Доска монтажа появится на следующем этапе.</summary>
     public Project? Project { get; private set; }
 
@@ -172,6 +207,10 @@ public sealed partial class ShellViewModel : ObservableObject
 
         if (initialFile is null || !File.Exists(initialFile))
         {
+            // Файл не открывают — самое время спросить про прошлый сеанс.
+            // Если открывают, предложение восстановиться только мешало бы:
+            // человек уже сказал, с чем хочет работать.
+            await TryRecoverAsync(cancellationToken).ConfigureAwait(true);
             return;
         }
 
@@ -185,7 +224,7 @@ public sealed partial class ShellViewModel : ObservableObject
         await OpenAsync(initialFile, cancellationToken).ConfigureAwait(true);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartWork))]
     private async Task OpenFileAsync(CancellationToken cancellationToken)
     {
         var paths = _fileDialogService.PickVideoFiles();
@@ -256,7 +295,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     /// <summary>Добавить ещё один файл в конец видеоряда.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartWork))]
     private async Task AddFileAsync(CancellationToken cancellationToken)
     {
         foreach (var path in _fileDialogService.PickVideoFiles())
@@ -317,7 +356,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     /// <summary>Положить звук из файла на аудиодорожку.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartWork))]
     private async Task AddSoundAsync(CancellationToken cancellationToken)
     {
         if (Project is null || IsBusy || !IsToolsetReady)
@@ -404,8 +443,10 @@ public sealed partial class ShellViewModel : ObservableObject
     {
         Media = media;
         Project = project;
+        _autosave.Track(project, ProjectPath);
 
         Timeline.Attach(project);
+        RemoveSilenceCommand.NotifyCanExecuteChanged();
         Preview.Attach(project);
         _thumbnailLoader.Attach(Timeline);
         Export.Attach(project);
@@ -420,6 +461,9 @@ public sealed partial class ShellViewModel : ObservableObject
         Media = null;
         Project = null;
         Sources.Update(null);
+
+        // Проект закрыли осознанно — восстанавливать нечего.
+        _autosave.Clear();
 
         _thumbnailLoader.Detach();
         Timeline.Detach();
@@ -466,6 +510,19 @@ public sealed partial class ShellViewModel : ObservableObject
         ToolsetProblem = Strings.FfmpegNotFoundMessage;
     }
 
+    partial void OnIsToolsetReadyChanged(bool value) => RefreshRecentFileAvailability();
+
+    partial void OnIsBusyChanged(bool value) => RefreshRecentFileAvailability();
+
+    /// <summary>Кнопки недавних файлов гаснут вместе с пунктами меню.</summary>
+    private void RefreshRecentFileAvailability()
+    {
+        foreach (var file in RecentFiles)
+        {
+            file.RefreshAvailability();
+        }
+    }
+
     private void RefreshRecentFiles()
     {
         RecentFiles.Clear();
@@ -485,11 +542,16 @@ public sealed partial class RecentFileViewModel(string path, ShellViewModel shel
 
     public string FileName { get; } = System.IO.Path.GetFileName(path);
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanOpen))]
     private Task OpenAsync(CancellationToken cancellationToken) =>
         IsProject
             ? shell.OpenProjectFileAsync(Path, cancellationToken)
             : shell.OpenAsync(Path, cancellationToken);
+
+    private bool CanOpen() => shell.CanStartWork;
+
+    /// <summary>Пересчитать доступность: список переживает стартовую подготовку.</summary>
+    internal void RefreshAvailability() => OpenCommand.NotifyCanExecuteChanged();
 
     /// <summary>Черновик в списке недавних открывается как проект, а не как новый файл.</summary>
     private bool IsProject =>

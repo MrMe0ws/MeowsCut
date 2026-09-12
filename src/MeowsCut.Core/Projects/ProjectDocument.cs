@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MeowsCut.Core.Editing.Timeline;
 
 namespace MeowsCut.Core.Projects;
 
@@ -28,6 +29,38 @@ public sealed class ProjectDocument
 
     [JsonPropertyName("audioTracks")]
     public IReadOnlyList<ProjectAudioTrackDocument> AudioTracks { get; init; } = [];
+
+    [JsonPropertyName("titles")]
+    public IReadOnlyList<ProjectTitleDocument> Titles { get; init; } = [];
+}
+
+/// <summary>Надпись поверх кадра.</summary>
+public sealed class ProjectTitleDocument
+{
+    [JsonPropertyName("text")]
+    public string Text { get; init; } = string.Empty;
+
+    [JsonPropertyName("startMs")]
+    public double StartMs { get; init; }
+
+    [JsonPropertyName("durationMs")]
+    public double DurationMs { get; init; }
+
+    [JsonPropertyName("scale")]
+    public double Scale { get; init; } = 0.06;
+
+    /// <summary>Место на кадре: индекс <c>TitleAnchor</c>.</summary>
+    [JsonPropertyName("anchor")]
+    public int Anchor { get; init; } = (int)TitleAnchor.BottomCenter;
+
+    [JsonPropertyName("color")]
+    public string Color { get; init; } = "#FFFFFF";
+
+    [JsonPropertyName("backdrop")]
+    public bool Backdrop { get; init; } = true;
+
+    [JsonPropertyName("marginShare")]
+    public double MarginShare { get; init; } = 0.05;
 }
 
 /// <summary>Файл проекта. Идентификатор хранится, чтобы клипы знали, чей они кусок.</summary>
@@ -53,6 +86,14 @@ public sealed class ProjectFormatDocument
 
     [JsonPropertyName("frameRateDenominator")]
     public int FrameRateDenominator { get; init; } = 1;
+
+    /// <summary>Формат выбран вручную, а не взят у первого файла.</summary>
+    [JsonPropertyName("custom")]
+    public bool Custom { get; init; }
+
+    /// <summary>Как кусок ложится в кадр: 0 — вписать, 1 — заполнить, 2 — растянуть.</summary>
+    [JsonPropertyName("fit")]
+    public int Fit { get; init; }
 }
 
 public sealed class ProjectClipDocument
@@ -87,6 +128,16 @@ public sealed class ProjectClipDocument
 
     [JsonPropertyName("offsetY")]
     public double OffsetY { get; init; }
+
+    /// <summary>Поворот кадра по часовой стрелке: 0, 90, 180 или 270.</summary>
+    [JsonPropertyName("rotation")]
+    public int Rotation { get; init; }
+
+    [JsonPropertyName("fadeInMs")]
+    public double FadeInMs { get; init; }
+
+    [JsonPropertyName("fadeOutMs")]
+    public double FadeOutMs { get; init; }
 
     [JsonPropertyName("label")]
     public string? Label { get; init; }

@@ -10,16 +10,39 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:PreviewViewModel}">
 
+    <UserControl.Resources>
+        <!-- «Заполнить кадр» — это Stretch у самой картинки: вписанное видео
+             стоит с полями, заполняющее вылезает за кадр и обрезается рамкой.
+             Стилем, а не значением в коде: проигрыватель создаётся один раз,
+             а режим меняется по ходу работы. -->
+        <Style TargetType="MediaElement">
+            <Setter Property="Stretch" Value="Uniform" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding FillFrame}" Value="True">
+                    <Setter Property="Stretch" Value="UniformToFill" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="{DynamicResource Brush.Background}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Margin="18,14,18,8" Background="#FF0B0B0D" CornerRadius="8">
-            <controls:FramingHost Margin="6"
-                                  OffsetX="{Binding FrameOffsetX}"
+            <!-- Кадр ролика держит свои пропорции: в вертикальном формате видно
+                 и сам кадр 9:16, и то, что осталось за его краями. -->
+            <controls:AspectFrame Margin="6" Aspect="{Binding FrameAspect}">
+            <Grid>
+            <Border Background="Black"
+                    BorderBrush="{DynamicResource Brush.Border}"
+                    BorderThickness="1" />
+            <controls:FramingHost OffsetX="{Binding FrameOffsetX}"
                                   OffsetY="{Binding FrameOffsetY}"
+                                  Rotation="{Binding FrameRotation}"
                                   Zoom="{Binding FrameZoom}">
             <Grid>
                 <!-- Обычный режим: системный проигрыватель -->
@@ -30,13 +53,109 @@
                      из видеоряда — проигрыватель её показать не может -->
                 <Image RenderOptions.BitmapScalingMode="HighQuality"
                        Source="{Binding Frame}"
-                       Stretch="Uniform"
-                       Visibility="{Binding IsFrameVisible, Converter={StaticResource BoolToVisibility}}" />
+                       Visibility="{Binding IsFrameVisible, Converter={StaticResource BoolToVisibility}}">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Setter Property="Stretch" Value="Uniform" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding FillFrame}" Value="True">
+                                    <Setter Property="Stretch" Value="UniformToFill" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
             </Grid>
             </controls:FramingHost>
+
+            <!-- Надписи поверх кадра: приблизительно, но на своих местах и своего
+                 размера. Без них титр впервые показался бы только в готовом файле. -->
+            <ItemsControl x:Name="TitleLayer"
+                          IsHitTestVisible="False"
+                          ItemsSource="{Binding VisibleTitles}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:PreviewTitle}">
+                        <Border HorizontalAlignment="{Binding Horizontal}"
+                                VerticalAlignment="{Binding Vertical}"
+                                CornerRadius="2">
+                            <Border.Margin>
+                                <MultiBinding Converter="{StaticResource ShareOfHeightMargin}">
+                                    <Binding ElementName="TitleLayer" Path="ActualHeight" />
+                                    <Binding Path="Margin" />
+                                </MultiBinding>
+                            </Border.Margin>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Backdrop}" Value="True">
+                                            <Setter Property="Background" Value="#8C000000" />
+                                            <Setter Property="Padding" Value="6,2" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <TextBlock FontFamily="Segoe UI"
+                                       Foreground="{Binding Foreground}"
+                                       Text="{Binding Text}"
+                                       TextWrapping="NoWrap">
+                                <TextBlock.FontSize>
+                                    <MultiBinding Converter="{StaticResource ShareOfHeight}">
+                                        <Binding ElementName="TitleLayer" Path="ActualHeight" />
+                                        <Binding Path="Scale" />
+                                    </MultiBinding>
+                                </TextBlock.FontSize>
+                            </TextBlock>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Затемнение поверх кадра: показывает затухание там же, где его
+                 выставляли, не дожидаясь экспорта. -->
+            <Rectangle Fill="Black" IsHitTestVisible="False" Opacity="{Binding FadeDim}" />
+            </Grid>
+            </controls:AspectFrame>
         </Border>
 
+        <!-- Формат ролика. Стоит под кадром, а не в настройках экспорта: это
+             решение про монтаж — от него зависит, что вообще попадёт в кадр,
+             и видно его сразу же, на самом кадре. -->
         <StackPanel Grid.Row="1"
+                    Margin="18,0,18,8"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+            <TextBlock VerticalAlignment="Center"
+                       Style="{StaticResource Text.Muted}"
+                       Text="{loc:Tr FieldSequenceFormat}" />
+
+            <ComboBox Width="180"
+                      Margin="8,0,0,0"
+                      VerticalAlignment="Center"
+                      ItemsSource="{Binding FormatOptions}"
+                      SelectedItem="{Binding SelectedFormat}"
+                      ToolTip="{loc:Tr FieldSequenceFormatHint}" />
+
+            <TextBlock Margin="10,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource Text.Muted}"
+                       Text="{Binding FrameSizeText}" />
+
+            <CheckBox Margin="14,0,0,0"
+                      VerticalAlignment="Center"
+                      Content="{loc:Tr FieldFillFrame}"
+                      IsChecked="{Binding FillFrame}"
+                      ToolTip="{loc:Tr FieldFillFrameHint}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2"
                     Margin="0,0,0,10"
                     HorizontalAlignment="Center"
                     Orientation="Horizontal">

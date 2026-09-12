@@ -1,0 +1,115 @@
+<Window x:Class="MeowsCut.App.Views.Dialogs.SilenceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+        Title="{loc:Tr AppTitle}"
+        Width="470"
+        SizeToContent="Height"
+        Background="{DynamicResource Brush.Background}"
+        FontFamily="{StaticResource Font.Ui}"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- Три числа, которыми настраивают поиск пауз. Значения по умолчанию
+         подходят для речи с микрофона; менять их приходится редко, но без них
+         редактор либо режет дыхание, либо не замечает пауз вовсе. -->
+    <StackPanel Margin="22" Grid.IsSharedSizeScope="True">
+        <TextBlock Style="{StaticResource Text.Title}" Text="{loc:Tr RemoveSilenceTitle}" />
+
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource Text.Muted}"
+                   Text="{loc:Tr RemoveSilenceHint}"
+                   TextWrapping="Wrap" />
+
+        <Border Style="{StaticResource Inspector.Separator}" />
+
+        <Grid Margin="0,1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                <ColumnDefinition Width="*" MinWidth="80" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Style="{StaticResource Inspector.Label}"
+                       Text="{loc:Tr FieldSilenceThreshold}" />
+
+            <Slider Grid.Column="1"
+                    IsSnapToTickEnabled="True"
+                    Maximum="-10"
+                    Minimum="-60"
+                    Style="{StaticResource Inspector.Slider}"
+                    TickFrequency="1"
+                    ToolTip="{loc:Tr FieldSilenceThresholdHint}"
+                    Value="{Binding ThresholdDb}" />
+
+            <TextBlock Grid.Column="2"
+                       Style="{StaticResource Inspector.Value}"
+                       Text="{Binding ThresholdDb, StringFormat={}{0:0} дБ}" />
+        </Grid>
+
+        <Grid Margin="0,1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                <ColumnDefinition Width="*" MinWidth="80" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Style="{StaticResource Inspector.Label}"
+                       Text="{loc:Tr FieldSilenceMinimum}" />
+
+            <Slider Grid.Column="1"
+                    IsSnapToTickEnabled="True"
+                    Maximum="5"
+                    Minimum="0.2"
+                    Style="{StaticResource Inspector.Slider}"
+                    TickFrequency="0.1"
+                    ToolTip="{loc:Tr FieldSilenceMinimumHint}"
+                    Value="{Binding MinimumSeconds}" />
+
+            <TextBlock Grid.Column="2"
+                       Style="{StaticResource Inspector.Value}"
+                       Text="{Binding MinimumSeconds, StringFormat={}{0:0.0} с}" />
+        </Grid>
+
+        <Grid Margin="0,1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                <ColumnDefinition Width="*" MinWidth="80" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Style="{StaticResource Inspector.Label}"
+                       Text="{loc:Tr FieldSilencePadding}" />
+
+            <Slider Grid.Column="1"
+                    IsSnapToTickEnabled="True"
+                    Maximum="500"
+                    Minimum="0"
+                    Style="{StaticResource Inspector.Slider}"
+                    TickFrequency="10"
+                    ToolTip="{loc:Tr FieldSilencePaddingHint}"
+                    Value="{Binding PaddingMilliseconds}" />
+
+            <TextBlock Grid.Column="2"
+                       Style="{StaticResource Inspector.Value}"
+                       Text="{Binding PaddingMilliseconds, StringFormat={}{0:0} мс}" />
+        </Grid>
+
+        <StackPanel Margin="0,20,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Click="OnCancel"
+                    Content="{loc:Tr Cancel}"
+                    Style="{StaticResource Button.Ghost}" />
+
+            <Button Margin="10,0,0,0"
+                    MinWidth="130"
+                    Click="OnAccept"
+                    Content="{loc:Tr RemoveSilenceAccept}"
+                    IsDefault="True"
+                    Style="{StaticResource Button.Primary}" />
+        </StackPanel>
+    </StackPanel>
+</Window>

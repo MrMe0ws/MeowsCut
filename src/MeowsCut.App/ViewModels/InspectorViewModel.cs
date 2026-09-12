@@ -79,7 +79,28 @@ public sealed partial class InspectorViewModel : ObservableObject
     [ObservableProperty]
     private double _offsetYPercent;
 
+    /// <summary>
+    /// Появление и затухание в секундах: так их называет пользователь
+    /// («секунду на затемнение»), и так же подписаны поля у звука.
+    /// </summary>
+    [ObservableProperty]
+    private double _fadeInSeconds;
+
+    [ObservableProperty]
+    private double _fadeOutSeconds;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RotationText))]
+    private int _rotation;
+
     public bool HasSelection => Clip is not null;
+
+    /// <summary>Насколько кадр повёрнут сейчас. «0°» тоже показываем: иначе непонятно,
+    /// довернули клип или кнопка не сработала.</summary>
+    public string RotationText => Rotation + "°";
+
+    /// <summary>Полное имя типа: здесь <c>Clip</c> — это свойство с выделенным клипом.</summary>
+    public static double MaxFadeSeconds => Core.Editing.Timeline.Clip.MaxFade.TotalSeconds;
 
     private void Refresh()
     {
@@ -102,6 +123,9 @@ public sealed partial class InspectorViewModel : ObservableObject
             ZoomPercent = Math.Round(clip.Clip.Transform.Zoom * 100);
             OffsetXPercent = Math.Round(clip.Clip.Transform.OffsetX * 100);
             OffsetYPercent = Math.Round(clip.Clip.Transform.OffsetY * 100);
+            Rotation = clip.Clip.Transform.Rotation;
+            FadeInSeconds = Round(clip.Clip.FadeIn);
+            FadeOutSeconds = Round(clip.Clip.FadeOut);
         }
         else
         {
@@ -114,6 +138,9 @@ public sealed partial class InspectorViewModel : ObservableObject
             ZoomPercent = 100d;
             OffsetXPercent = 0d;
             OffsetYPercent = 0d;
+            Rotation = 0;
+            FadeInSeconds = 0d;
+            FadeOutSeconds = 0d;
         }
 
         _updating = false;
@@ -187,6 +214,60 @@ public sealed partial class InspectorViewModel : ObservableObject
         _timeline.SetClipAudio(clip.Clip.Audio.WithVolume(volume));
     }
 
+    /// <summary>Десятые доли секунды: шага ползунка мельче глаз всё равно не различает.</summary>
+    private static double Round(TimeSpan value) => Math.Round(value.TotalSeconds, 1);
+
+    partial void OnFadeInSecondsChanged(double value)
+    {
+        if (_updating || Clip is not { } clip)
+        {
+            return;
+        }
+
+        var fade = TimeSpan.FromSeconds(Math.Clamp(value, 0d, MaxFadeSeconds));
+        if (Math.Abs((clip.Clip.FadeIn - fade).TotalSeconds) < 0.01)
+        {
+            return;
+        }
+
+        _timeline.SetClipFades(fadeIn: fade);
+    }
+
+    partial void OnFadeOutSecondsChanged(double value)
+    {
+        if (_updating || Clip is not { } clip)
+        {
+            return;
+        }
+
+        var fade = TimeSpan.FromSeconds(Math.Clamp(value, 0d, MaxFadeSeconds));
+        if (Math.Abs((clip.Clip.FadeOut - fade).TotalSeconds) < 0.01)
+        {
+            return;
+        }
+
+        _timeline.SetClipFades(fadeOut: fade);
+    }
+
+    /// <summary>Довернуть кадр на четверть оборота — по часовой стрелке и против.</summary>
+    [RelayCommand]
+    private void RotateLeft() => _timeline.RotateClipsBy(-90);
+
+    [RelayCommand]
+    private void RotateRight() => _timeline.RotateClipsBy(90);
+
+    [RelayCommand]
+    private void RotateHalfTurn() => _timeline.RotateClipsBy(180);
+
+    [RelayCommand]
+    private void ClearFades()
+    {
+        FadeInSeconds = 0d;
+        FadeOutSeconds = 0d;
+        _timeline.SetClipFades(TimeSpan.Zero, TimeSpan.Zero);
+        _timeline.EndInteraction();
+    }
+
     partial void OnZoomPercentChanged(double value) => ApplyTransform();
 
     partial void OnOffsetXPercentChanged(double value) => ApplyTransform();
@@ -207,7 +288,7 @@ public sealed partial class InspectorViewModel : ObservableObject
         var transform = new ClipTransform(
             Math.Clamp(ZoomPercent / 100d, ClipTransform.MinZoom, ClipTransform.MaxZoom),
             OffsetXPercent / 100d,
-            OffsetYPercent / 100d);
+            OffsetYPercent / 100d) with { Rotation = Rotation };
 
         if (transform == clip.Clip.Transform)
         {
@@ -223,6 +304,8 @@ public sealed partial class InspectorViewModel : ObservableObject
         ZoomPercent = 100d;
         OffsetXPercent = 0d;
         OffsetYPercent = 0d;
+        Rotation = 0;
+        _timeline.SetClipTransform(ClipTransform.Identity);
         _timeline.EndInteraction();
     }
 

@@ -58,6 +58,7 @@ public sealed class TempWorkspaceFactory(AppPaths paths, ILogger<TempWorkspaceFa
             var threshold = DateTime.UtcNow - olderThan;
 
             CleanPreviewFragments(threshold);
+            CleanTitleTexts(threshold);
 
             foreach (var directory in Directory.EnumerateDirectories(paths.TempDirectory, "job-*"))
             {
@@ -87,6 +88,39 @@ public sealed class TempWorkspaceFactory(AppPaths paths, ILogger<TempWorkspaceFa
     /// Фрагменты предпросмотра живут дольше своей задачи — пользователь их смотрит,
     /// поэтому удаляются они не сразу, а при следующем запуске.
     /// </summary>
+    /// <summary>
+    /// Тексты надписей, которые больше никому не нужны.
+    /// </summary>
+    /// <remarks>
+    /// Файлы именуются отпечатком текста и переживают экспорт намеренно:
+    /// пересборка плана находит их на месте. Значит, убирать их некому,
+    /// кроме этой уборки по возрасту.
+    /// </remarks>
+    private void CleanTitleTexts(DateTime threshold)
+    {
+        var directory = Path.Combine(paths.TempDirectory, TitleTextStore.FolderName);
+
+        if (!Directory.Exists(directory))
+        {
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(directory, "*.txt"))
+        {
+            try
+            {
+                if (File.GetLastWriteTimeUtc(file) <= threshold)
+                {
+                    File.Delete(file);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogDebug(ex, "Текст надписи {File} занят, пропускаем", file);
+            }
+        }
+    }
+
     private void CleanPreviewFragments(DateTime threshold)
     {
         if (!Directory.Exists(paths.PreviewDirectory))

@@ -127,6 +127,12 @@ public sealed class FfmpegArgumentBuilder
         return this;
     }
 
+    public FfmpegArgumentBuilder NoVideo()
+    {
+        _output.Add("-vn");
+        return this;
+    }
+
     public FfmpegArgumentBuilder NoSubtitles()
     {
         _output.Add("-sn");

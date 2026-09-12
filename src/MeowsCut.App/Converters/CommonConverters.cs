@@ -39,6 +39,12 @@ public sealed class EnumLabelConverter : IValueConverter
             Core.Export.ContainerFormat.Mov => "MOV",
             Core.Export.ContainerFormat.Mkv => "MKV",
             Core.Export.ContainerFormat.Avi => "AVI",
+
+            // Без пояснения «только звук»: это был бы текст интерфейса в коде,
+            // а объяснение и так стоит строкой под списком, из ресурсов.
+            Core.Export.ContainerFormat.Mp3 => "MP3",
+            Core.Export.ContainerFormat.M4a => "M4A",
+            Core.Export.ContainerFormat.Wav => "WAV",
             _ => container.ToString()
         },
         Core.Export.HardwareAcceleration hardware => Core.Export.HardwareAccelerationExtensions.DisplayName(hardware),
@@ -83,5 +89,46 @@ public sealed class NullToVisibilityConverter : IValueConverter
             : value is null ? Visibility.Collapsed : Visibility.Visible;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>
+/// Доля высоты кадра в пиксели: высота кадра × доля.
+/// </summary>
+/// <remarks>
+/// Размер надписи в модели задан долей высоты — так он одинаков и в 1080p,
+/// и в вертикальном 4K. Предпросмотру нужна та же доля, но от высоты кадра
+/// на экране, а она известна только разметке.
+/// </remarks>
+public sealed class ShareOfHeightConverter : IMultiValueConverter
+{
+    public object Convert(object?[] values, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (values is [double height, double share] && height > 0)
+        {
+            return Math.Max(1d, height * share);
+        }
+
+        return 12d;
+    }
+
+    public object[] ConvertBack(object? value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Та же доля высоты, но отступом со всех сторон.</summary>
+public sealed class ShareOfHeightThicknessConverter : IMultiValueConverter
+{
+    public object Convert(object?[] values, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (values is [double height, double share] && height > 0)
+        {
+            return new System.Windows.Thickness(height * share);
+        }
+
+        return new System.Windows.Thickness(0);
+    }
+
+    public object[] ConvertBack(object? value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }

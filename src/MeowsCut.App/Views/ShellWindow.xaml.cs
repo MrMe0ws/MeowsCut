@@ -20,10 +20,14 @@ public partial class ShellWindow : Window
         InitializeComponent();
     }
 
+    /// <summary>
+    /// Пока идёт стартовая подготовка, курсор над окном показывает запрет: файл,
+    /// брошенный в этот момент, всё равно некому прочитать.
+    /// </summary>
     private void OnDragOver(object sender, DragEventArgs e)
     {
         var files = DragDropFileValidator.ExtractFiles(e.Data);
-        e.Effects = files.Count > 0 ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Effects = files.Count > 0 && _viewModel.CanStartWork ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
     }
 
@@ -55,7 +59,7 @@ public partial class ShellWindow : Window
     private async void OnDrop(object sender, DragEventArgs e)
     {
         var files = DragDropFileValidator.ExtractFiles(e.Data);
-        if (files.Count == 0)
+        if (files.Count == 0 || !_viewModel.CanStartWork)
         {
             return;
         }

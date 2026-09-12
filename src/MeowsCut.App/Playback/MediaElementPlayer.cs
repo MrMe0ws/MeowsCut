@@ -24,7 +24,6 @@ public sealed class MediaElementPlayer : IMediaPlayer
             LoadedBehavior = MediaState.Manual,
             UnloadedBehavior = MediaState.Manual,
             ScrubbingEnabled = true,          // без этого при паузе не видно кадр
-            Stretch = Stretch.Uniform,
             Volume = 1d
         };
 

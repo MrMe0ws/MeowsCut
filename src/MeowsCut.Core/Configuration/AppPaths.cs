@@ -48,6 +48,19 @@ public sealed class AppPaths
     /// <summary>Папка ffmpeg в portable-поставке — рядом с исполняемым файлом.</summary>
     public string BundledFfmpegDirectory => Path.Combine(ApplicationDirectory, "ffmpeg");
 
+    /// <summary>
+    /// Черновик, который редактор сохраняет сам по ходу работы.
+    /// </summary>
+    /// <remarks>
+    /// Рядом с временными файлами, а не в папке пользователя: это не его файл,
+    /// а страховка редактора, и место ей там же, где кэшу кадров.
+    /// </remarks>
+    public string AutosaveDirectory => Path.Combine(LocalRoot, "autosave");
+
+    public string AutosaveProjectFile => Path.Combine(AutosaveDirectory, "recovery.meows");
+
+    public string AutosaveStateFile => Path.Combine(AutosaveDirectory, "recovery.json");
+
     public string SettingsFile => Path.Combine(RoamingRoot, "settings.json");
 
     public string UserPresetsDirectory => Path.Combine(RoamingRoot, "presets");
@@ -61,6 +74,7 @@ public sealed class AppPaths
         Directory.CreateDirectory(TempDirectory);
         Directory.CreateDirectory(ThumbnailsDirectory);
         Directory.CreateDirectory(WaveformsDirectory);
+        Directory.CreateDirectory(AutosaveDirectory);
         Directory.CreateDirectory(RoamingRoot);
     }
 }

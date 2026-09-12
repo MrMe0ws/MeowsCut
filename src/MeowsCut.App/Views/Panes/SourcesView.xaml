@@ -9,8 +9,8 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:SourcesViewModel}">
 
-    <!-- Что приложено к проекту. Стоит под свойствами в той же колонке: место
-         справа от кадра всё равно пустует, а заглядывать сюда нужно часто. -->
+    <!-- Что приложено к проекту. Стоит над свойствами в той же колонке: отсюда
+         файл кладут на доску, и заглядывают сюда чаще, чем в поля свойств. -->
     <Border Padding="12,10"
             Background="{DynamicResource Brush.Surface}"
             BorderBrush="{DynamicResource Brush.Border}"

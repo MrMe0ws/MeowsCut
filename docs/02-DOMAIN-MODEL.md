@@ -87,14 +87,32 @@ readonly record struct ClipId(Guid Value);
 ```csharp
 sealed record Sequence(VideoTrack Video, SequenceFormat Format)
 {
-    TimeSpan Duration { get; }                       // сумма длительностей клипов
-    (Clip Clip, TimeSpan SourceTime)? Resolve(TimeSpan timelineTime);   // для плеера и рендера
+    IReadOnlyList<AudioTrack> AudioTracks { get; init; }   // дорожки звука поверх видеоряда
+    TimeSpan Duration { get; }                             // включая звук длиннее видеоряда
+    PlacedClip? Resolve(TimeSpan timelineTime);            // для плеера и рендера
     TimeSpan StartOf(ClipId id);
+    IReadOnlyList<TitleClip> Titles { get; init; }          // надписи поверх кадра
+    Sequence WithTracks(IReadOnlyList<AudioTrack> tracks);
+    Sequence WithTitles(IReadOnlyList<TitleClip> titles);
+}
+
+readonly record struct PlacedClip(Clip Clip, int Index, TimeSpan Start);
+
+sealed record TitleClip(TitleId Id, string Text, TimeSpan TimelineStart, TimeSpan Duration)
+{
+    TitleAnchor Anchor { get; init; }   // девять мест на кадре (ADR-35)
+    double Scale { get; init; }         // высота букв как доля высоты кадра
+    string Color { get; init; }
+    bool Backdrop { get; init; }        // тёмная плашка под текстом
 }
 
 sealed record SequenceFormat(FrameSize Size, Rational FrameRate)
 {
-    static SequenceFormat FromFirstClip(MediaInfo info);   // формат задаётся первым клипом
+    FitMode Fit { get; init; }        // вписать с полями или заполнить с обрезкой
+    bool IsCustom { get; init; }      // формат выбран вручную, а не взят у файла (ADR-33)
+    SequenceFormat WithAspect(double widthToHeight);       // 9/16 — вертикальный кадр
+
+    static SequenceFormat FromMedia(MediaInfo info);       // формат задаётся первым клипом
 }
 
 sealed record VideoTrack(IReadOnlyList<Clip> Clips)        // упорядочены; между ними бывают зазоры
@@ -119,11 +137,21 @@ sealed record VideoTrack(IReadOnlyList<Clip> Clips)        // упорядоче
 sealed record Clip(
     ClipId Id,
     SourceId SourceId,
+    TimeSpan SourceDuration,
+    bool SourceHasAudio,
     TimeRange SourceRange,        // in/out внутри исходника
     double Speed,                 // 0.1 .. 16.0
     ClipAudio Audio,
-    string? Label)
+    ClipTransform Transform,      // масштаб, поворот и смещение кадра
+    string? Label = null,
+    TimeSpan LeadingGap = default,  // зазор перед клипом; абсолютная позиция не хранится
+    bool SourceIsImage = false)     // фотография: длительность условная, задаётся клипом
 {
+    TimeSpan FadeIn { get; init; }      // появление из чёрного (ADR-28)
+    TimeSpan FadeOut { get; init; }     // уход в чёрное
+    TimeSpan EffectiveFadeIn { get; }   // то же, подрезанное под длину клипа
+    TimeSpan EffectiveFadeOut { get; }
+
     TimeSpan TimelineDuration => SourceRange.Duration / Speed;
     TimeSpan ToSourceTime(TimeSpan offsetInClip) => SourceRange.Start + offsetInClip * Speed;
     Clip WithSpeed(double speed);
@@ -132,12 +160,34 @@ sealed record Clip(
     (Clip left, Clip right) SplitAt(TimeSpan offsetInClip);   // ножницы
 }
 
-sealed record ClipAudio(bool Enabled, double VolumeMultiplier);   // 1.0 = без изменений
+sealed record ClipAudio(bool Enabled, double Volume);                  // 1.0 = без изменений
+sealed record ClipTransform(double Zoom, double OffsetX, double OffsetY)
+{
+    int Rotation { get; init; }        // 0, 90, 180 или 270 по часовой (ADR-29)
+    bool SwapsDimensions { get; }      // четверть оборота меняет ширину и высоту местами
+}
 ```
 
-Аудио в v1 жёстко связано с видеоклипом (как связанные A/V в Premiere): режется вместе,
-скорость общая, отдельно регулируются только громкость и вкл/выкл. Отдельная аудиодорожка —
-следующая по очереди возможность, она добавляется как второй трек в `Sequence`, не ломая клипы.
+Звук самого клипа жёстко связан с видео (как связанные A/V в Premiere): режется вместе,
+скорость общая, отдельно регулируются только громкость и вкл/выкл.
+
+Музыка и озвучка живут отдельно — на аудиодорожках последовательности:
+
+```csharp
+sealed record AudioTrack(AudioTrackId Id, string Title, IReadOnlyList<AudioClip> Clips)
+{
+    bool IsMuted { get; init; }
+    double Gain { get; init; }     // громкость всей дорожки, поверх громкости кусков
+}
+
+sealed record AudioClip(AudioClipId Id, SourceId SourceId, TimeRange SourceRange, TimeSpan TimelineStart)
+{
+    // собственная громкость, затухания на краях, сдвиг тона при изменении скорости
+}
+```
+
+Куски звука стоят по абсолютному времени (`TimelineStart`), а не через зазоры: музыку
+двигают относительно картинки, а не относительно соседнего куска.
 
 **Trim и Cut выражаются через операции над клипами**, отдельной сущности для них нет:
 
@@ -180,9 +230,21 @@ sealed class EditHistory
 `TryMergeWith` нужен, чтобы перетаскивание края клипа не создавало 200 записей в истории:
 серия однотипных команд по одному клипу схлопывается в одну.
 
-Команды v1: `SplitClipCommand`, `RemoveClipCommand` (ripple), `TrimClipEdgeCommand`,
-`MoveClipCommand`, `SetClipSpeedCommand`, `SetClipAudioCommand`, `AppendClipCommand`,
-`RemoveRangeCommand` (вырезать выделенный интервал), `DuplicateClipCommand`.
+Команды видеоряда: `SetClipFadesCommand`, `SplitClipCommand`, `RemoveClipCommand` (ripple), `RemoveClipsCommand`,
+`TrimClipEdgeCommand`, `MoveClipCommand`, `MoveClipInTimeCommand` (сдвиг по ленте, меняет зазор),
+`AppendClipCommand`, `InsertClipsCommand`, `DuplicateClipCommand`, `RemoveRangeCommand`,
+`SetClipSpeedCommand`, `SetClipAudioCommand`, `SetClipTransformCommand`, `DetachClipAudioCommand`.
+
+Команды звука: `AddAudioTrackCommand`, `RemoveAudioTrackCommand`, `SetAudioTrackPropertiesCommand`,
+`AddAudioClipCommand`, `RemoveAudioClipCommand`, `MoveAudioClipCommand`, `SplitAudioClipCommand`,
+`TrimAudioClipEdgeCommand`, `SetAudioClipPropertiesCommand`.
+
+Команды надписей: `AddTitleCommand`, `RemoveTitleCommand`, `SetTitleTextCommand`,
+`MoveTitleCommand`, `SetTitleDurationCommand`, `SetTitleLookCommand`.
+Формат ролика меняет `SetSequenceFormatCommand`.
+
+Отдельно стоит `ReplaceSequenceCommand` — им в историю попадает результат операции,
+которую неудобно выражать точечно (вставка из буфера, открытие черновика).
 
 ## 2.4 Настройки экспорта
 

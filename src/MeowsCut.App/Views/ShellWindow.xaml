@@ -110,9 +110,12 @@
                        RenderOptions.BitmapScalingMode="HighQuality"
                        Source="../Assets/logo.png" />
 
+                <!-- По центру строки, а не враспор: раскладка пунктов внутри Menu
+                     держит их собственную высоту, и растянутое меню оставляло
+                     под «Файлом» пустую полосу. -->
                 <Menu Grid.Column="1"
                       HorizontalAlignment="Left"
-                      VerticalAlignment="Stretch"
+                      VerticalAlignment="Center"
                       WindowChrome.IsHitTestVisibleInChrome="True">
                     <MenuItem Header="{loc:Tr MenuFile}">
                         <MenuItem Command="{Binding AddFileCommand}"
@@ -220,7 +223,6 @@
                                 HorizontalAlignment="Center"
                                 Command="{Binding OpenFileCommand}"
                                 Content="{loc:Tr OpenVideo}"
-                                IsEnabled="{Binding IsToolsetReady}"
                                 Style="{StaticResource Button.Primary}"
                                 Visibility="{Binding IsPreparing, Converter={StaticResource InverseBoolToVisibility}}" />
 
@@ -300,34 +302,44 @@
                 <Border Grid.Column="2"
                         BorderBrush="{DynamicResource Brush.Border}"
                         BorderThickness="1,0,0,0">
-                    <!-- Свойства и файлы делят колонку по вертикали: у одного бывает
-                         десяток полей, у другого десяток файлов, и что важнее сейчас,
-                         знает только пользователь. -->
+                    <!-- Файлы сверху, свойства под ними: список файлов — это вход
+                         в работу (положить на доску, показать в папке), и тянуться
+                         к нему через всю колонку приходилось на каждый клип.
+                         Свойств больше по высоте, поэтому нижней части отдано
+                         больше места; границу между ними двигает разделитель. -->
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="1.7*" MinHeight="90" />
-                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="1*" MinHeight="90" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="1.7*" MinHeight="90" />
                         </Grid.RowDefinitions>
 
-                        <ScrollViewer Grid.Row="0"
+                        <panes:SourcesView Grid.Row="0" DataContext="{Binding Sources}" />
+                        <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
+
+                        <ScrollViewer Grid.Row="2"
                                       controls:SmoothScroll.IsEnabled="True"
                                       HorizontalScrollBarVisibility="Disabled"
                                       VerticalScrollBarVisibility="Auto">
+                            <!-- Три инспектора на одном месте: свойства клипа,
+                                 куска звука и надписи. Одновременно выделено
+                                 что-то одно, и показывать их рядом значило бы
+                                 каждый раз гадать, к чему относится «размер». -->
                             <Grid>
                                 <panes:InspectorView DataContext="{Binding Inspector}"
-                                                     Visibility="{Binding DataContext.Timeline.HasAudioSelection,
+                                                     Visibility="{Binding DataContext.Timeline.HasClipInspector,
                                                          RelativeSource={RelativeSource AncestorType=Window},
-                                                         Converter={StaticResource InverseBoolToVisibility}}" />
+                                                         Converter={StaticResource BoolToVisibility}}" />
                                 <panes:AudioInspectorView DataContext="{Binding AudioInspector}"
                                                           Visibility="{Binding DataContext.Timeline.HasAudioSelection,
                                                               RelativeSource={RelativeSource AncestorType=Window},
                                                               Converter={StaticResource BoolToVisibility}}" />
+                                <panes:TitleInspectorView DataContext="{Binding TitleInspector}"
+                                                          Visibility="{Binding DataContext.Timeline.HasTitleSelection,
+                                                              RelativeSource={RelativeSource AncestorType=Window},
+                                                              Converter={StaticResource BoolToVisibility}}" />
                             </Grid>
                         </ScrollViewer>
-
-                        <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
-                        <panes:SourcesView Grid.Row="2" DataContext="{Binding Sources}" />
                     </Grid>
                 </Border>
             </Grid>

@@ -49,6 +49,7 @@ public static class ServiceRegistration
         services.AddSingleton<IMediaToolsetLocator, FfmpegToolsetLocator>();
         services.AddSingleton<IMediaToolsetProvider, MediaToolsetProvider>();
         services.AddSingleton<IMediaProbe, FfprobeMediaProbe>();
+        services.AddSingleton<ISilenceDetector, FfmpegSilenceDetector>();
         services.AddSingleton<IThumbnailService, FfmpegThumbnailService>();
         services.AddSingleton<IWaveformService, FfmpegWaveformService>();
         services.AddSingleton<IExportPlanner, FfmpegExportPlanner>();
@@ -67,6 +68,7 @@ public static class ServiceRegistration
         services.AddTransient<SettingsViewModel>();
         services.AddSingleton<Func<SettingsViewModel>>(provider => provider.GetRequiredService<SettingsViewModel>);
         services.AddSingleton<IShellIntegration, ShellIntegration>();
+        services.AddSingleton<AutosaveService>();
 
         services.AddSingleton<ThumbnailImageCache>();
         services.AddSingleton<TimelineThumbnailLoader>();
@@ -76,6 +78,7 @@ public static class ServiceRegistration
         services.AddSingleton<PreviewViewModel>();
         services.AddSingleton<InspectorViewModel>();
         services.AddSingleton<AudioInspectorViewModel>();
+        services.AddSingleton<TitleInspectorViewModel>();
         services.AddSingleton<ExportViewModel>();
         services.AddSingleton<PresetsViewModel>();
         services.AddSingleton<Func<PresetsViewModel>>(provider => provider.GetRequiredService<PresetsViewModel>);

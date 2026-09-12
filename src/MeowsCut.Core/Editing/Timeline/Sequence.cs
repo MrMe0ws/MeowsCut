@@ -11,6 +11,50 @@ public sealed record SequenceFormat(FrameSize Size, Rational FrameRate)
 {
     public static readonly SequenceFormat Default = new(new FrameSize(1920, 1080), new Rational(30, 1));
 
+    /// <summary>
+    /// Как кусок ложится в кадр ролика, когда пропорции не совпадают:
+    /// вписать целиком с полями или заполнить кадр, обрезав лишнее.
+    /// </summary>
+    public Export.FitMode Fit { get; init; } = Export.FitMode.Contain;
+
+    /// <summary>
+    /// Формат выбран руками, а не взят у первого файла.
+    /// </summary>
+    /// <remarks>
+    /// От этого зависит сборка: у выбранного вручную формата каждый кусок
+    /// приводится к общему кадру, потому что почти наверняка не совпадает с ним
+    /// пропорциями. У формата «как в исходнике» лишние фильтры не нужны —
+    /// куски и так одного размера.
+    /// </remarks>
+    public bool IsCustom { get; init; }
+
+    public double AspectRatio => Size.Height > 0 ? (double)Size.Width / Size.Height : 16d / 9d;
+
+    /// <summary>
+    /// Кадр заданных пропорций поверх нынешнего.
+    /// </summary>
+    /// <remarks>
+    /// Длинная сторона сохраняется: у ролика из 4K вертикальный формат обязан
+    /// остаться 4K по высоте, а не молча упасть до 1080. Обе стороны округляются
+    /// до чётных — нечётный размер не кодируется в yuv420p.
+    /// </remarks>
+    public SequenceFormat WithAspect(double widthToHeight)
+    {
+        var longSide = Math.Max(Size.Width, Size.Height);
+        if (longSide <= 0)
+        {
+            longSide = 1920;
+        }
+
+        var (width, height) = widthToHeight >= 1d
+            ? (longSide, (int)Math.Round(longSide / widthToHeight))
+            : ((int)Math.Round(longSide * widthToHeight), longSide);
+
+        return this with { Size = new FrameSize(Even(width), Even(height)), IsCustom = true };
+    }
+
+    private static int Even(int value) => Math.Max(2, value - (value % 2));
+
     public static SequenceFormat FromMedia(MediaInfo info)
     {
         var video = info.PrimaryVideo;
@@ -54,6 +98,29 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
     /// и звук там ни при чём — пусть по умолчанию его просто нет.
     /// </remarks>
     public IReadOnlyList<AudioTrack> AudioTracks { get; init; } = [];
+
+    /// <summary>
+    /// Надписи поверх кадра. Лежат отдельным списком: места на ленте они
+    /// не занимают и ничего под собой не сдвигают.
+    /// </summary>
+    public IReadOnlyList<TitleClip> Titles { get; init; } = [];
+
+    public bool HasTitles => Titles.Count > 0;
+
+    public Sequence WithTitles(IReadOnlyList<TitleClip> titles) => this with { Titles = titles };
+
+    public TitleClip? FindTitle(TitleId id)
+    {
+        foreach (var title in Titles)
+        {
+            if (title.Id == id)
+            {
+                return title;
+            }
+        }
+
+        return null;
+    }
 
     /// <summary>
     /// Длительность ролика.
@@ -129,6 +196,59 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
             foreach (var clip in Video.Clips)
             {
                 if (clip.SourceIsImage)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Есть ли клипы, которым меняли картинку: поворот или затухание.
+    /// </summary>
+    /// <remarks>
+    /// Быстрые стратегии экспорта такое не умеют. Копирование потоков отдало бы
+    /// файл без затуханий и без поворота — молча не тот результат, который собрали
+    /// на доске. Поворот вдобавок меняет размер кадра, и склеивать его с соседями
+    /// без приведения к общему размеру нельзя.
+    /// </remarks>
+    public bool HasPictureEdits
+    {
+        get
+        {
+            foreach (var clip in Video.Clips)
+            {
+                if (clip.Transform.IsRotated || clip.HasFades)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Надо ли приводить каждый кусок к общему кадру перед склейкой.
+    /// </summary>
+    /// <remarks>
+    /// Обязательно там, где в ряду есть что-то сгенерированное или повёрнутое,
+    /// и там, где формат ролика выбран вручную: горизонтальное видео в вертикальном
+    /// кадре — это ровно тот случай, ради которого формат и меняют.
+    /// </remarks>
+    public bool NeedsUniformFrame =>
+        Video.HasGaps || HasImages || HasVideoTail || HasRotation || Format.IsCustom;
+
+    /// <summary>Есть ли на видеоряде повороты — их кадр надо приводить к общему размеру.</summary>
+    public bool HasRotation
+    {
+        get
+        {
+            foreach (var clip in Video.Clips)
+            {
+                if (clip.Transform.IsRotated)
                 {
                     return true;
                 }
@@ -300,7 +420,44 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
             cursor = start - clamped.Start + clip.TimelineDuration;
         }
 
-        return WithTrack(new VideoTrack(clips)) with { AudioTracks = SliceAudio(clamped) };
+        return WithTrack(new VideoTrack(clips)) with
+        {
+            AudioTracks = SliceAudio(clamped),
+            Titles = SliceTitles(clamped)
+        };
+    }
+
+    /// <summary>
+    /// Надписи того же отрезка, сдвинутые к нулю и подрезанные по его краям.
+    /// </summary>
+    /// <remarks>
+    /// Без этого проверка фрагмента показывала бы надписи не в тех местах,
+    /// а экспорт выделенного куска вытаскивал бы в файл титры соседних сцен.
+    /// </remarks>
+    private IReadOnlyList<TitleClip> SliceTitles(TimeRange range)
+    {
+        var titles = new List<TitleClip>();
+
+        foreach (var title in Titles)
+        {
+            if (!title.Overlaps(range.Start, range.End))
+            {
+                continue;
+            }
+
+            var start = title.TimelineStart > range.Start ? title.TimelineStart : range.Start;
+            var end = title.TimelineEnd < range.End ? title.TimelineEnd : range.End;
+
+            var duration = end - start;
+            if (duration < TitleClip.MinDuration)
+            {
+                continue;
+            }
+
+            titles.Add(title with { TimelineStart = start - range.Start, Duration = duration });
+        }
+
+        return titles;
     }
 
     /// <summary>

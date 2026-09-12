@@ -26,10 +26,26 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <ScrollViewer Grid.Column="0"
-                              HorizontalScrollBarVisibility="Hidden"
-                              VerticalScrollBarVisibility="Disabled">
-                    <StackPanel Orientation="Horizontal">
+                <!-- Переносящаяся строка, а не прокрутка: кнопок больше, чем влезает
+                     в узкое окно, и последняя просто уезжала за край — добраться
+                     до «вернуть» было нельзя вовсе. Отступы задаются стилями,
+                     чтобы при переносе строки не слипались. -->
+                <WrapPanel Grid.Column="0" Orientation="Horizontal">
+                    <WrapPanel.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource Button.Ghost}">
+                            <Setter Property="Margin" Value="0,2,6,2" />
+                        </Style>
+                        <Style TargetType="RadioButton" BasedOn="{StaticResource ToolButton}">
+                            <Setter Property="Margin" Value="0,2,6,2" />
+                        </Style>
+                        <!-- Разделители: в переносящейся строке высота не тянется
+                             сама, и без неё полоска схлопывалась в ничто. -->
+                        <Style TargetType="Border">
+                            <Setter Property="Margin" Value="2,4,8,4" />
+                            <Setter Property="Height" Value="20" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                    </WrapPanel.Resources>
                         <RadioButton GroupName="Tool"
                                      IsChecked="{Binding ActiveTool, Mode=TwoWay,
                                          Converter={StaticResource EnumToBool},
@@ -53,9 +69,7 @@
                             </StackPanel>
                         </RadioButton>
 
-                        <Border Width="1"
-                                Margin="8,2"
-                                Background="{DynamicResource Brush.Border}" />
+                        <Border Width="1" Background="{DynamicResource Brush.Border}" />
 
                         <Button Command="{Binding DataContext.AddFileCommand,
                                     RelativeSource={RelativeSource AncestorType=Window}}"
@@ -67,8 +81,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Margin="6,0,0,0"
-                                Command="{Binding DataContext.AddSoundCommand,
+                        <Button Command="{Binding DataContext.AddSoundCommand,
                                     RelativeSource={RelativeSource AncestorType=Window}}"
                                 Style="{StaticResource Button.Ghost}"
                                 ToolTip="{loc:Tr AddSoundHint}">
@@ -78,8 +91,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Margin="6,0,0,0"
-                                Command="{Binding AddAudioTrackCommand}"
+                        <Button Command="{Binding AddAudioTrackCommand}"
                                 Style="{StaticResource Button.Ghost}"
                                 ToolTip="{loc:Tr AddAudioTrackHint}">
                             <StackPanel Orientation="Horizontal">
@@ -88,37 +100,49 @@
                             </StackPanel>
                         </Button>
 
-                        <Border Width="1"
-                                Margin="8,2"
-                                Background="{DynamicResource Brush.Border}" />
+                        <Button Command="{Binding DataContext.RemoveSilenceCommand,
+                                    RelativeSource={RelativeSource AncestorType=Window}}"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="{loc:Tr RemoveSilenceHint}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Scissors}" Style="{StaticResource ToolIconStroke}" />
+                                <TextBlock Text="{loc:Tr RemoveSilence}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding AddTitleAtPlayheadCommand}"
+                                Style="{StaticResource Button.Ghost}"
+                                ToolTip="{loc:Tr AddTitleHint}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource Icon.Text}" Style="{StaticResource ToolIconStroke}" />
+                                <TextBlock Text="{loc:Tr AddTitle}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Border Width="1" Background="{DynamicResource Brush.Border}" />
 
                         <Button Command="{Binding SplitAtPlayheadCommand}"
                                 Style="{StaticResource Button.Ghost}"
                                 ToolTip="{loc:Tr SplitHereHint}">
                             <Path Data="{StaticResource Icon.Split}" Style="{StaticResource ToolIconOnly}" />
                         </Button>
-                        <Button Margin="6,0,0,0"
-                                Command="{Binding DeleteSelectedCommand}"
+                        <Button Command="{Binding DeleteSelectedCommand}"
                                 Style="{StaticResource Button.Ghost}"
                                 ToolTip="{loc:Tr DeleteClipHint}">
                             <Path Data="{StaticResource Icon.Trash}" Style="{StaticResource ToolIconOnly}" />
                         </Button>
 
-                        <Border Width="1"
-                                Margin="8,2"
-                                Background="{DynamicResource Brush.Border}" />
+                        <Border Width="1" Background="{DynamicResource Brush.Border}" />
 
                         <Button Command="{Binding UndoCommand}"
                                 Content="↶"
                                 Style="{StaticResource Button.Ghost}"
                                 ToolTip="Ctrl+Z" />
-                        <Button Margin="6,0,0,0"
-                                Command="{Binding RedoCommand}"
+                        <Button Command="{Binding RedoCommand}"
                                 Content="↷"
                                 Style="{StaticResource Button.Ghost}"
                                 ToolTip="Ctrl+Shift+Z" />
-                    </StackPanel>
-                </ScrollViewer>
+                </WrapPanel>
 
                 <StackPanel Grid.Column="1" Margin="12,0,0,0" Orientation="Horizontal">
                     <CheckBox VerticalAlignment="Center"

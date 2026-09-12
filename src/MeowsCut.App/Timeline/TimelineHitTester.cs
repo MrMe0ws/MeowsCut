@@ -31,7 +31,13 @@ public enum TimelineHitKind
     AudioEmpty,
     AudioClipBody,
     AudioClipStartEdge,
-    AudioClipEndEdge
+    AudioClipEndEdge,
+
+    /// <summary>Надпись в своей полосе.</summary>
+    TitleBody,
+
+    /// <summary>Пустое место в полосе надписей.</summary>
+    TitleEmpty
 }
 
 public readonly record struct TimelineHit(TimelineHitKind Kind, PlacedClip? Clip, TimeSpan Time)
@@ -41,6 +47,9 @@ public readonly record struct TimelineHit(TimelineHitKind Kind, PlacedClip? Clip
 
     public AudioClip? AudioClip { get; init; }
 
+    /// <summary>Надпись под курсором, если он над её полосой.</summary>
+    public TitleClip? Title { get; init; }
+
     public static TimelineHit Nothing(TimeSpan time) => new(TimelineHitKind.Empty, null, time);
 
     public bool IsEdge => Kind is TimelineHitKind.ClipStartEdge or TimelineHitKind.ClipEndEdge
@@ -48,6 +57,8 @@ public readonly record struct TimelineHit(TimelineHitKind Kind, PlacedClip? Clip
 
     public bool IsAudio => Kind is TimelineHitKind.AudioEmpty or TimelineHitKind.AudioClipBody
         or TimelineHitKind.AudioClipStartEdge or TimelineHitKind.AudioClipEndEdge;
+
+    public bool IsTitle => Kind is TimelineHitKind.TitleBody or TimelineHitKind.TitleEmpty;
 }
 
 /// <summary>
@@ -77,12 +88,29 @@ public sealed class TimelineHitTester
             return new TimelineHit(TimelineHitKind.Ruler, null, time);
         }
 
-        var lanes = _layout.Build(ViewportHeight, [.. sequence.AudioTracks.Select(track => track.Id)]);
+        var lanes = _layout.Build(
+            ViewportHeight,
+            [.. sequence.AudioTracks.Select(track => track.Id)],
+            sequence.HasTitles);
+
         var lane = _layout.LaneAt(lanes, y);
 
         if (lane is { Kind: LaneKind.Audio } audioLane)
         {
             return TestAudio(x, time, audioLane, sequence, metrics);
+        }
+
+        if (lane is { Kind: LaneKind.Title })
+        {
+            foreach (var title in sequence.Titles)
+            {
+                if (time >= title.TimelineStart && time < title.TimelineEnd)
+                {
+                    return new TimelineHit(TimelineHitKind.TitleBody, null, time) { Title = title };
+                }
+            }
+
+            return new TimelineHit(TimelineHitKind.TitleEmpty, null, time);
         }
 
         foreach (var placed in sequence.EnumeratePlaced())

@@ -104,6 +104,68 @@ public sealed class SetClipAudioCommand(IReadOnlyList<ClipId> clipIds, ClipAudio
 }
 
 /// <summary>
+/// Кадр всего ролика: пропорции и то, как в них ложатся куски.
+/// </summary>
+/// <remarks>
+/// Через историю, как и всё остальное: смена формата переворачивает картинку
+/// у каждого куска, и отменяться она обязана одним Ctrl+Z.
+/// </remarks>
+public sealed class SetSequenceFormatCommand(SequenceFormat format) : IEditCommand
+{
+    public string Title => "Изменить формат ролика";
+
+    public SequenceFormat Format { get; } = format;
+
+    public Sequence Apply(Sequence sequence) => sequence with { Format = Format };
+
+    public bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
+    {
+        merged = this;
+        return false;
+    }
+}
+
+/// <summary>
+/// Появление из чёрного и уход в чёрное у выделенных клипов.
+/// </summary>
+/// <remarks>
+/// Оба края одной командой: их правят соседними полями, и раздельные записи
+/// в истории заставляли бы жать Ctrl+Z дважды там, где пользователь сделал
+/// одно движение.
+/// </remarks>
+public sealed class SetClipFadesCommand(
+    IReadOnlyList<ClipId> clipIds,
+    TimeSpan? fadeIn = null,
+    TimeSpan? fadeOut = null)
+    : ClipPropertyCommand(clipIds)
+{
+    public SetClipFadesCommand(ClipId clipId, TimeSpan? fadeIn = null, TimeSpan? fadeOut = null)
+        : this([clipId], fadeIn, fadeOut)
+    {
+    }
+
+    public override string Title => "Изменить затухание клипа";
+
+    public TimeSpan? FadeIn { get; } = fadeIn;
+
+    public TimeSpan? FadeOut { get; } = fadeOut;
+
+    protected override Clip Change(Clip clip) => clip.WithFades(FadeIn, FadeOut);
+
+    public override bool TryMergeWith(IEditCommand previous, out IEditCommand merged)
+    {
+        merged = this;
+
+        // Склеиваем только правку того же края: подвинули появление, потом
+        // затухание — это два разных действия, и отменяться они должны порознь.
+        return previous is SetClipFadesCommand other &&
+               (other.FadeIn is null) == (FadeIn is null) &&
+               (other.FadeOut is null) == (FadeOut is null) &&
+               SameClips(other.ClipIds);
+    }
+}
+
+/// <summary>
 /// Масштаб и положение кадра внутри кадра последовательности.
 /// Нужно для стикеров: произвольное видео приводится к квадрату, и пользователь
 /// выбирает, какую часть кадра оставить.

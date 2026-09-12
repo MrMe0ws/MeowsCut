@@ -122,18 +122,24 @@ sealed class SequencePlaybackController    // App/Playback
 ## 5.5 ViewModels
 
 ```
-ShellViewModel                        состояние: Empty | Editing | Exporting; undo/redo команды
-├─ ProjectViewModel                   источники, Sequence, EditHistory
-│   ├─ SourceBinViewModel             список файлов, добавление, перетаскивание на таймлайн
-│   ├─ PreviewViewModel               SequencePlaybackController, транспорт, плейхед
-│   ├─ TimelineViewModel              зум, скролл, снап, активный инструмент, выделение
-│   │   └─ ClipViewModel[]            позиция/ширина, миниатюры, волна, drag-состояние
-│   └─ InspectorViewModel             свойства выделенного клипа (in/out, скорость, звук)
-├─ ExportViewModel                    сводка, базовые/расширенные параметры, запуск, прогресс
+ShellViewModel                        проект, открытие файлов и черновиков, статус ffmpeg
+│  ShellViewModel.Project.cs          черновик .meows: сохранить, открыть, имя в шапке
+├─ SourcesViewModel                   файлы проекта: положить на доску, показать в папке
+├─ PreviewViewModel                   SequencePlaybackController, транспорт, плейхед
+├─ TimelineViewModel                  зум, скролл, снап, инструмент, выделение, EditHistory
+│   │  .Audio / .Clipboard / .Pointer  дорожки звука, буфер обмена, работа мышью
+│   └─ ClipViewModel[]                позиция/ширина, миниатюры, волна, drag-состояние
+├─ InspectorViewModel                 свойства выделенных клипов (скорость, звук, кадр)
+├─ AudioInspectorViewModel            свойства выбранного куска звука и его дорожки
+├─ TitleInspectorViewModel            свойства выбранной надписи: текст, время, вид
+├─ ExportViewModel + ExportOptions    сводка, базовые/расширенные параметры, запуск, прогресс
 ├─ PresetsViewModel                   группы пресетов, Telegram Stickers
-├─ SettingsViewModel                  путь к ffmpeg, тема, папка вывода, логи
-└─ FfmpegSetupViewModel               онбординг, если ffmpeg не найден
+└─ SettingsViewModel                  путь к ffmpeg, тема, язык, шаблон имени, логи
 ```
+
+Отдельного `ProjectViewModel` нет: проект — иммутабельная запись в `ShellViewModel`,
+панели получают её через `Attach` / `Update`. Онбординга `FfmpegSetupViewModel` тоже нет —
+не найденный ffmpeg показывается строкой состояния с кнопкой «Выбрать папку».
 
 Правила:
 
@@ -146,7 +152,9 @@ ShellViewModel                        состояние: Empty | Editing | Expo
 - ViewModel не знает про ffmpeg: только `IMediaProbe`, `IJobQueue`, `IExportPlanner`,
   `IPresetProvider`, `IThumbnailService`, `IWaveformService`.
 - Обновление UI из фоновых потоков — через `IUiDispatcher`.
-- Связь между VM — `WeakReferenceMessenger` (`SelectionChangedMessage`, `PlayheadMovedMessage`).
+- Связь между VM — прямые события и вызовы владельца (`TimelineViewModel.SequenceChanged`,
+  делегаты `SourcesViewModel.AddToBoard`). Мессенджер не заводили: владение однозначное,
+  и слабые подписки прятали бы порядок обновления панелей.
 
 ## 5.6 Контрол таймлайна
 

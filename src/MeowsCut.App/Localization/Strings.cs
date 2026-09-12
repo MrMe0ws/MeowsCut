@@ -427,5 +427,115 @@ public static class Strings
 
     public static string ClearCache => Get(nameof(ClearCache));
 
+    public static string ClipFadeIn => Get(nameof(ClipFadeIn));
+
+    public static string ClipFadeOut => Get(nameof(ClipFadeOut));
+
+    public static string ClipFadeInHint => Get(nameof(ClipFadeInHint));
+
+    public static string ClipFadeOutHint => Get(nameof(ClipFadeOutHint));
+
+    public static string ClipFadesClear => Get(nameof(ClipFadesClear));
+
+    public static string FieldRotation => Get(nameof(FieldRotation));
+
+    public static string RotateLeft => Get(nameof(RotateLeft));
+
+    public static string RotateRight => Get(nameof(RotateRight));
+
+    public static string RotateHalfTurn => Get(nameof(RotateHalfTurn));
+
+    public static string ExportScope => Get(nameof(ExportScope));
+
+    public static string ExportScopeWhole => Get(nameof(ExportScopeWhole));
+
+    public static string ExportScopeSelection => Get(nameof(ExportScopeSelection));
+
+    public static string ExportScopeSelectionHint => Get(nameof(ExportScopeSelectionHint));
+
+    public static string ExportScopeEmpty => Get(nameof(ExportScopeEmpty));
+
+    public static string ExportAudioOnlyNotice => Get(nameof(ExportAudioOnlyNotice));
+
+    public static string FieldNormalizeLoudness => Get(nameof(FieldNormalizeLoudness));
+
+    public static string FieldNormalizeLoudnessHint => Get(nameof(FieldNormalizeLoudnessHint));
+
+    public static string SectionFade => Get(nameof(SectionFade));
+
+    public static string SectionTrack => Get(nameof(SectionTrack));
+
+    public static string FieldSequenceFormat => Get(nameof(FieldSequenceFormat));
+
+    public static string FieldSequenceFormatHint => Get(nameof(FieldSequenceFormatHint));
+
+    public static string FieldFillFrame => Get(nameof(FieldFillFrame));
+
+    public static string FieldFillFrameHint => Get(nameof(FieldFillFrameHint));
+
+    public static string RecoverTitle => Get(nameof(RecoverTitle));
+
+    public static string RecoverMessage => Get(nameof(RecoverMessage));
+
+    public static string RecoverMessageNamed => Get(nameof(RecoverMessageNamed));
+
+    public static string RecoverAccept => Get(nameof(RecoverAccept));
+
+    public static string RecoverDecline => Get(nameof(RecoverDecline));
+
+    public static string SectionTitle => Get(nameof(SectionTitle));
+
+    public static string FieldTitleStart => Get(nameof(FieldTitleStart));
+
+    public static string FieldTitleDuration => Get(nameof(FieldTitleDuration));
+
+    public static string FieldTitlePlace => Get(nameof(FieldTitlePlace));
+
+    public static string FieldTitleSize => Get(nameof(FieldTitleSize));
+
+    public static string FieldTitleSizeHint => Get(nameof(FieldTitleSizeHint));
+
+    public static string FieldTitleColor => Get(nameof(FieldTitleColor));
+
+    public static string FieldTitleBackdrop => Get(nameof(FieldTitleBackdrop));
+
+    public static string FieldTitleBackdropHint => Get(nameof(FieldTitleBackdropHint));
+
+    public static string RemoveTitle => Get(nameof(RemoveTitle));
+
+    public static string AddTitle => Get(nameof(AddTitle));
+
+    public static string AddTitleHint => Get(nameof(AddTitleHint));
+
+    public static string NewTitleText => Get(nameof(NewTitleText));
+
+    public static string RemoveSilence => Get(nameof(RemoveSilence));
+
+    public static string RemoveSilenceTitle => Get(nameof(RemoveSilenceTitle));
+
+    public static string RemoveSilenceHint => Get(nameof(RemoveSilenceHint));
+
+    public static string RemoveSilenceAccept => Get(nameof(RemoveSilenceAccept));
+
+    public static string FieldSilenceThreshold => Get(nameof(FieldSilenceThreshold));
+
+    public static string FieldSilenceThresholdHint => Get(nameof(FieldSilenceThresholdHint));
+
+    public static string FieldSilenceMinimum => Get(nameof(FieldSilenceMinimum));
+
+    public static string FieldSilenceMinimumHint => Get(nameof(FieldSilenceMinimumHint));
+
+    public static string FieldSilencePadding => Get(nameof(FieldSilencePadding));
+
+    public static string FieldSilencePaddingHint => Get(nameof(FieldSilencePaddingHint));
+
+    public static string BusySilenceSearch => Get(nameof(BusySilenceSearch));
+
+    public static string SilenceNothingFound => Get(nameof(SilenceNothingFound));
+
+    public static string SilenceRemoved => Get(nameof(SilenceRemoved));
+
+    public static string Cancel => Get(nameof(Cancel));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }

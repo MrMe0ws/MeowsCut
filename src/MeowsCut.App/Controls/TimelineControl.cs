@@ -129,7 +129,13 @@ public sealed class TimelineControl : Control
         DrawRuler(context, metrics);
 
         var tracks = _model.AudioTracks;
-        var lanes = _layout.Build(ActualHeight, [.. tracks.Select(track => track.Id)]);
+        var titles = _model.Sequence.Titles;
+
+        var lanes = _layout.Build(
+            ActualHeight,
+            [.. tracks.Select(track => track.Id)],
+            titles.Count > 0);
+
         var video = lanes[0];
 
         foreach (var clip in _model.Clips)
@@ -140,6 +146,14 @@ public sealed class TimelineControl : Control
         for (var i = 0; i < tracks.Count && i + 1 < lanes.Count; i++)
         {
             DrawAudioLane(context, metrics, tracks[i], lanes[i + 1]);
+        }
+
+        foreach (var lane in lanes)
+        {
+            if (lane.Kind == LaneKind.Title)
+            {
+                DrawTitleLane(context, metrics, titles, lane);
+            }
         }
 
         DrawRazorGuide(context, metrics, video.Top, ActualHeight - video.Top - TrackPadding);
@@ -264,6 +278,72 @@ public sealed class TimelineControl : Control
     /// Показывает, где пройдёт разрез. Без неё ножницами приходится целиться вслепую:
     /// курсор стоит на одном пикселе, а режется кадр, и промах виден только после.
     /// </summary>
+    /// <summary>
+    /// Полоса надписей: узкие плашки с текстом над видеорядом.
+    /// </summary>
+    /// <remarks>
+    /// Надпись не занимает места на ленте и лежит поверх картинки, поэтому
+    /// и полоса у неё своя, над всем остальным. Без неё увидеть, где по времени
+    /// стоят титры, можно было бы только листая их по одному в свойствах.
+    /// </remarks>
+    private void DrawTitleLane(
+        DrawingContext context,
+        TimelineMetrics metrics,
+        IReadOnlyList<TitleClip> titles,
+        TimelineLane lane)
+    {
+        context.DrawRoundedRectangle(
+            LaneFill,
+            null,
+            new Rect(0, lane.Top, ActualWidth, lane.Height),
+            4,
+            4);
+
+        var selected = _model?.SelectedTitle?.Id;
+
+        foreach (var title in titles)
+        {
+            var left = metrics.TimeToX(title.TimelineStart);
+            var right = metrics.TimeToX(title.TimelineEnd);
+
+            if (right < 0 || left > ActualWidth)
+            {
+                continue;
+            }
+
+            var rect = new Rect(left, lane.Top + 2, Math.Max(3, right - left), lane.Height - 4);
+            var isSelected = selected == title.Id;
+
+            context.DrawRoundedRectangle(
+                isSelected ? Accent : ClipFill,
+                new Pen(isSelected ? Accent : ClipBorder, 1),
+                rect,
+                3,
+                3);
+
+            if (rect.Width < 34)
+            {
+                continue;
+            }
+
+            var text = new FormattedText(
+                title.Text,
+                CultureInfo.CurrentUICulture,
+                FlowDirection.LeftToRight,
+                LabelTypeface,
+                10,
+                isSelected ? TrackBackground : TextBrush,
+                VisualTreeHelper.GetDpi(this).PixelsPerDip)
+            {
+                MaxTextWidth = Math.Max(10, rect.Width - 10),
+                MaxLineCount = 1,
+                Trimming = TextTrimming.CharacterEllipsis
+            };
+
+            context.DrawText(text, new Point(rect.X + 5, rect.Y + (rect.Height - text.Height) / 2));
+        }
+    }
+
     private void DrawRazorGuide(DrawingContext context, TimelineMetrics metrics, double top, double height)
     {
         if (_model is null || _model.ActiveTool != TimelineTool.Razor || !IsMouseOver)

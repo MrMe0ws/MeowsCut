@@ -603,13 +603,13 @@
     <value>Исправить</value>
   </data>
   <data name="FieldZoom" xml:space="preserve">
-    <value>Масштаб кадра</value>
+    <value>Масштаб</value>
   </data>
   <data name="FieldOffsetX" xml:space="preserve">
-    <value>Сдвиг по горизонтали</value>
+    <value>По горизонтали</value>
   </data>
   <data name="FieldOffsetY" xml:space="preserve">
-    <value>Сдвиг по вертикали</value>
+    <value>По вертикали</value>
   </data>
   <data name="ResetTransform" xml:space="preserve">
     <value>Сбросить кадрирование</value>
@@ -682,5 +682,170 @@
   </data>
   <data name="ClearCache" xml:space="preserve">
     <value>Очистить кэш кадров</value>
+  </data>
+  <data name="ClipFadeIn" xml:space="preserve">
+    <value>Появление</value>
+  </data>
+  <data name="ClipFadeOut" xml:space="preserve">
+    <value>Затухание</value>
+  </data>
+  <data name="ClipFadeInHint" xml:space="preserve">
+    <value>Кадр выходит из чёрного за это время после начала клипа</value>
+  </data>
+  <data name="ClipFadeOutHint" xml:space="preserve">
+    <value>Кадр уходит в чёрное за это время перед концом клипа</value>
+  </data>
+  <data name="ClipFadesClear" xml:space="preserve">
+    <value>Без затемнения</value>
+  </data>
+  <data name="FieldRotation" xml:space="preserve">
+    <value>Поворот</value>
+  </data>
+  <data name="RotateLeft" xml:space="preserve">
+    <value>Повернуть против часовой на 90°</value>
+  </data>
+  <data name="RotateRight" xml:space="preserve">
+    <value>Повернуть по часовой на 90°</value>
+  </data>
+  <data name="RotateHalfTurn" xml:space="preserve">
+    <value>Перевернуть на 180°</value>
+  </data>
+  <data name="ExportScope" xml:space="preserve">
+    <value>Экспортировать</value>
+  </data>
+  <data name="ExportScopeWhole" xml:space="preserve">
+    <value>Весь ролик</value>
+  </data>
+  <data name="ExportScopeSelection" xml:space="preserve">
+    <value>Выделенный кусок</value>
+  </data>
+  <data name="ExportScopeSelectionHint" xml:space="preserve">
+    <value>Выделите клипы на доске — в файл пойдёт только их отрезок</value>
+  </data>
+  <data name="ExportScopeEmpty" xml:space="preserve">
+    <value>Ничего не выделено</value>
+  </data>
+  <data name="ExportAudioOnlyNotice" xml:space="preserve">
+    <value>Только звук: картинка в файл не попадёт</value>
+  </data>
+  <data name="FieldNormalizeLoudness" xml:space="preserve">
+    <value>Выровнять громкость</value>
+  </data>
+  <data name="FieldNormalizeLoudnessHint" xml:space="preserve">
+    <value>Приводит громкость к −16 LUFS (EBU R128). Нужно, когда куски пришли из разных источников и скачут по громкости</value>
+  </data>
+  <data name="SectionFade" xml:space="preserve">
+    <value>Затемнение</value>
+  </data>
+  <data name="SectionTrack" xml:space="preserve">
+    <value>Дорожка</value>
+  </data>
+  <data name="FieldSequenceFormat" xml:space="preserve">
+    <value>Формат</value>
+  </data>
+  <data name="FieldSequenceFormatHint" xml:space="preserve">
+    <value>Кадр, в который складывается монтаж. Горизонтальное видео в вертикальном формате встанет полосой или заполнит кадр с обрезкой</value>
+  </data>
+  <data name="FieldFillFrame" xml:space="preserve">
+    <value>Заполнить кадр</value>
+  </data>
+  <data name="FieldFillFrameHint" xml:space="preserve">
+    <value>Обрезать края вместо чёрных полей по бокам</value>
+  </data>
+  <data name="RecoverTitle" xml:space="preserve">
+    <value>Вернуть прошлый монтаж?</value>
+  </data>
+  <data name="RecoverMessage" xml:space="preserve">
+    <value>Прошлый раз редактор закрылся, не спросив. Монтаж сохранён автоматически в {0}.</value>
+  </data>
+  <data name="RecoverMessageNamed" xml:space="preserve">
+    <value>Прошлый раз редактор закрылся, не спросив. Монтаж с файлом «{0}» сохранён автоматически в {1}.</value>
+  </data>
+  <data name="RecoverAccept" xml:space="preserve">
+    <value>Вернуть монтаж</value>
+  </data>
+  <data name="RecoverDecline" xml:space="preserve">
+    <value>Начать с чистого</value>
+  </data>
+  <data name="SectionTitle" xml:space="preserve">
+    <value>Надпись</value>
+  </data>
+  <data name="FieldTitleStart" xml:space="preserve">
+    <value>Начало</value>
+  </data>
+  <data name="FieldTitleDuration" xml:space="preserve">
+    <value>Длительность</value>
+  </data>
+  <data name="FieldTitlePlace" xml:space="preserve">
+    <value>Место</value>
+  </data>
+  <data name="FieldTitleSize" xml:space="preserve">
+    <value>Размер</value>
+  </data>
+  <data name="FieldTitleSizeHint" xml:space="preserve">
+    <value>Высота букв как доля высоты кадра: надпись останется одинаковой и в 1080p, и в 4K</value>
+  </data>
+  <data name="FieldTitleColor" xml:space="preserve">
+    <value>Цвет</value>
+  </data>
+  <data name="FieldTitleBackdrop" xml:space="preserve">
+    <value>Плашка</value>
+  </data>
+  <data name="FieldTitleBackdropHint" xml:space="preserve">
+    <value>Тёмная подложка под текстом: без неё светлые буквы пропадают на светлом кадре</value>
+  </data>
+  <data name="RemoveTitle" xml:space="preserve">
+    <value>Убрать надпись</value>
+  </data>
+  <data name="AddTitle" xml:space="preserve">
+    <value>Текст</value>
+  </data>
+  <data name="AddTitleHint" xml:space="preserve">
+    <value>Поставить надпись в позицию курсора</value>
+  </data>
+  <data name="NewTitleText" xml:space="preserve">
+    <value>Надпись</value>
+  </data>
+  <data name="RemoveSilence" xml:space="preserve">
+    <value>Убрать паузы</value>
+  </data>
+  <data name="RemoveSilenceTitle" xml:space="preserve">
+    <value>Убрать паузы</value>
+  </data>
+  <data name="RemoveSilenceHint" xml:space="preserve">
+    <value>Редактор прослушает файлы на доске и вырежет из видеоряда места, где долго тихо. Отменяется одним Ctrl+Z.</value>
+  </data>
+  <data name="RemoveSilenceAccept" xml:space="preserve">
+    <value>Найти и убрать</value>
+  </data>
+  <data name="FieldSilenceThreshold" xml:space="preserve">
+    <value>Порог тишины</value>
+  </data>
+  <data name="FieldSilenceThresholdHint" xml:space="preserve">
+    <value>Громче этого — уже не тишина. −30 дБ подходит для речи с микрофона; ближе к нулю начнёт резать тихие слова</value>
+  </data>
+  <data name="FieldSilenceMinimum" xml:space="preserve">
+    <value>Короче не резать</value>
+  </data>
+  <data name="FieldSilenceMinimumHint" xml:space="preserve">
+    <value>Паузы короче этого остаются: так дышат между фразами</value>
+  </data>
+  <data name="FieldSilencePadding" xml:space="preserve">
+    <value>Оставить воздух</value>
+  </data>
+  <data name="FieldSilencePaddingHint" xml:space="preserve">
+    <value>Сколько тишины оставить по краям: без неё фразы склеиваются встык и звучат обрывом</value>
+  </data>
+  <data name="BusySilenceSearch" xml:space="preserve">
+    <value>Слушаю файлы в поисках пауз</value>
+  </data>
+  <data name="SilenceNothingFound" xml:space="preserve">
+    <value>Пауз длиннее заданной не нашлось</value>
+  </data>
+  <data name="SilenceRemoved" xml:space="preserve">
+    <value>Убрано пауз: {0}. Ролик короче на {1}</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Отмена</value>
   </data>
 </root>

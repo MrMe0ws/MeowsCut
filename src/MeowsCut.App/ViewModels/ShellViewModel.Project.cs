@@ -1,5 +1,6 @@
 using System.IO;
 using CommunityToolkit.Mvvm.Input;
+using MeowsCut.App.Formatting;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MeowsCut.App.Localization;
 using MeowsCut.Core.Diagnostics;
@@ -25,6 +26,13 @@ public sealed partial class ShellViewModel
 
     public string? ProjectFileName =>
         ProjectPath is null ? null : Path.GetFileNameWithoutExtension(ProjectPath);
+
+    /// <summary>
+    /// Автосохранение должно знать, в какой черновик вернётся монтаж после
+    /// восстановления. Путь меняется и при открытии файла, и при «Сохранить как»,
+    /// поэтому следим за самим свойством, а не за каждым местом, где его ставят.
+    /// </summary>
+    partial void OnProjectPathChanged(string? value) => _autosave.Track(Project, value);
 
     [RelayCommand]
     private async Task SaveProjectAsync(CancellationToken cancellationToken)
@@ -57,7 +65,7 @@ public sealed partial class ShellViewModel
         await WriteAsync(chosen, cancellationToken).ConfigureAwait(true);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartWork))]
     private async Task OpenProjectAsync(CancellationToken cancellationToken)
     {
         var path = _fileDialogService.PickProjectToOpen();
@@ -117,6 +125,65 @@ public sealed partial class ShellViewModel
         }
     }
 
+    /// <summary>
+    /// Предлагает вернуть монтаж, оставшийся от прерванного сеанса.
+    /// </summary>
+    /// <remarks>
+    /// Спрашиваем, а не восстанавливаем молча: подсунуть вместо пустого экрана
+    /// чужую с виду работу — худший способ начать сеанс. Отказ означает, что
+    /// сохранённое больше не нужно, и файл удаляется сразу.
+    /// </remarks>
+    private async Task TryRecoverAsync(CancellationToken cancellationToken)
+    {
+        if (_autosave.FindRecovery() is not { } state)
+        {
+            return;
+        }
+
+        var message = string.IsNullOrEmpty(state.Title)
+            ? string.Format(Strings.RecoverMessage, DisplayFormat.DateTime(state.SavedAt))
+            : string.Format(Strings.RecoverMessageNamed, state.Title, DisplayFormat.DateTime(state.SavedAt));
+
+        if (!_dialogService.Confirm(Strings.RecoverTitle, message, Strings.RecoverAccept, Strings.RecoverDecline))
+        {
+            _autosave.Clear();
+            return;
+        }
+
+        BusyText = Strings.BusyOpeningProject;
+        IsBusy = true;
+        try
+        {
+            var result = await _projectStore
+                .LoadAsync(_autosave.RecoveryProjectPath, cancellationToken)
+                .ConfigureAwait(true);
+
+            Attach(result.Project, MediaSummaryOf(result.Project));
+
+            // Путь берём из сохранённого состояния, а не из служебного файла:
+            // «Сохранить» обязан писать в тот черновик, с которым работали,
+            // а не в папку автосохранения.
+            ProjectPath = state.ProjectPath;
+
+            if (result.HasWarnings)
+            {
+                _dialogService.ShowError(
+                    Strings.ProjectOpenedWithProblems,
+                    string.Join(Environment.NewLine, result.Warnings));
+            }
+        }
+        catch (Exception ex) when (ex is MeowsCutException or IOException or System.Text.Json.JsonException)
+        {
+            _logger.LogWarning(ex, "Не удалось восстановить монтаж после падения");
+            _dialogService.ShowError(Strings.ProjectOpenFailed, ex.Message);
+            _autosave.Clear();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     private async Task WriteAsync(string path, CancellationToken cancellationToken)
     {
         if (Project is not { } project)
@@ -129,6 +196,10 @@ public sealed partial class ShellViewModel
             await _projectStore.SaveAsync(project, path, cancellationToken).ConfigureAwait(true);
             ProjectPath = path;
             ToolsetStatus = string.Format(Strings.ProjectSaved, Path.GetFileName(path));
+
+            // Сохранённое руками важнее нашей страховки: дальше отсчёт идёт
+            // от этого черновика.
+            _autosave.Track(project, path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

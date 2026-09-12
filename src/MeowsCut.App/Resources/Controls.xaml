@@ -249,6 +249,122 @@
         </Setter>
     </Style>
 
+    <!--
+        Кнопка со значком вместо подписи. Выглядит как ToolButton, но это
+        обычная Button: поворот кадра — действие, а не режим, и «нажатого»
+        состояния у него не бывает.
+    -->
+    <Style x:Key="IconButton" TargetType="Button">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root"
+                            Background="Transparent"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="7,5">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceRaised}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Инспектор свойств. Раньше поля стояли в переносящемся ряду: при узкой
+        колонке подписи, ползунки и числа расходились по строкам как попало,
+        и панель читалась как каша. Теперь у всех полей одна сетка — подпись
+        слева, орган посередине, значение справа, — и глаз ведёт по одной линии.
+    -->
+    <Style x:Key="Inspector.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,0,10,0" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Значение прижато вправо и одной ширины у всех полей: иначе колонка чисел
+         прыгает, когда «100%» сменяется на «0%». -->
+    <Style x:Key="Inspector.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="10,0,0,0" />
+        <Setter Property="MinWidth" Value="46" />
+        <Setter Property="TextAlignment" Value="Right" />
+    </Style>
+
+    <Style x:Key="Inspector.Separator" TargetType="Border">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="0,10" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+    </Style>
+
+    <!--
+        Заголовок раскрывающегося раздела. Стоит вплотную над своим содержимым:
+        когда кнопка «Кадр» жила в общем ряду наверху, раскрытые поля появлялись
+        через полпанели от неё, и было непонятно, что именно раскрылось.
+    -->
+    <Style x:Key="Inspector.SectionToggle" TargetType="ToggleButton">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Ui}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Root"
+                            Background="Transparent"
+                            CornerRadius="4"
+                            Padding="0,3">
+                        <StackPanel Orientation="Horizontal">
+                            <Path x:Name="Chevron"
+                                  Width="11"
+                                  Height="11"
+                                  Margin="0,0,6,0"
+                                  Data="{StaticResource Icon.Chevron}"
+                                  RenderTransformOrigin="0.5,0.5"
+                                  Stretch="Uniform"
+                                  Stroke="{TemplateBinding Foreground}"
+                                  StrokeEndLineCap="Round"
+                                  StrokeStartLineCap="Round"
+                                  StrokeThickness="2"
+                                  VerticalAlignment="Center" />
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                        <!-- Раскрытый раздел роняет стрелку вниз -->
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                            <Setter TargetName="Chevron" Property="RenderTransform">
+                                <Setter.Value>
+                                    <RotateTransform Angle="90" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Разделитель панелей. Полоса захвата шире видимой линии: в шесть пикселей
          попасть мышью легко, а рисовать такую толстую границу незачем. -->
     <Style x:Key="Splitter.Horizontal" TargetType="GridSplitter">
@@ -442,6 +558,14 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Ползунок в инспекторе: тот же вид, только прижат к середине строки.
+         Стоит после самого стиля ползунка: StaticResource не смотрит вперёд,
+         и BasedOn на ещё не объявленный стиль терял бы шаблон вместе с цветом. -->
+    <Style x:Key="Inspector.Slider" TargetType="Slider" BasedOn="{StaticResource {x:Type Slider}}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,5" />
     </Style>
 
 </ResourceDictionary>

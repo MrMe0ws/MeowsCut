@@ -68,6 +68,23 @@ public sealed record AudioSettings
     /// <summary>Общая громкость поверх громкости отдельных клипов.</summary>
     public double MasterVolume { get; init; } = 1d;
 
+    /// <summary>
+    /// Привести громкость к вещательной норме (EBU R128, −16 LUFS).
+    /// </summary>
+    /// <remarks>
+    /// Нужно там, где куски пришли из разных источников: снятое на телефон,
+    /// скачанная музыка и запись с микрофона расходятся по громкости в разы,
+    /// и слушатель весь ролик держит руку на регуляторе. Общий множитель
+    /// громкости этого не решает — он поднимает всё разом, вместе с перекосом.
+    /// </remarks>
+    public bool NormalizeLoudness { get; init; }
+
+    /// <summary>Целевая громкость интегрально, LUFS. Значение из рекомендации EBU R128.</summary>
+    public const double LoudnessTargetLufs = -16d;
+
+    /// <summary>Потолок истинного пика, дБ: запас против клиппинга после кодирования.</summary>
+    public const double LoudnessTruePeakDb = -1.5d;
+
     public static readonly int[] BitratePresetsKbps = [64, 96, 128, 192, 256, 320];
 
     public static readonly int[] SampleRatePresetsHz = [22_050, 32_000, 44_100, 48_000];
@@ -103,10 +120,19 @@ public sealed record ExportSettings
     /// Приводит настройки к согласованному виду: кодеки, недопустимые в выбранном
     /// контейнере, заменяются на подходящие, расширение файла подгоняется под контейнер.
     /// </summary>
+    /// <summary>Результат — звуковая дорожка без картинки.</summary>
+    public bool IsAudioOnly => Container.IsAudioOnly();
+
     public ExportSettings Normalized()
     {
         var video = Video with { Codec = CompatibilityMatrix.Coerce(Container, Video.Codec) };
         var audio = Audio with { Codec = CompatibilityMatrix.Coerce(Container, Audio.Codec) };
+
+        // В звуковом файле звук не выключают: без него остаётся пустой контейнер.
+        if (Container.IsAudioOnly())
+        {
+            audio = audio with { Enabled = true };
+        }
 
         var path = OutputPath;
         if (!string.IsNullOrEmpty(path) &&

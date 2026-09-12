@@ -29,6 +29,7 @@ public static class EncoderCatalog
         AudioCodec.Mp3 => "libmp3lame",
         AudioCodec.Vorbis => "libvorbis",
         AudioCodec.Flac => "flac",
+        AudioCodec.Pcm => "pcm_s16le",
         _ => "copy"
     };
 

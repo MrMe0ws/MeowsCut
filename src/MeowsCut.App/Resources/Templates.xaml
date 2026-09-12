@@ -9,6 +9,8 @@
     <conv:EnumLabelConverter x:Key="EnumLabel" />
     <conv:EnumToBooleanConverter x:Key="EnumToBool" />
     <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+    <conv:ShareOfHeightConverter x:Key="ShareOfHeight" />
+    <conv:ShareOfHeightThicknessConverter x:Key="ShareOfHeightMargin" />
 
     <!-- Списки форматов и кодеков показывают человеческие названия -->
     <DataTemplate x:Key="EnumLabelTemplate">

@@ -115,6 +115,21 @@ public sealed partial class ExportViewModel : ObservableObject
     [ObservableProperty]
     private double _masterVolumePercent = 100d;
 
+    /// <summary>Привести громкость результата к вещательной норме.</summary>
+    [ObservableProperty]
+    private bool _normalizeLoudness;
+
+    /// <summary>
+    /// Экспортировать только выделенный на доске кусок.
+    /// </summary>
+    /// <remarks>
+    /// Переключатель, а не отдельная кнопка: все настройки вывода для куска
+    /// те же самые, и дублировать ради него весь экран было бы странно.
+    /// </remarks>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ScopeText))]
+    private bool _selectionOnly;
+
     [ObservableProperty]
     private bool _showAdvanced;
 
@@ -190,6 +205,63 @@ public sealed partial class ExportViewModel : ObservableObject
         _fileDialogService = fileDialogService;
         _dispatcher = dispatcher;
         _logger = logger;
+
+        // Выделение на доске меняет и подпись отрезка, и саму возможность
+        // экспортировать кусок: без подписки переключатель оставался бы серым
+        // до следующего действия в окне экспорта.
+        _timeline.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(TimelineViewModel.SelectedClip)
+                or nameof(TimelineViewModel.SelectedAudioClip)
+                or nameof(TimelineViewModel.SelectionCount))
+            {
+                RefreshScope();
+            }
+        };
+    }
+
+    /// <summary>Есть ли на доске выделение, которое можно отдать в экспорт отдельно.</summary>
+    public bool HasSelectionRange => _timeline.SelectionRange is not null;
+
+    /// <summary>
+    /// Что именно уйдёт в файл. Отрезок называется временами, а не числом клипов:
+    /// длительность результата — это то, что пользователь проверяет глазами.
+    /// </summary>
+    public string ScopeText
+    {
+        get
+        {
+            if (!SelectionOnly)
+            {
+                return Strings.ExportScopeWhole;
+            }
+
+            return _timeline.SelectionRange is { } range
+                ? $"{DisplayFormat.Duration(range.Start)} → {DisplayFormat.Duration(range.End)}"
+                : Strings.ExportScopeEmpty;
+        }
+    }
+
+    private void RefreshScope()
+    {
+        OnPropertyChanged(nameof(HasSelectionRange));
+        OnPropertyChanged(nameof(ScopeText));
+
+        // Выделение сняли, пока стоял переключатель: молча экспортировать весь
+        // ролик вместо куска нельзя — это не то, что просили.
+        if (SelectionOnly && !HasSelectionRange)
+        {
+            SelectionOnly = false;
+        }
+
+        RefreshSummary();
+        RefreshCommands();
+    }
+
+    partial void OnSelectionOnlyChanged(bool value)
+    {
+        RefreshSummary();
+        RefreshCommands();
     }
 
     public bool IsIdle => State is ExportState.Idle or ExportState.Failed;
@@ -239,10 +311,25 @@ public sealed partial class ExportViewModel : ObservableObject
 
     public ObservableCollection<string> Warnings { get; } = [];
 
+    /// <summary>
+    /// Контейнеры одним списком, звуковые в конце. Отдельного переключателя
+    /// «только звук» нет намеренно: выбрав MP3, пользователь уже сказал всё,
+    /// что нужно, а два органа с одним смыслом рано или поздно разойдутся.
+    /// </summary>
     public IReadOnlyList<ContainerFormat> Containers { get; } =
-        [ContainerFormat.Mp4, ContainerFormat.WebM, ContainerFormat.Mov, ContainerFormat.Mkv, ContainerFormat.Avi];
+    [
+        ContainerFormat.Mp4, ContainerFormat.WebM, ContainerFormat.Mov,
+        ContainerFormat.Mkv, ContainerFormat.Avi,
+        ContainerFormat.Mp3, ContainerFormat.M4a, ContainerFormat.Wav
+    ];
 
     public ObservableCollection<VideoCodec> VideoCodecs { get; } = [];
+
+    /// <summary>Выбран звуковой контейнер: настройки картинки к результату не относятся.</summary>
+    public bool IsAudioOnly => Container.IsAudioOnly();
+
+    /// <summary>Обратное — чтобы разметка прятала блоки картинки без конвертера-отрицания.</summary>
+    public bool HasVideoOutput => !IsAudioOnly;
 
     public IReadOnlyList<ResolutionOption> Resolutions { get; } = ResolutionOption.All;
 
@@ -311,6 +398,15 @@ public sealed partial class ExportViewModel : ObservableObject
     partial void OnContainerChanged(ContainerFormat value)
     {
         RefreshCodecs();
+        OnPropertyChanged(nameof(IsAudioOnly));
+        OnPropertyChanged(nameof(HasVideoOutput));
+
+        // Звук — единственное, что попадёт в файл: выключенный звук оставил бы
+        // пустой контейнер, и кнопка экспорта делала бы бессмыслицу.
+        if (value.IsAudioOnly())
+        {
+            KeepAudio = true;
+        }
 
         if (!string.IsNullOrEmpty(OutputPath))
         {
@@ -566,6 +662,25 @@ public sealed partial class ExportViewModel : ObservableObject
         RefreshSummary();
     }
 
+    /// <summary>
+    /// Проект, урезанный до того, что просили экспортировать.
+    /// </summary>
+    /// <remarks>
+    /// Кусок вырезается в модели, а не в аргументах ffmpeg: тогда все стратегии
+    /// планировщика — копирование потоков, быстрая склейка, обычное кодирование —
+    /// работают с ним без единой правки, а сводка и оценка размера считаются
+    /// по той длительности, которая на самом деле уйдёт в файл.
+    /// </remarks>
+    private Project ScopedProject(Project project)
+    {
+        if (!SelectionOnly || _timeline.SelectionRange is not { } range)
+        {
+            return project;
+        }
+
+        return project.WithSequence(project.Sequence.Slice(range));
+    }
+
     public ExportSettings BuildSettings() => new ExportSettings
     {
         Container = Container,
@@ -634,7 +749,8 @@ public sealed partial class ExportViewModel : ObservableObject
             BitrateKbps = AudioBitrateKbps,
             SampleRateHz = AudioSampleRateHz,
             Channels = AudioChannels,
-            MasterVolume = MasterVolumePercent / 100d
+            MasterVolume = MasterVolumePercent / 100d,
+            NormalizeLoudness = NormalizeLoudness
         };
     }
 
@@ -650,13 +766,22 @@ public sealed partial class ExportViewModel : ObservableObject
 
         try
         {
-            var plan = _planner.CreatePlan(new ExportRequest(_project, BuildSettings()), _toolsetProvider.Current.Capabilities);
+            var plan = _planner.CreatePlan(
+                new ExportRequest(ScopedProject(_project), BuildSettings()),
+                _toolsetProvider.Current.Capabilities);
+
             var summary = plan.Summary;
 
-            SummaryLines.Add(new SummaryLine(Strings.FieldResolution, summary.Resolution.ToString()));
-            SummaryLines.Add(new SummaryLine(Strings.FieldFrameRate, $"{summary.Fps:0.###} fps"));
-            SummaryLines.Add(new SummaryLine(Strings.FieldCodec, summary.VideoCodecLabel));
-            SummaryLines.Add(new SummaryLine(Strings.FieldBitrate, summary.VideoBitrateLabel));
+            // У звукового файла ни разрешения, ни кадров в секунду нет: строки
+            // про картинку в сводке обещали бы то, чего в файле не будет.
+            if (!IsAudioOnly)
+            {
+                SummaryLines.Add(new SummaryLine(Strings.FieldResolution, summary.Resolution.ToString()));
+                SummaryLines.Add(new SummaryLine(Strings.FieldFrameRate, $"{summary.Fps:0.###} fps"));
+                SummaryLines.Add(new SummaryLine(Strings.FieldCodec, summary.VideoCodecLabel));
+                SummaryLines.Add(new SummaryLine(Strings.FieldBitrate, summary.VideoBitrateLabel));
+            }
+
             SummaryLines.Add(new SummaryLine(Strings.SectionAudio, summary.AudioLabel));
             SummaryLines.Add(new SummaryLine(Strings.FieldDuration, DisplayFormat.Duration(summary.Duration)));
             SummaryLines.Add(new SummaryLine(
@@ -758,7 +883,7 @@ public sealed partial class ExportViewModel : ObservableObject
         try
         {
             plan = _planner.CreatePlan(
-                new ExportRequest(_project, BuildSettings()),
+                new ExportRequest(ScopedProject(_project), BuildSettings()),
                 _toolsetProvider.Current.Capabilities);
         }
         catch (MeowsCutException ex)
@@ -797,7 +922,13 @@ public sealed partial class ExportViewModel : ObservableObject
     }
 
     private bool CanStart() =>
-        _project is not null && State != ExportState.Running && !string.IsNullOrWhiteSpace(OutputPath);
+        _project is not null &&
+        State != ExportState.Running &&
+        !string.IsNullOrWhiteSpace(OutputPath) &&
+
+        // Кусок без выделения экспортировать некуда: кнопка гаснет, а не выдаёт
+        // весь ролик вместо запрошенного отрезка.
+        (!SelectionOnly || HasSelectionRange);
 
     [RelayCommand(CanExecute = nameof(IsRunning))]
     private void Cancel() => _currentJob?.Cancel();

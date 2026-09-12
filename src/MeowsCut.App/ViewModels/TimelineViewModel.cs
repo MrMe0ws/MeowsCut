@@ -7,6 +7,7 @@ using MeowsCut.Core.Editing;
 using MeowsCut.Core.Editing.Commands;
 using MeowsCut.Core.Editing.History;
 using MeowsCut.Core.Editing.Timeline;
+using MeowsCut.Core.Media;
 
 namespace MeowsCut.App.ViewModels;
 
@@ -73,10 +74,20 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasAudioSelection))]
+    [NotifyPropertyChangedFor(nameof(HasClipInspector))]
     private AudioClip? _selectedAudioClip;
 
     [ObservableProperty]
     private AudioTrackId _selectedAudioTrack;
+
+    /// <summary>
+    /// Выбранная надпись. Тоже отдельно от остальных выделений: у надписи
+    /// свои свойства, и показывать их вперемешку со свойствами клипа нельзя.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTitleSelection))]
+    [NotifyPropertyChangedFor(nameof(HasClipInspector))]
+    private TitleClip? _selectedTitle;
 
     public TimelineViewModel(AudioWaveformCache? waveforms = null)
     {
@@ -124,6 +135,11 @@ public sealed partial class TimelineViewModel : ObservableObject
     public bool HasMultipleSelected => _selection.Count > 1;
 
     public bool HasAudioSelection => SelectedAudioClip is not null;
+
+    public bool HasTitleSelection => SelectedTitle is not null;
+
+    /// <summary>Показывать ли свойства клипа: когда не выбраны ни звук, ни надпись.</summary>
+    public bool HasClipInspector => !HasAudioSelection && !HasTitleSelection;
 
     /// <summary>
     /// Кисть с волной для куска звука. null — волна ещё считается или её нет.
@@ -244,11 +260,13 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <remarks>
     /// Без этого «Дорожка» оставалась серой навсегда: её условие проверяется один раз
     /// при создании модели, когда проекта ещё нет, и открытие файла об этом не сообщало.
+    /// Каждая новая команда с условием <see cref="HasProject"/> обязана попасть сюда же.
     /// </remarks>
     private void RefreshProjectCommands()
     {
         OnPropertyChanged(nameof(HasProject));
         AddAudioTrackCommand.NotifyCanExecuteChanged();
+        AddTitleAtPlayheadCommand.NotifyCanExecuteChanged();
     }
 
     public void Detach()
@@ -286,6 +304,13 @@ public sealed partial class TimelineViewModel : ObservableObject
     private void RebuildClips()
     {
         var selectedId = SelectedClip?.Id;
+
+        // Надпись подхватывается заново по идентификатору: последовательность
+        // иммутабельна, и старый объект в выделении устаревает после любой правки.
+        if (SelectedTitle is { } title)
+        {
+            SelectedTitle = Sequence.FindTitle(title.Id);
+        }
 
         _clipPool.Clear();
         _clipPool.AddRange(Clips);
@@ -333,6 +358,9 @@ public sealed partial class TimelineViewModel : ObservableObject
         VisualInvalidated?.Invoke(this, EventArgs.Empty);
     }
 
+    partial void OnSelectedTitleChanged(TitleClip? value) =>
+        DeleteSelectedCommand.NotifyCanExecuteChanged();
+
     partial void OnSelectedAudioClipChanged(AudioClip? value)
     {
         DeleteSelectedCommand.NotifyCanExecuteChanged();
@@ -377,6 +405,12 @@ public sealed partial class TimelineViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void DeleteSelected()
     {
+        if (SelectedTitle is { } title)
+        {
+            RemoveTitle(title.Id);
+            return;
+        }
+
         if (SelectedAudioClip is { } audio)
         {
             Execute(new RemoveAudioClipCommand(SelectedAudioTrack, audio.Id));
@@ -423,7 +457,8 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
-    private bool HasSelection() => SelectedClip is not null || SelectedAudioClip is not null;
+    private bool HasSelection() =>
+        SelectedClip is not null || SelectedAudioClip is not null || SelectedTitle is not null;
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
     private void Undo() => _history?.Undo();
@@ -446,6 +481,10 @@ public sealed partial class TimelineViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleSnap() => SnapEnabled = !SnapEnabled;
+
+    /// <summary>Кнопка «Текст» на панели доски: надпись встаёт под курсор.</summary>
+    [RelayCommand(CanExecute = nameof(HasProject))]
+    private void AddTitleAtPlayhead() => AddTitle(Localization.Strings.NewTitleText);
 
     /// <summary>Ставит границу выделенного клипа в позицию курсора (клавиши I и O).</summary>
     [RelayCommand(CanExecute = nameof(HasSelection))]
@@ -513,6 +552,125 @@ public sealed partial class TimelineViewModel : ObservableObject
         if (TargetClips is { Count: > 0 } clips)
         {
             Execute(new SetClipTransformCommand(clips, transform));
+        }
+    }
+
+    /// <summary>
+    /// Ставит надпись в позицию плейхеда.
+    /// </summary>
+    /// <remarks>
+    /// Текст по умолчанию непустой: пустая надпись не видна ни на доске,
+    /// ни в кадре, и её появление выглядело бы как «кнопка ничего не делает».
+    /// </remarks>
+    public void AddTitle(string text)
+    {
+        if (_history is null)
+        {
+            return;
+        }
+
+        var title = TitleClip.Create(text, Playhead);
+
+        Execute(new AddTitleCommand(title));
+        EndInteraction();
+
+        SelectedTitle = Sequence.FindTitle(title.Id);
+        RequestRedraw();
+    }
+
+    public void RemoveTitle(TitleId id)
+    {
+        Execute(new RemoveTitleCommand(id));
+        EndInteraction();
+
+        if (SelectedTitle?.Id == id)
+        {
+            SelectedTitle = null;
+        }
+
+        RequestRedraw();
+    }
+
+    /// <summary>Правка выбранной надписи: команду выбирает вызывающий.</summary>
+    public void ChangeTitle(IEditCommand command)
+    {
+        Execute(command);
+
+        if (SelectedTitle is { } title)
+        {
+            SelectedTitle = Sequence.FindTitle(title.Id);
+        }
+
+        RequestRedraw();
+    }
+
+    /// <summary>Кадр всего ролика: пропорции и то, как в них ложатся куски.</summary>
+    public void SetSequenceFormat(SequenceFormat format)
+    {
+        Execute(new SetSequenceFormatCommand(format));
+        EndInteraction();
+    }
+
+    /// <summary>Появление и затухание у выделенных клипов; null оставляет край как был.</summary>
+    public void SetClipFades(TimeSpan? fadeIn = null, TimeSpan? fadeOut = null)
+    {
+        if (TargetClips is { Count: > 0 } clips)
+        {
+            Execute(new SetClipFadesCommand(clips, fadeIn, fadeOut));
+        }
+    }
+
+    /// <summary>
+    /// Довернуть выделенные клипы. Каждый крутится от своего положения: два клипа,
+    /// повёрнутых по-разному, после одного нажатия обязаны разойтись так же,
+    /// а не съехаться к общему углу.
+    /// </summary>
+    public void RotateClipsBy(int degrees)
+    {
+        if (TargetClips is not { Count: > 0 } clips)
+        {
+            return;
+        }
+
+        foreach (var id in clips)
+        {
+            if (Sequence.Video.Find(id) is { } clip)
+            {
+                Execute(new SetClipTransformCommand(id, clip.Transform.RotatedBy(degrees)));
+            }
+        }
+
+        EndInteraction();
+    }
+
+    /// <summary>
+    /// Отрезок таймлайна, занятый выделением: от начала первого выделенного куска
+    /// до конца последнего. Пусто — выделения нет.
+    /// </summary>
+    /// <remarks>
+    /// Считается по краям, а не по сумме длительностей: выделив первый и третий
+    /// клип, пользователь показал на кусок ленты между ними, а не просил склеить
+    /// два обрывка, выбросив середину.
+    /// </remarks>
+    public TimeRange? SelectionRange
+    {
+        get
+        {
+            if (SelectedAudioClip is { } audio)
+            {
+                return audio.TimelineRange;
+            }
+
+            var selected = SelectedClips;
+            if (selected.Count == 0)
+            {
+                return null;
+            }
+
+            var start = selected.Min(clip => clip.Start);
+            var end = selected.Max(clip => clip.End);
+
+            return end > start ? new TimeRange(start, end) : null;
         }
     }
 

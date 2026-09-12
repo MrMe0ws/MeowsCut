@@ -22,7 +22,10 @@ public static class CompatibilityMatrix
         [ContainerFormat.WebM] = [AudioCodec.Opus, AudioCodec.Vorbis],
         [ContainerFormat.Mov] = [AudioCodec.Aac],
         [ContainerFormat.Mkv] = [AudioCodec.Aac, AudioCodec.Opus, AudioCodec.Mp3, AudioCodec.Vorbis, AudioCodec.Flac],
-        [ContainerFormat.Avi] = [AudioCodec.Mp3]
+        [ContainerFormat.Avi] = [AudioCodec.Mp3],
+        [ContainerFormat.Mp3] = [AudioCodec.Mp3],
+        [ContainerFormat.M4a] = [AudioCodec.Aac],
+        [ContainerFormat.Wav] = [AudioCodec.Pcm]
     };
 
     public static IReadOnlyList<VideoCodec> VideoCodecsFor(ContainerFormat container) =>
@@ -47,7 +50,8 @@ public static class CompatibilityMatrix
     public static AudioCodec DefaultAudioCodec(ContainerFormat container) => container switch
     {
         ContainerFormat.WebM => AudioCodec.Opus,
-        ContainerFormat.Avi => AudioCodec.Mp3,
+        ContainerFormat.Avi or ContainerFormat.Mp3 => AudioCodec.Mp3,
+        ContainerFormat.Wav => AudioCodec.Pcm,
         _ => AudioCodec.Aac
     };
 

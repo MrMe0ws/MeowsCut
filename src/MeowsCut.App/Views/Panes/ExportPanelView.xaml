@@ -40,6 +40,36 @@
                           VerticalScrollBarVisibility="Auto">
                 <StackPanel>
 
+                    <!-- Что уходит в файл: весь ролик или отрезок выделения. Стоит
+                         первым — это решение принимают до всех настроек вывода,
+                         и промахнуться тут дороже, чем ошибиться с битрейтом. -->
+                    <Grid Margin="0,0,0,14"
+                          Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibility}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{loc:Tr ExportScope}" />
+
+                        <CheckBox Grid.Column="1"
+                                  Margin="10,0,0,0"
+                                  VerticalAlignment="Center"
+                                  Content="{loc:Tr ExportScopeSelection}"
+                                  IsChecked="{Binding SelectionOnly}"
+                                  IsEnabled="{Binding HasSelectionRange}"
+                                  ToolTip="{loc:Tr ExportScopeSelectionHint}" />
+
+                        <TextBlock Grid.Column="2"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource Text.Base}"
+                                   Text="{Binding ScopeText}" />
+                    </Grid>
+
                     <!-- Настройки в две колонки: одной лентой они не помещались ни в одно
                          окно, и до кнопки экспорта приходилось листать через всё. Слева
                          картинка, справа звук и всё остальное. -->
@@ -59,6 +89,17 @@
                                   ItemsSource="{Binding Containers}"
                                   SelectedItem="{Binding Container}"
                                   Style="{StaticResource FieldBox}" />
+
+                        <!-- Выбран MP3 или WAV: настройки картинки к такому файлу
+                             не относятся, и оставлять их значило бы обещать кадр,
+                             которого в результате не будет. -->
+                        <TextBlock Margin="0,0,0,12"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{loc:Tr ExportAudioOnlyNotice}"
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding IsAudioOnly, Converter={StaticResource BoolToVisibility}}" />
+
+                        <StackPanel Visibility="{Binding HasVideoOutput, Converter={StaticResource BoolToVisibility}}">
 
                         <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
                             <Path Data="{StaticResource Icon.Film}" Style="{StaticResource FieldIcon}" />
@@ -164,11 +205,14 @@
 
                         </StackPanel>
 
+                        </StackPanel>
+
                         <StackPanel Grid.Column="2">
                         <!-- Звук -->
                         <CheckBox Margin="0,2,0,8"
                                   Content="{loc:Tr KeepAudio}"
-                                  IsChecked="{Binding KeepAudio}" />
+                                  IsChecked="{Binding KeepAudio}"
+                                  Visibility="{Binding HasVideoOutput, Converter={StaticResource BoolToVisibility}}" />
 
                         <StackPanel Visibility="{Binding KeepAudio, Converter={StaticResource BoolToVisibility}}">
                             <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
@@ -201,15 +245,21 @@
                                            Style="{StaticResource Text.Base}"
                                            Text="{Binding MasterVolumePercent, StringFormat={}{0:0}%}" />
                             </Grid>
-                            <Slider Margin="0,4,0,12"
+                            <Slider Margin="0,4,0,8"
                                     IsSnapToTickEnabled="True"
                                     Maximum="200"
                                     Minimum="0"
                                     TickFrequency="5"
                                     Value="{Binding MasterVolumePercent}" />
+
+                            <CheckBox Margin="0,0,0,12"
+                                      Content="{loc:Tr FieldNormalizeLoudness}"
+                                      IsChecked="{Binding NormalizeLoudness}"
+                                      ToolTip="{loc:Tr FieldNormalizeLoudnessHint}" />
                         </StackPanel>
 
                         <!-- Субтитры -->
+                        <StackPanel Visibility="{Binding HasVideoOutput, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Margin="0,4,0,6" Orientation="Horizontal">
                             <Path Data="{StaticResource Icon.Subtitles}" Style="{StaticResource FieldIcon}" />
                             <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr SectionSubtitles}" />
@@ -252,9 +302,12 @@
                                        TextWrapping="Wrap" />
                         </StackPanel>
 
+                        <!-- Быстрый режим здесь же: копирование потоков — это про
+                             картинку, для звукового файла его всё равно не будет. -->
                         <CheckBox Margin="0,0,0,12"
                                   Content="{loc:Tr FastMode}"
                                   IsChecked="{Binding PreferStreamCopy}" />
+                        </StackPanel>
 
                         <!-- Расширенные -->
                         <CheckBox Margin="0,0,0,10"

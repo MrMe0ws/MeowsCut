@@ -25,7 +25,10 @@ public enum PlanWarningKind
     HardwareUnavailable,
 
     /// <summary>Контейнер не носит дорожку субтитров.</summary>
-    SubtitlesDropped
+    SubtitlesDropped,
+
+    /// <summary>Сборка ffmpeg не умеет рисовать надписи: нет фильтра drawtext.</summary>
+    TitlesUnsupported
 }
 
 /// <summary>Предупреждение о последствиях выбранных настроек — показывается до запуска.</summary>

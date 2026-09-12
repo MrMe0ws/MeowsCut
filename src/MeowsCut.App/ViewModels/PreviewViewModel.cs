@@ -85,8 +85,125 @@ public sealed partial class PreviewViewModel : ObservableObject
             _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: true);
 
             RefreshTexts();
+            RefreshFormat();
             RequestFrame();
         };
+    }
+
+    /// <summary>Пропорции кадра ролика: 1.78 — горизонтальный, 0.5625 — вертикальный.</summary>
+    [ObservableProperty]
+    private double _frameAspect = 16d / 9d;
+
+    /// <summary>
+    /// Заполнять кадр с обрезкой вместо полей по краям.
+    /// </summary>
+    /// <remarks>
+    /// Главный вопрос вертикального формата: горизонтальное видео либо стоит
+    /// полосой посреди чёрного экрана, либо заполняет кадр, теряя края. Верного
+    /// ответа нет — он зависит от того, что в кадре, поэтому выбор отдан
+    /// пользователю и виден сразу в предпросмотре.
+    /// </remarks>
+    [ObservableProperty]
+    private bool _fillFrame;
+
+    /// <summary>Формат ролика: пропорции кадра, в который складывается монтаж.</summary>
+    public IReadOnlyList<SequenceFormatOption> FormatOptions { get; } = SequenceFormatOption.All;
+
+    [ObservableProperty]
+    private SequenceFormatOption _selectedFormat = SequenceFormatOption.All[0];
+
+    /// <summary>Размер кадра словами: его спрашивают ровно тогда, когда меняют формат.</summary>
+    [ObservableProperty]
+    private string _frameSizeText = string.Empty;
+
+    partial void OnSelectedFormatChanged(SequenceFormatOption value) => ApplyFormat();
+
+    partial void OnFillFrameChanged(bool value) => ApplyFormat();
+
+    /// <summary>
+    /// Складывает выбор пользователя в формат последовательности и отдаёт его истории.
+    /// </summary>
+    private void ApplyFormat()
+    {
+        if (_updatingFormat || !_timeline.HasProject)
+        {
+            return;
+        }
+
+        var current = _timeline.Sequence.Format;
+        var fit = FillFrame ? Core.Export.FitMode.Cover : Core.Export.FitMode.Contain;
+
+        var format = SelectedFormat.Aspect is { } aspect
+            ? current.WithAspect(aspect) with { Fit = fit }
+
+            // «Как в исходнике» возвращает кадр первого файла: заново считать его
+            // неоткуда, но пропорции исходника у проекта уже есть.
+            : OriginalFormat() with { Fit = fit, IsCustom = false };
+
+        if (format == current)
+        {
+            return;
+        }
+
+        _timeline.SetSequenceFormat(format);
+    }
+
+    private Core.Editing.Timeline.SequenceFormat OriginalFormat()
+    {
+        var sequence = _timeline.Sequence;
+        var first = sequence.Video.Clips.Count > 0 && _project is not null
+            ? _project.Find(sequence.Video.Clips[0].SourceId)
+            : null;
+
+        return first is null
+            ? sequence.Format
+            : Core.Editing.Timeline.SequenceFormat.FromMedia(first.Info) with
+            {
+                FrameRate = sequence.Format.FrameRate
+            };
+    }
+
+    /// <summary>Приводит переключатели к тому, что стоит в последовательности.</summary>
+    private void RefreshFormat()
+    {
+        var format = _timeline.Sequence.Format;
+
+        _updatingFormat = true;
+
+        FrameAspect = format.AspectRatio;
+        FillFrame = format.Fit == Core.Export.FitMode.Cover;
+        FrameSizeText = $"{format.Size.Width}×{format.Size.Height}";
+        SelectedFormat = SequenceFormatOption.For(format);
+
+        _updatingFormat = false;
+    }
+
+    private bool _updatingFormat;
+
+    /// <summary>
+    /// Надписи, попадающие в текущий кадр.
+    /// </summary>
+    /// <remarks>
+    /// Рисуются поверх предпросмотра средствами WPF — приблизительно, но
+    /// достаточно, чтобы выбрать место и размер. Иначе надпись впервые
+    /// показалась бы только в готовом файле.
+    /// </remarks>
+    public System.Collections.ObjectModel.ObservableCollection<PreviewTitle> VisibleTitles { get; } = [];
+
+    private void RefreshTitles()
+    {
+        var playhead = _timeline.Playhead;
+        var titles = _timeline.Sequence.Titles;
+
+        VisibleTitles.Clear();
+
+        foreach (var title in titles)
+        {
+            if (playhead >= title.TimelineStart && playhead < title.TimelineEnd)
+            {
+                VisibleTitles.Add(PreviewTitle.From(title));
+            }
+        }
     }
 
     /// <summary>Визуальный элемент проигрывателя для размещения в разметке.</summary>
@@ -141,6 +258,20 @@ public sealed partial class PreviewViewModel : ObservableObject
     [ObservableProperty]
     private double _frameOffsetY;
 
+    [ObservableProperty]
+    private int _frameRotation;
+
+    /// <summary>
+    /// Насколько кадр сейчас затемнён: 0 — картинка видна, 1 — чёрный экран.
+    /// </summary>
+    /// <remarks>
+    /// Без этого затухание нельзя было бы увидеть до экспорта: пользователь
+    /// ставит секунду затемнения, прокручивает к концу клипа и видит обычный кадр —
+    /// ровно то ощущение «настройка не работает», ради которого поле и добавляли.
+    /// </remarks>
+    [ObservableProperty]
+    private double _fadeDim;
+
     public bool IsPlayerVisible => !UseFallbackFrames && !IsStillImage && !IsBlackScreen;
 
     /// <summary>Картинку показывают и запасной режим, и фотография в видеоряду.</summary>
@@ -154,6 +285,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         _timer.Start();
 
         RefreshTexts();
+        RefreshFormat();
         RequestFrame();
     }
 
@@ -267,17 +399,48 @@ public sealed partial class PreviewViewModel : ObservableObject
         PositionText = DisplayFormat.Duration(_timeline.Playhead);
         DurationText = DisplayFormat.Duration(_timeline.Duration);
         RefreshFraming();
+        RefreshTitles();
     }
 
     /// <summary>Кадрирование берётся у клипа под курсором и меняется вместе с ним.</summary>
     private void RefreshFraming()
     {
-        var transform = _timeline.Sequence.ClipAt(_timeline.Playhead)?.Clip.Transform
-                        ?? Core.Editing.Timeline.ClipTransform.Identity;
+        var placed = _timeline.Sequence.ClipAt(_timeline.Playhead);
+        var transform = placed?.Clip.Transform ?? Core.Editing.Timeline.ClipTransform.Identity;
 
         FrameZoom = transform.Zoom;
         FrameOffsetX = transform.OffsetX;
         FrameOffsetY = transform.OffsetY;
+        FrameRotation = transform.Rotation;
+        FadeDim = placed is { } clip ? DimAt(clip, _timeline.Playhead) : 0d;
+    }
+
+    /// <summary>
+    /// Затемнение кадра в точке таймлайна: на краях затухания — полный чёрный,
+    /// дальше линейно к нулю. Так же считает и фильтр fade при экспорте.
+    /// </summary>
+    private static double DimAt(Core.Editing.Timeline.PlacedClip placed, TimeSpan playhead)
+    {
+        var offset = playhead - placed.Start;
+        var clip = placed.Clip;
+
+        var fadeIn = clip.EffectiveFadeIn;
+        if (fadeIn > TimeSpan.Zero && offset < fadeIn)
+        {
+            return 1d - offset / fadeIn;
+        }
+
+        var fadeOut = clip.EffectiveFadeOut;
+        if (fadeOut > TimeSpan.Zero)
+        {
+            var fromEnd = clip.TimelineDuration - offset;
+            if (fromEnd < fadeOut)
+            {
+                return 1d - Math.Max(fromEnd / fadeOut, 0d);
+            }
+        }
+
+        return 0d;
     }
 
     /// <summary>

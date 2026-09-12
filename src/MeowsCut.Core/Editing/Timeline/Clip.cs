@@ -28,6 +28,20 @@ public sealed record Clip(
     /// <summary>Ниже этого предела клип теряет смысл: примерно один кадр.</summary>
     public static readonly TimeSpan MinSourceDuration = TimeSpan.FromMilliseconds(20);
 
+    /// <summary>
+    /// Появление из чёрного в начале клипа. Ноль — клип начинается сразу с картинки.
+    /// </summary>
+    /// <remarks>
+    /// Затухание живёт у клипа, а не у всего ролика: «погасить концовку» — это
+    /// затухание последнего куска, и та же механика бесплатно даёт уход в чёрное
+    /// в середине монтажа. Так же устроен звук (<see cref="AudioClip.FadeIn"/>),
+    /// и одинаковые поля в инспекторе читаются одинаково.
+    /// </remarks>
+    public TimeSpan FadeIn { get; init; }
+
+    /// <summary>Уход в чёрное к концу клипа.</summary>
+    public TimeSpan FadeOut { get; init; }
+
     public const double MinSpeed = 0.1;
     public const double MaxSpeed = 16d;
 
@@ -107,6 +121,47 @@ public sealed record Clip(
     }
 
     public Clip WithAudio(ClipAudio audio) => this with { Audio = audio };
+
+    public bool HasFades => EffectiveFadeIn > TimeSpan.Zero || EffectiveFadeOut > TimeSpan.Zero;
+
+    /// <summary>
+    /// Затухания, укладывающиеся в клип. Хранится заказанная длина, а отдаётся
+    /// подрезанная: клип укоротили за край — затухание обязано ужаться вместе с ним,
+    /// а не съесть весь кусок и не уехать за его конец.
+    /// </summary>
+    /// <remarks>
+    /// Пополам, когда оба затухания вместе длиннее клипа: так они встречаются
+    /// ровно в середине, вместо того чтобы одно отъело всё, а второму не осталось.
+    /// </remarks>
+    public TimeSpan EffectiveFadeIn => ResolveFades().In;
+
+    public TimeSpan EffectiveFadeOut => ResolveFades().Out;
+
+    private (TimeSpan In, TimeSpan Out) ResolveFades()
+    {
+        var duration = TimelineDuration;
+
+        var fadeIn = Clamp(FadeIn, TimeSpan.Zero, duration);
+        var fadeOut = Clamp(FadeOut, TimeSpan.Zero, duration);
+
+        if (fadeIn + fadeOut <= duration)
+        {
+            return (fadeIn, fadeOut);
+        }
+
+        var half = TimeSpan.FromTicks(duration.Ticks / 2);
+        return (half, duration - half);
+    }
+
+    /// <summary>Ставит затухания; null оставляет соответствующее как было.</summary>
+    public Clip WithFades(TimeSpan? fadeIn = null, TimeSpan? fadeOut = null) => this with
+    {
+        FadeIn = Clamp(fadeIn ?? FadeIn, TimeSpan.Zero, MaxFade),
+        FadeOut = Clamp(fadeOut ?? FadeOut, TimeSpan.Zero, MaxFade)
+    };
+
+    /// <summary>Дольше этого затухание перестаёт читаться как приём и выглядит поломкой.</summary>
+    public static readonly TimeSpan MaxFade = TimeSpan.FromSeconds(10);
 
     public Clip WithTransform(ClipTransform transform) => this with { Transform = transform };
 

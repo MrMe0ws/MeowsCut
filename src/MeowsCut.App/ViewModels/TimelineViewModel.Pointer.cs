@@ -29,7 +29,8 @@ public sealed partial class TimelineViewModel
         Pan,
         MoveAudio,
         TrimAudioStart,
-        TrimAudioEnd
+        TrimAudioEnd,
+        MoveTitle
     }
 
     public void PointerDown(double x, double y, PointerMode mode = PointerMode.Normal)
@@ -59,6 +60,12 @@ public sealed partial class TimelineViewModel
         if (hit.IsAudio)
         {
             HandleAudioPointerDown(hit);
+            return;
+        }
+
+        if (hit.IsTitle)
+        {
+            HandleTitlePointerDown(hit);
             return;
         }
 
@@ -108,6 +115,81 @@ public sealed partial class TimelineViewModel
                 // За какое место клипа схватились: без этого он прыгает под курсор серединой.
                 _dragReferenceTime = hit.Time - hit.Clip!.Value.Start;
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Нажатие в полосе надписей: выбрать и, если попали в саму надпись, тянуть.
+    /// </summary>
+    /// <remarks>
+    /// Ножницы здесь не работают: резать надпись пополам бессмысленно — её
+    /// длительность правят числом, а текст всё равно останется тем же.
+    /// </remarks>
+    private void HandleTitlePointerDown(TimelineHit hit)
+    {
+        SelectTitle(hit.Title);
+
+        if (hit.Title is not { } title)
+        {
+            return;
+        }
+
+        _drag = DragState.MoveTitle;
+
+        // За какое место схватились: без этого надпись прыгает под курсор началом.
+        _dragReferenceTime = hit.Time - title.TimelineStart;
+    }
+
+    /// <summary>Выделение надписи снимает выделение клипа и звука: свойства показываются одни.</summary>
+    private void SelectTitle(TitleClip? title)
+    {
+        if (title is not null)
+        {
+            ClearSelection();
+            SelectedAudioClip = null;
+        }
+
+        SelectedTitle = title;
+        RequestRedraw();
+    }
+
+    /// <summary>Тянут надпись: она встаёт туда, где отпустили, с прилипанием.</summary>
+    private void DragTitle(double x)
+    {
+        if (SelectedTitle is not { } title)
+        {
+            return;
+        }
+
+        var start = Snap.Snap(Metrics.XToTime(x) - _dragReferenceTime, Sequence, Metrics, Playhead);
+
+        if (start < TimeSpan.Zero)
+        {
+            start = TimeSpan.Zero;
+        }
+
+        if (start == title.TimelineStart)
+        {
+            return;
+        }
+
+        Execute(new MoveTitleCommand(title.Id, start));
+        RefreshTitleSelection();
+    }
+
+    /// <summary>
+    /// Подхватывает надпись заново после правки.
+    /// </summary>
+    /// <remarks>
+    /// Последовательность иммутабельна: команда создаёт новый список, и старый
+    /// объект в выделении устаревает сразу же. Без этого следующее движение мыши
+    /// считало бы сдвиг от исходного положения, и надпись дёргалась бы назад.
+    /// </remarks>
+    private void RefreshTitleSelection()
+    {
+        if (SelectedTitle is { } title)
+        {
+            SelectedTitle = Sequence.FindTitle(title.Id);
         }
     }
 
@@ -200,6 +282,10 @@ public sealed partial class TimelineViewModel
             case DragState.TrimAudioStart:
             case DragState.TrimAudioEnd:
                 DragAudioEdge(x);
+                break;
+
+            case DragState.MoveTitle:
+                DragTitle(x);
                 break;
         }
     }
@@ -453,6 +539,7 @@ public sealed partial class TimelineViewModel
         _selection.Clear();
         SelectedClip = null;
         SelectedAudioClip = null;
+        SelectedTitle = null;
         ApplySelectionToClips();
     }
 

@@ -70,10 +70,29 @@ public static class ProjectDocumentReader
         }
 
         var sequence = new Sequence(VideoTrack.Empty with { Clips = clips }, Format(document, clips, sources))
-            .WithTracks(tracks);
+            .WithTracks(tracks)
+            .WithTitles(document.Titles.Select(Restore).Where(title => !title.IsEmpty).ToArray());
 
         return (new Project(sources, sequence), warnings);
     }
+
+    /// <summary>
+    /// Надпись из черновика. Файлов она не касается, поэтому и потеряться,
+    /// в отличие от клипа, не может — восстанавливается как есть.
+    /// </summary>
+    private static TitleClip Restore(ProjectTitleDocument entry) =>
+        new(
+            TitleId.New(),
+            entry.Text,
+            TimeSpan.FromMilliseconds(Math.Max(0, entry.StartMs)),
+            TimeSpan.FromMilliseconds(Math.Max(TitleClip.MinDuration.TotalMilliseconds, entry.DurationMs)))
+        {
+            Scale = Math.Clamp(entry.Scale, TitleClip.MinScale, TitleClip.MaxScale),
+            Anchor = Enum.IsDefined((TitleAnchor)entry.Anchor) ? (TitleAnchor)entry.Anchor : TitleAnchor.BottomCenter,
+            Color = string.IsNullOrWhiteSpace(entry.Color) ? "#FFFFFF" : entry.Color,
+            Backdrop = entry.Backdrop,
+            Margin = Math.Clamp(entry.MarginShare, 0d, 0.4d)
+        };
 
     private static Clip? TryRestore(ProjectClipDocument entry, MediaSource source)
     {
@@ -93,10 +112,13 @@ public static class ProjectDocumentReader
             fitted,
             Math.Clamp(entry.Speed, Clip.MinSpeed, Clip.MaxSpeed),
             new ClipAudio(entry.AudioEnabled, entry.Volume),
-            new ClipTransform(entry.Zoom, entry.OffsetX, entry.OffsetY),
+            new ClipTransform(entry.Zoom, entry.OffsetX, entry.OffsetY).WithRotation(entry.Rotation),
             entry.Label,
             TimeSpan.FromMilliseconds(Math.Max(0, entry.LeadingGapMs)),
-            source.IsImage);
+            source.IsImage)
+            .WithFades(
+                TimeSpan.FromMilliseconds(Math.Max(0, entry.FadeInMs)),
+                TimeSpan.FromMilliseconds(Math.Max(0, entry.FadeOutMs)));
     }
 
     private static AudioClip? TryRestore(ProjectAudioClipDocument entry, MediaSource source)
@@ -151,7 +173,11 @@ public static class ProjectDocumentReader
         {
             return new SequenceFormat(
                 new FrameSize(saved.Width, saved.Height),
-                new Rational(saved.FrameRateNumerator, Math.Max(1, saved.FrameRateDenominator)));
+                new Rational(saved.FrameRateNumerator, Math.Max(1, saved.FrameRateDenominator)))
+            {
+                IsCustom = saved.Custom,
+                Fit = Enum.IsDefined((Export.FitMode)saved.Fit) ? (Export.FitMode)saved.Fit : Export.FitMode.Contain
+            };
         }
 
         // Формата в файле нет — берём его у первого клипа, как при обычном открытии файла

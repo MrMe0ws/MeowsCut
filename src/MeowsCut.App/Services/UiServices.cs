@@ -166,6 +166,12 @@ public interface IDialogService
 
     /// <summary>Финальный шаг: пресеты и параметры вывода.</summary>
     void ShowExport();
+
+    /// <summary>Вопрос с двумя ответами. true — пользователь согласился.</summary>
+    bool Confirm(string title, string message, string acceptText, string declineText);
+
+    /// <summary>Настройки поиска пауз. null — передумали.</summary>
+    Core.Abstractions.SilenceOptions? AskSilenceOptions(Core.Abstractions.SilenceOptions current);
 }
 
 /// <summary>
@@ -221,6 +227,26 @@ public sealed class DialogService(
         };
 
         window.ShowDialog();
+    }
+
+    public bool Confirm(string title, string message, string acceptText, string declineText)
+    {
+        var dialog = new Views.Dialogs.ConfirmDialog(title, message, acceptText, declineText)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        return dialog.ShowDialog() == true;
+    }
+
+    public Core.Abstractions.SilenceOptions? AskSilenceOptions(Core.Abstractions.SilenceOptions current)
+    {
+        var window = new Views.Dialogs.SilenceWindow(current)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        return window.ShowDialog() == true ? window.Result : null;
     }
 }
 

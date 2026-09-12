@@ -6,7 +6,16 @@ public enum ContainerFormat
     WebM,
     Mov,
     Mkv,
-    Avi
+    Avi,
+
+    /// <summary>Только звук: дорожка без картинки.</summary>
+    Mp3,
+
+    /// <summary>Только звук, AAC в контейнере MPEG-4.</summary>
+    M4a,
+
+    /// <summary>Только звук, без сжатия.</summary>
+    Wav
 }
 
 public enum VideoCodec
@@ -27,7 +36,10 @@ public enum AudioCodec
     Opus,
     Mp3,
     Vorbis,
-    Flac
+    Flac,
+
+    /// <summary>Несжатый звук для WAV.</summary>
+    Pcm
 }
 
 /// <summary>
@@ -59,8 +71,22 @@ public static class ContainerFormatExtensions
         ContainerFormat.Mov => ".mov",
         ContainerFormat.Mkv => ".mkv",
         ContainerFormat.Avi => ".avi",
+        ContainerFormat.Mp3 => ".mp3",
+        ContainerFormat.M4a => ".m4a",
+        ContainerFormat.Wav => ".wav",
         _ => ".mp4"
     };
+
+    /// <summary>
+    /// Контейнер без картинки: результат — звуковая дорожка.
+    /// </summary>
+    /// <remarks>
+    /// Признак контейнера, а не отдельная галочка «только звук»: выбрав MP3,
+    /// пользователь уже сказал всё, что нужно, и второй переключатель с тем же
+    /// смыслом только даёт им шанс разойтись.
+    /// </remarks>
+    public static bool IsAudioOnly(this ContainerFormat format) =>
+        format is ContainerFormat.Mp3 or ContainerFormat.M4a or ContainerFormat.Wav;
 
     /// <summary>Имя мультиплексора для ключа -f, когда расширение не определяет формат.</summary>
     public static string MuxerName(this ContainerFormat format) => format switch
@@ -70,6 +96,12 @@ public static class ContainerFormatExtensions
         ContainerFormat.Mov => "mov",
         ContainerFormat.Mkv => "matroska",
         ContainerFormat.Avi => "avi",
+        ContainerFormat.Mp3 => "mp3",
+
+        // Для m4a это не «mp4»: муксер ipod ставит правильный бренд файла,
+        // иначе проигрыватели принимают звук за видео без картинки.
+        ContainerFormat.M4a => "ipod",
+        ContainerFormat.Wav => "wav",
         _ => "mp4"
     };
 
@@ -84,6 +116,9 @@ public static class ContainerFormatExtensions
             ".mov" => ContainerFormat.Mov,
             ".mkv" => ContainerFormat.Mkv,
             ".avi" => ContainerFormat.Avi,
+            ".mp3" => ContainerFormat.Mp3,
+            ".m4a" => ContainerFormat.M4a,
+            ".wav" => ContainerFormat.Wav,
             _ => null
         };
     }
@@ -104,6 +139,7 @@ public static class CodecNames
     public static AudioCodec? AudioFromProbeName(string? name) => name?.ToLowerInvariant() switch
     {
         "aac" => AudioCodec.Aac,
+        "pcm_s16le" or "pcm_s24le" or "pcm_f32le" => AudioCodec.Pcm,
         "opus" => AudioCodec.Opus,
         "mp3" => AudioCodec.Mp3,
         "vorbis" => AudioCodec.Vorbis,
@@ -129,6 +165,7 @@ public static class CodecNames
         AudioCodec.Mp3 => "MP3",
         AudioCodec.Vorbis => "Vorbis",
         AudioCodec.Flac => "FLAC",
+        AudioCodec.Pcm => "PCM",
         _ => codec.ToString()
     };
 }

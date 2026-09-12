@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MeowsCut.App.Views.Panes.InspectorView"
+<UserControl x:Class="MeowsCut.App.Views.Panes.InspectorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:MeowsCut.App.Controls"
@@ -14,68 +14,86 @@
         <!-- Отпустили ползунок — склейка правок в истории заканчивается. Без этого
              вся работа со звуком за сеанс становилась одной записью, а Ctrl+Z
              возвращал кусок к исходному состоянию. -->
-        <Style TargetType="Slider" BasedOn="{StaticResource {x:Type Slider}}">
+        <Style TargetType="Slider" BasedOn="{StaticResource Inspector.Slider}">
             <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+
+        <!-- Одна сетка на все поля раздела: подпись, орган, значение.
+             Ширины подписей и чисел общие на всю панель — поля разных разделов
+             стоят по одной линии, и взгляд идёт сверху вниз, а не зигзагом. -->
+        <Style x:Key="FieldGrid" TargetType="Grid">
+            <Setter Property="Margin" Value="0,1" />
         </Style>
     </UserControl.Resources>
 
-    <!-- Годится и полосой под доской монтажа, и колонкой справа: строки переносятся
-         по ширине. Полосой поля стоят в ряд, колонкой — складываются в столбик. -->
-    <Border Padding="12,8"
+    <!--
+        Свойства выделенного клипа. Панель узкая и вертикальная: разделы идут
+        столбиком, раскрывающийся «Кадр» стоит вплотную над своими полями.
+    -->
+    <Border Padding="12,10"
             Background="{DynamicResource Brush.Surface}"
             BorderBrush="{DynamicResource Brush.Border}"
             BorderThickness="0,1,0,0">
-        <StackPanel>
+        <StackPanel Grid.IsSharedSizeScope="True">
             <TextBlock Style="{StaticResource Text.Muted}"
                        Text="{loc:Tr NoClipSelected}"
                        TextWrapping="Wrap"
                        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}" />
 
             <StackPanel Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
-                <WrapPanel Orientation="Horizontal">
-                    <WrapPanel.Resources>
-                        <!-- Зазор у каждой группы разом: колонкой справа они встают
-                             друг под другом, и без него настройки слипаются. -->
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Margin" Value="0,4" />
-                        </Style>
-                    </WrapPanel.Resources>
 
-                    <TextBlock VerticalAlignment="Center"
+                <!-- Шапка: что выделено и сколько это длится -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center"
                                Style="{StaticResource Text.Section}"
                                Text="{loc:Tr SectionClip}" />
-                    <TextBlock Margin="10,0,0,0"
+
+                    <TextBlock Grid.Column="1"
+                               HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                Style="{StaticResource Text.Base}"
                                Text="{Binding DurationText}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Muted}">
-                        <Run Text="{Binding StartText, Mode=OneWay}" />
-                        <Run Text="→" />
-                        <Run Text="{Binding EndText, Mode=OneWay}" />
-                    </TextBlock>
+                </Grid>
 
-                    <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
+                <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Muted}">
+                    <Run Text="{Binding StartText, Mode=OneWay}" />
+                    <Run Text="→" />
+                    <Run Text="{Binding EndText, Mode=OneWay}" />
+                </TextBlock>
 
-                    <!-- Ползунок и число — одной группой: порознь при переносе строки
-                         число повисает отдельно от того, чем его меняют. -->
-                    <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource Inspector.Separator}" />
+
+                <!-- Скорость и звук: то, что правят чаще всего -->
+                <Grid Style="{StaticResource FieldGrid}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="*" MinWidth="60" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Path Data="{StaticResource Icon.Speed}" Style="{StaticResource FieldIcon}" />
-                        <TextBlock Margin="0,0,8,0"
-                                   VerticalAlignment="Center"
-                                   Style="{StaticResource Text.Muted}"
-                                   Text="{loc:Tr FieldSpeed}" />
-                        <Slider Width="120"
-                                VerticalAlignment="Center"
-                                LargeChange="1"
-                                Maximum="{x:Static fmt:SpeedScale.Max}"
-                                Minimum="{x:Static fmt:SpeedScale.Min}"
-                                SmallChange="0.08"
-                                ToolTip="{loc:Tr FieldSpeedHint}"
-                                Value="{Binding SpeedSlider}" />
-                        <TextBox Width="44"
-                                 Margin="8,0,0,0"
+                        <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldSpeed}" />
+                    </StackPanel>
+
+                    <Slider Grid.Column="1"
+                            LargeChange="1"
+                            Maximum="{x:Static fmt:SpeedScale.Max}"
+                            Minimum="{x:Static fmt:SpeedScale.Min}"
+                            SmallChange="0.08"
+                            ToolTip="{loc:Tr FieldSpeedHint}"
+                            Value="{Binding SpeedSlider}" />
+
+                    <StackPanel Grid.Column="2" Margin="10,0,0,0" Orientation="Horizontal">
+                        <TextBox Width="42"
                                  VerticalAlignment="Center"
-                                 Padding="5,2"
+                                 Padding="4,2"
                                  TextAlignment="Center"
                                  Text="{Binding SpeedText, UpdateSourceTrigger=PropertyChanged}"
                                  ToolTip="{loc:Tr FieldSpeedCustomHint}" />
@@ -84,99 +102,230 @@
                                    Style="{StaticResource Text.Muted}"
                                    Text="×" />
                     </StackPanel>
+                </Grid>
 
-                    <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
+                <Grid Style="{StaticResource FieldGrid}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="*" MinWidth="60" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                    </Grid.ColumnDefinitions>
 
-                    <!-- Ползунок и его число — одной группой: при переносе строки
-                         они обязаны остаться вместе, иначе «100%» повисает отдельно. -->
-                    <StackPanel Orientation="Horizontal">
+                    <!-- Галочка и есть подпись поля: отдельное слово рядом с ней
+                         повторяло бы то же самое дважды. -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Path Data="{StaticResource Icon.Volume}" Style="{StaticResource FieldIcon}" />
-                        <CheckBox VerticalAlignment="Center"
+                        <CheckBox Margin="0,0,10,0"
+                                  VerticalAlignment="Center"
                                   Content="{loc:Tr ClipAudioEnabled}"
                                   IsChecked="{Binding AudioEnabled}" />
-                        <Slider Width="90"
-                                Margin="12,0,0,0"
-                                VerticalAlignment="Center"
-                                IsEnabled="{Binding AudioEnabled}"
-                                IsSnapToTickEnabled="True"
-                                Maximum="200"
-                                Minimum="0"
-                                TickFrequency="5"
-                                ToolTip="{loc:Tr FieldVolume}"
-                                Value="{Binding VolumePercent}" />
-                        <TextBlock Width="40"
-                                   Margin="6,0,0,0"
-                                   VerticalAlignment="Center"
-                                   Style="{StaticResource Text.Muted}"
-                                   Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
                     </StackPanel>
 
-                    <Border Width="1" Margin="12,2" Background="{DynamicResource Brush.Border}" />
+                    <Slider Grid.Column="1"
+                            IsEnabled="{Binding AudioEnabled}"
+                            IsSnapToTickEnabled="True"
+                            Maximum="200"
+                            Minimum="0"
+                            TickFrequency="5"
+                            ToolTip="{loc:Tr FieldVolume}"
+                            Value="{Binding VolumePercent}" />
 
-                    <ToggleButton x:Name="FrameToggle"
-                                  Margin="0,4"
-                                  Style="{StaticResource ToolButton}"
-                                  ToolTip="{loc:Tr SectionFrameHint}">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="{StaticResource Icon.Frame}" Style="{StaticResource ToolIconStroke}" />
-                            <TextBlock Text="{loc:Tr SectionFrame}" />
+                    <TextBlock Grid.Column="2"
+                               Style="{StaticResource Inspector.Value}"
+                               Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
+                </Grid>
+
+                <Border Style="{StaticResource Inspector.Separator}" />
+
+                <!-- Затемнение краёв -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Section}"
+                               Text="{loc:Tr SectionFade}" />
+
+                    <Button Grid.Column="1"
+                            Padding="8,2"
+                            HorizontalAlignment="Right"
+                            Command="{Binding ClearFadesCommand}"
+                            Content="{loc:Tr ClipFadesClear}"
+                            Style="{StaticResource Button.Ghost}" />
+                </Grid>
+
+                <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr ClipFadeInHint}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="*" MinWidth="60" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Path Data="{StaticResource Icon.Fade}" Style="{StaticResource FieldIcon}" />
+                        <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr ClipFadeIn}" />
+                    </StackPanel>
+
+                    <Slider Grid.Column="1"
+                            IsSnapToTickEnabled="True"
+                            Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                            Minimum="0"
+                            TickFrequency="0.1"
+                            Value="{Binding FadeInSeconds}" />
+
+                    <TextBlock Grid.Column="2"
+                               Style="{StaticResource Inspector.Value}"
+                               Text="{Binding FadeInSeconds, StringFormat={}{0:0.0} с}" />
+                </Grid>
+
+                <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr ClipFadeOutHint}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="*" MinWidth="60" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Path Data="{StaticResource Icon.FadeOut}" Style="{StaticResource FieldIcon}" />
+                        <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr ClipFadeOut}" />
+                    </StackPanel>
+
+                    <Slider Grid.Column="1"
+                            IsSnapToTickEnabled="True"
+                            Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                            Minimum="0"
+                            TickFrequency="0.1"
+                            Value="{Binding FadeOutSeconds}" />
+
+                    <TextBlock Grid.Column="2"
+                               Style="{StaticResource Inspector.Value}"
+                               Text="{Binding FadeOutSeconds, StringFormat={}{0:0.0} с}" />
+                </Grid>
+
+                <Border Style="{StaticResource Inspector.Separator}" />
+
+                <!-- Кадр: нужен редко, поэтому свёрнут. Заголовок стоит вплотную
+                     над своими полями, и раскрытие видно там же, где нажали. -->
+                <ToggleButton x:Name="FrameToggle"
+                              Content="{loc:Tr SectionFrame}"
+                              Style="{StaticResource Inspector.SectionToggle}"
+                              ToolTip="{loc:Tr SectionFrameHint}" />
+
+                <StackPanel Margin="0,6,0,0"
+                            Visibility="{Binding IsChecked, ElementName=FrameToggle,
+                                Converter={StaticResource BoolToVisibility}}">
+                    <Grid Style="{StaticResource FieldGrid}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="*" MinWidth="60" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Style="{StaticResource Inspector.Label}"
+                                   Text="{loc:Tr FieldRotation}" />
+
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Left" Orientation="Horizontal">
+                            <Button Command="{Binding RotateLeftCommand}"
+                                    Style="{StaticResource IconButton}"
+                                    ToolTip="{loc:Tr RotateLeft}">
+                                <Path Data="{StaticResource Icon.RotateLeft}" Style="{StaticResource ToolIconStroke}" />
+                            </Button>
+                            <Button Margin="4,0,0,0"
+                                    Command="{Binding RotateRightCommand}"
+                                    Style="{StaticResource IconButton}"
+                                    ToolTip="{loc:Tr RotateRight}">
+                                <Path Data="{StaticResource Icon.RotateRight}" Style="{StaticResource ToolIconStroke}" />
+                            </Button>
+                            <Button Margin="4,0,0,0"
+                                    Command="{Binding RotateHalfTurnCommand}"
+                                    Style="{StaticResource IconButton}"
+                                    ToolTip="{loc:Tr RotateHalfTurn}">
+                                <Path Data="{StaticResource Icon.RotateHalf}" Style="{StaticResource ToolIconStroke}" />
+                            </Button>
                         </StackPanel>
-                    </ToggleButton>
-                </WrapPanel>
 
-                <!-- Кадрирование прячется: нужно редко, а места занимает как всё остальное -->
-                <WrapPanel Margin="0,8,0,0"
-                           Orientation="Horizontal"
-                           Visibility="{Binding IsChecked, ElementName=FrameToggle,
-                               Converter={StaticResource BoolToVisibility}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Muted}" Text="{loc:Tr FieldZoom}" />
-                        <Slider Width="110"
-                                Margin="8,0,0,0"
-                                VerticalAlignment="Center"
+                        <TextBlock Grid.Column="2"
+                                   Style="{StaticResource Inspector.Value}"
+                                   Text="{Binding RotationText}" />
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldGrid}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="*" MinWidth="60" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Style="{StaticResource Inspector.Label}"
+                                   Text="{loc:Tr FieldZoom}" />
+
+                        <Slider Grid.Column="1"
                                 IsSnapToTickEnabled="True"
                                 Maximum="300"
                                 Minimum="50"
                                 TickFrequency="5"
                                 Value="{Binding ZoomPercent}" />
-                        <TextBlock Width="44"
-                                   Margin="6,0,0,0"
-                                   VerticalAlignment="Center"
-                                   Style="{StaticResource Text.Muted}"
-                                   Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
-                    </StackPanel>
 
-                    <StackPanel Margin="12,0,0,0" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
-                                   Style="{StaticResource Text.Muted}"
+                        <TextBlock Grid.Column="2"
+                                   Style="{StaticResource Inspector.Value}"
+                                   Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldGrid}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="*" MinWidth="60" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Style="{StaticResource Inspector.Label}"
                                    Text="{loc:Tr FieldOffsetX}" />
-                        <Slider Width="90"
-                                Margin="8,0,0,0"
-                                VerticalAlignment="Center"
+
+                        <Slider Grid.Column="1"
                                 Maximum="50"
                                 Minimum="-50"
                                 TickFrequency="5"
                                 Value="{Binding OffsetXPercent}" />
-                    </StackPanel>
 
-                    <StackPanel Margin="12,0,0,0" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
-                                   Style="{StaticResource Text.Muted}"
+                        <TextBlock Grid.Column="2"
+                                   Style="{StaticResource Inspector.Value}"
+                                   Text="{Binding OffsetXPercent, StringFormat={}{0:0}%}" />
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldGrid}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="*" MinWidth="60" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Style="{StaticResource Inspector.Label}"
                                    Text="{loc:Tr FieldOffsetY}" />
-                        <Slider Width="90"
-                                Margin="8,0,0,0"
-                                VerticalAlignment="Center"
+
+                        <Slider Grid.Column="1"
                                 Maximum="50"
                                 Minimum="-50"
                                 TickFrequency="5"
                                 Value="{Binding OffsetYPercent}" />
-                    </StackPanel>
 
-                    <Button Margin="12,0,0,0"
+                        <TextBlock Grid.Column="2"
+                                   Style="{StaticResource Inspector.Value}"
+                                   Text="{Binding OffsetYPercent, StringFormat={}{0:0}%}" />
+                    </Grid>
+
+                    <Button Margin="0,6,0,0"
+                            HorizontalAlignment="Left"
                             Command="{Binding ResetTransformCommand}"
                             Content="{loc:Tr ResetTransform}"
                             Style="{StaticResource Button.Ghost}" />
-                </WrapPanel>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
     </Border>

@@ -6,6 +6,52 @@ namespace MeowsCut.App.ViewModels;
 /// Пункт списка разрешений. Отдельный тип нужен, чтобы в списке была подпись
 /// для человека, а наружу уходила модель ядра.
 /// </summary>
+/// <summary>
+/// Формат кадра ролика. Пропорции, а не размер: длинную сторону сохраняет
+/// сама последовательность, чтобы ролик из 4K не падал молча до 1080.
+/// </summary>
+public sealed record SequenceFormatOption(string Title, double? Aspect)
+{
+    public static readonly SequenceFormatOption Original = new("Как в исходнике", null);
+
+    public static readonly IReadOnlyList<SequenceFormatOption> All =
+    [
+        Original,
+        new("16:9 · горизонтальный", 16d / 9d),
+        new("9:16 · вертикальный", 9d / 16d),
+        new("1:1 · квадрат", 1d),
+        new("4:5 · лента", 4d / 5d)
+    ];
+
+    /// <summary>
+    /// Какой пункт списка отвечает нынешнему формату.
+    /// </summary>
+    /// <remarks>
+    /// Сравнение приблизительное: 1080×1920 и 1082×1920 — один и тот же
+    /// вертикальный формат, и подсвечен в списке должен быть он, а не «как
+    /// в исходнике» из-за округления на два пикселя.
+    /// </remarks>
+    public static SequenceFormatOption For(Core.Editing.Timeline.SequenceFormat format)
+    {
+        if (!format.IsCustom)
+        {
+            return Original;
+        }
+
+        foreach (var option in All)
+        {
+            if (option.Aspect is { } aspect && Math.Abs(aspect - format.AspectRatio) < 0.01)
+            {
+                return option;
+            }
+        }
+
+        return Original;
+    }
+
+    public override string ToString() => Title;
+}
+
 public sealed record ResolutionOption(string Title, int? TargetHeight, bool IsCustom = false)
 {
     public static readonly ResolutionOption Original = new("Как в исходнике", null);

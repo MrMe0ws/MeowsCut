@@ -71,7 +71,17 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         var stages = new List<ExportStage>();
         var cleanup = new List<string>();
 
-        if (!streamCopy && CanConcatWithoutReencoding(project, settings))
+        if (settings.IsAudioOnly)
+        {
+            stages.Add(new ExportStage(
+                StageKind.Transcode,
+                "Сборка звука",
+                BuildTranscodeArguments(project, effective, capabilities, partPath, pass: null, logPrefix: null),
+                Weight: 1d,
+                sequence.Duration,
+                partPath));
+        }
+        else if (!streamCopy && CanConcatWithoutReencoding(project, settings))
         {
             stages.AddRange(BuildConcatStages(project, settings, partPath, cleanup));
         }
@@ -193,6 +203,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 
     private static bool NeedsTwoPasses(ExportSettings settings, bool streamCopy) =>
         !streamCopy &&
+        !settings.IsAudioOnly &&
         (settings.Video.Advanced.TwoPass || settings.Video.RateControl is RateControl.TargetSize) &&
         settings.Video.Codec != VideoCodec.Copy;
 
@@ -207,7 +218,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
     /// </remarks>
     private static bool CanConcatWithoutReencoding(Project project, ExportSettings settings)
     {
-        if (!settings.PreferStreamCopy)
+        if (settings.IsAudioOnly || !settings.PreferStreamCopy)
         {
             return false;
         }
@@ -219,8 +230,9 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         }
 
         // Демультиплексор concat склеивает части встык и о пустых местах не знает:
-        // зазор просто исчез бы, а ролик стал короче задуманного.
-        if (sequence.HasGaps || sequence.HasImages || sequence.HasVideoTail)
+        // зазор просто исчез бы, а ролик стал короче задуманного. Надписи он
+        // тоже не нарисует — их рисует граф фильтров.
+        if (sequence.HasGaps || sequence.HasImages || sequence.HasVideoTail || sequence.HasTitles)
         {
             return false;
         }
@@ -231,7 +243,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             return false;
         }
 
-        if (Math.Abs(settings.Audio.MasterVolume - 1d) > 0.0001)
+        if (settings.Audio.NormalizeLoudness || Math.Abs(settings.Audio.MasterVolume - 1d) > 0.0001)
         {
             return false;
         }
@@ -243,6 +255,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             if (clip.SourceId != firstSourceId ||
                 clip.IsSpeedChanged ||
                 !clip.Transform.IsIdentity ||
+                clip.HasFades ||
                 Math.Abs(clip.Audio.Volume - 1d) > 0.0001 ||
                 !clip.Audio.Enabled)
             {
@@ -412,6 +425,13 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
     /// </summary>
     private static bool CanStreamCopy(Project project, ExportSettings settings, List<PlanWarning> warnings)
     {
+        // Звуковой файл всегда собирается заново: копировать нечего, картинку
+        // надо отбросить, а куски дорожки — склеить.
+        if (settings.IsAudioOnly)
+        {
+            return false;
+        }
+
         if (settings.Video.Codec != VideoCodec.Copy && !settings.PreferStreamCopy)
         {
             return false;
@@ -431,8 +451,8 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             return false;
         }
 
-        // Вшитые субтитры существуют только после перерисовки кадра.
-        if (settings.Subtitles.IsBurnedIn)
+        // Вшитые субтитры и надписи существуют только после перерисовки кадра.
+        if (settings.Subtitles.IsBurnedIn || sequence.HasTitles)
         {
             return false;
         }
@@ -449,7 +469,9 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
 
         var clip = sequence.Video.Clips[0];
 
-        if (clip.IsSpeedChanged || !clip.Transform.IsIdentity)
+        // Затухание и поворот живут только в перерисованном кадре: скопированный
+        // поток отдал бы файл без них — молча не тот результат, что на доске.
+        if (clip.IsSpeedChanged || !clip.Transform.IsIdentity || clip.HasFades)
         {
             return false;
         }
@@ -460,7 +482,8 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             return false;
         }
 
-        if (Math.Abs(settings.Audio.MasterVolume - 1d) > 0.0001 ||
+        if (settings.Audio.NormalizeLoudness ||
+            Math.Abs(settings.Audio.MasterVolume - 1d) > 0.0001 ||
             Math.Abs(clip.Audio.Volume - 1d) > 0.0001)
         {
             return false;
@@ -557,6 +580,13 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             : settings;
 
         _graphBuilder.SupportsPitchShift = capabilities.HasFilter("rubberband");
+        _graphBuilder.SupportsTitles = capabilities.HasFilter(TitleFilter.FilterName);
+
+        // Текст надписей едет в ffmpeg файлами: в строке фильтра апостроф
+        // и двоеточие рвут разбор, а в файле любые символы обычные.
+        _graphBuilder.TitleTextFiles = _graphBuilder.SupportsTitles
+            ? Temp.TitleTextStore.Materialize(sequence.Titles, paths.TempDirectory)
+            : new Dictionary<TitleId, string>();
 
         var graph = _graphBuilder.Build(sequence, indexBySource, graphSettings);
 
@@ -584,7 +614,11 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         }
 
         builder.FilterComplex(graph.Text);
-        builder.Map($"[{graph.VideoLabel}]");
+
+        if (graph.VideoLabel is { } videoLabel)
+        {
+            builder.Map($"[{videoLabel}]");
+        }
 
         // В первом проходе звук не нужен: он только считает статистику картинки.
         var withAudio = graph.HasAudio && pass != 1;
@@ -600,7 +634,16 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             builder.Option("-c:s", SubtitleFormats.SubtitleCodec(settings.Container)!);
         }
 
-        AppendVideoOptions(builder, settings, capabilities);
+        if (settings.IsAudioOnly)
+        {
+            // Картинку отбрасываем явно: без -vn ffmpeg попробует положить в mp3
+            // обложку из входного файла и споткнётся о неподходящий поток.
+            builder.NoVideo();
+        }
+        else
+        {
+            AppendVideoOptions(builder, settings, capabilities);
+        }
 
         if (withAudio)
         {
@@ -751,6 +794,14 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
                     : "Выбранный аппаратный энкодер недоступен — кодирует процессор."));
         }
 
+        // Молча выбросить надписи нельзя: человек их набрал и ждёт увидеть.
+        if (sequence.HasTitles && !capabilities.HasFilter(TitleFilter.FilterName))
+        {
+            warnings.Add(new PlanWarning(
+                PlanWarningKind.TitlesUnsupported,
+                "Эта сборка ffmpeg не умеет рисовать надписи (нет фильтра drawtext) — они не попадут в файл."));
+        }
+
         if (settings.Video.Resolution.IsUpscale(sequence.Format.Size))
         {
             warnings.Add(new PlanWarning(
@@ -837,7 +888,7 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             };
         }
 
-        var audioEnabled = settings.Audio.Enabled && sequence.HasAudio;
+        var audioEnabled = settings.Audio.Enabled && sequence.HasAnyAudio;
         var audioBitrate = audioEnabled ? settings.Audio.BitrateKbps * 1000L : 0L;
 
         var audioLabel = audioEnabled
@@ -849,6 +900,24 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
         var codecLabel = streamCopy
             ? $"{sourceVideo?.CodecName ?? "как в исходнике"} (копирование)"
             : settings.Video.Codec.DisplayName();
+
+        // Звуковой файл: разрешение и битрейт картинки в сводке были бы обещанием
+        // того, чего в файле не будет.
+        if (settings.IsAudioOnly)
+        {
+            return new ExportSummary(
+                FrameSize.Empty,
+                Fps: 0d,
+                "без картинки",
+                VideoBitrateLabel: "—",
+                audioLabel,
+                sequence.Duration,
+                sequence.ClipCount,
+                // Ноль, а не «неизвестно»: картинки в файле нет, и её вклад
+                // в размер точно равен нулю — оценка по звуку остаётся честной.
+                OutputSizeEstimator.Estimate(0L, audioBitrate, sequence.Duration),
+                IsStreamCopy: false);
+        }
 
         return new ExportSummary(
             resolution,

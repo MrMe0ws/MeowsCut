@@ -45,22 +45,28 @@
 
 ## Структура решения
 
+Дерево ниже — то, что лежит в репозитории сейчас. Типы сгруппированы по файлам:
+мелкие записи одной темы живут вместе (`Formats.cs` — контейнеры и кодеки,
+`JobContracts.cs` — очередь), а не каждая в своём файле. Правило «один файл —
+один тип» из `CLAUDE.md` про крупные классы, а не про пачку `record`-ов в три строки.
+
 ```
 MeowsCut/
 ├─ MeowsCut.sln
 ├─ Directory.Build.props          # общие свойства: nullable, LangVersion, анализаторы
-├─ .editorconfig
-├─ global.json                    # фиксация версии SDK
+├─ global.json                    # линейка SDK 8.0 (без привязки к feature band)
+├─ CLAUDE.md                      # правила проекта для агента
 ├─ docs/                          # эта документация
-├─ assets/                        # иконки, логотип, шрифты
-├─ tools/                         # скрипты: загрузка ffmpeg для dev, сборка installer
+├─ tools/                         # get-ffmpeg.ps1, publish-portable.ps1,
+│                                 # build-installer.ps1, installer/
 ├─ src/
 │  ├─ MeowsCut.Core/
 │  ├─ MeowsCut.Ffmpeg/
 │  └─ MeowsCut.App/
 └─ tests/
    ├─ MeowsCut.Core.Tests/
-   └─ MeowsCut.Ffmpeg.Tests/
+   ├─ MeowsCut.Ffmpeg.Tests/      # есть интеграционные на настоящем ffmpeg
+   └─ MeowsCut.App.Tests/
 ```
 
 ### src/MeowsCut.Core
@@ -68,46 +74,48 @@ MeowsCut/
 ```
 MeowsCut.Core/
 ├─ Media/                 # что прочитали из файла
-│   ├─ MediaInfo.cs, VideoStreamInfo.cs, AudioStreamInfo.cs, ContainerInfo.cs
-│   ├─ Rational.cs, MediaTime.cs, TimeRange.cs, FrameSize.cs
-│   └─ MediaCapabilities.cs           # какие энкодеры доступны в текущем ffmpeg
-├─ Editing/               # доска монтажа: последовательность клипов
-│   ├─ Project.cs, MediaSource.cs, SourceId.cs, ClipId.cs
-│   ├─ Timeline/  Sequence.cs, VideoTrack.cs, Clip.cs, ClipAudio.cs, SequenceFormat.cs
-│   ├─ Commands/  IEditCommand.cs, SplitClipCommand.cs, RemoveClipCommand.cs,
-│   │             TrimClipEdgeCommand.cs, MoveClipCommand.cs, SetClipSpeedCommand.cs,
-│   │             SetClipAudioCommand.cs, AppendClipCommand.cs, RemoveRangeCommand.cs
-│   └─ History/   EditHistory.cs, SequenceChangedEventArgs.cs
+│   ├─ MediaInfo.cs, MediaStreams.cs (Video/AudioStreamInfo, ContainerInfo, SubtitleStreamInfo)
+│   ├─ Rational.cs, TimeRange.cs, FrameSize.cs
+│   ├─ MediaFileTypes.cs             # какие расширения считаем видео, звуком, картинкой
+│   └─ MediaCapabilities.cs          # какие энкодеры доступны в текущем ffmpeg
+├─ Editing/               # доска монтажа
+│   ├─ Project.cs, MediaSource.cs, Identifiers.cs (SourceId, ClipId, AudioClipId, TrackId)
+│   ├─ SilenceTrimmer.cs              # вырезание пауз по найденной тишине (ADR-36)
+│   ├─ Timeline/  Sequence.cs (+ SequenceFormat, PlacedClip), VideoTrack.cs, Clip.cs,
+│   │             ClipSettings.cs (ClipAudio, ClipTransform), AudioTrack.cs, AudioClip.cs,
+│   │             TitleClip.cs (+ TitleId, TitleAnchor)
+│   ├─ Commands/  IEditCommand.cs, SplitAndRemoveCommands.cs, TrimClipEdgeCommand.cs,
+│   │             MoveClipInTimeCommand.cs, ArrangeClipCommands.cs, ClipPropertyCommands.cs,
+│   │             AudioClipCommands.cs, AudioTrackCommands.cs, TitleCommands.cs,
+│   │             ReplaceSequenceCommand.cs
+│   └─ History/   EditHistory.cs      # единственный вход для изменения последовательности
 ├─ Export/                # во что рендерим
-│   ├─ ExportSettings.cs, VideoSettings.cs, AudioSettings.cs
-│   ├─ RateControl.cs, ResolutionSpec.cs, FrameRateSpec.cs
-│   ├─ ContainerFormat.cs, VideoCodec.cs, AudioCodec.cs
-│   ├─ ExportRequest.cs, ExportSummary.cs, OutputSizeEstimator.cs
-│   └─ CompatibilityMatrix.cs         # какой кодек допустим в каком контейнере
+│   ├─ ExportSettings.cs, OutputSpecs.cs (ResolutionSpec, FrameRateSpec, AudioSettings)
+│   ├─ Formats.cs (ContainerFormat, VideoCodec, AudioCodec), RateControl.cs
+│   ├─ CompatibilityMatrix.cs        # какой кодек допустим в каком контейнере
+│   ├─ HardwareAcceleration.cs, SubtitleSettings.cs
+│   └─ ExportSummary.cs
 ├─ Presets/
-│   ├─ PresetDefinition.cs, PresetGroup.cs, PresetConstraints.cs
-│   ├─ IPresetProvider.cs, IPresetApplier.cs, IPresetValidator.cs
-│   └─ PresetApplyResult.cs, PresetValidationResult.cs
+│   ├─ PresetModels.cs, PresetContracts.cs, PresetResults.cs
+│   ├─ JsonPresetProvider.cs, PresetApplier.cs, PresetValidator.cs
+│   └─ Json/PresetJsonModels.cs      # лимиты площадок живут в JSON, а не в коде
 ├─ Processing/            # план работ, без знания о ffmpeg
-│   ├─ ExportPlan.cs, ExportStage.cs, StageKind.cs
-│   └─ IExportPlanner.cs
+│   └─ ExportPlan.cs (ExportStage, StageKind, IExportPlanner)
+├─ Projects/              # черновик .meows
+│   ├─ IProjectStore.cs, JsonProjectStore.cs, AutosaveState.cs
+│   └─ ProjectDocument.cs, ProjectDocumentReader.cs, ProjectDocumentWriter.cs
 ├─ Jobs/
-│   ├─ IJobQueue.cs, JobDescriptor.cs, JobHandle.cs
-│   ├─ JobStatus.cs, JobProgress.cs, JobResult.cs
-│   └─ IJobRunner.cs
+│   ├─ JobContracts.cs (IJobQueue, JobDescriptor, JobProgress, JobResult, JobStatus)
+│   ├─ JobQueue.cs, JobHandle.cs
 ├─ Abstractions/
-│   ├─ IMediaProbe.cs, IExportEngine.cs, IThumbnailService.cs
-│   ├─ IMediaToolset.cs, IMediaToolsetLocator.cs, IToolsetHealthCheck.cs
-│   ├─ ITempWorkspaceFactory.cs, ITempWorkspace.cs
-│   └─ IFileSystem.cs, IClock.cs
+│   ├─ IMediaProbe.cs, IExportEngine.cs, IThumbnailService.cs, IWaveformService.cs
+│   ├─ ISilenceDetector.cs (+ SilenceOptions)
+│   └─ IMediaToolset.cs (+ IMediaToolsetLocator, IMediaToolsetProvider, ITempWorkspace…)
 ├─ Diagnostics/
-│   ├─ MeowsCutException.cs + наследники
-│   ├─ AppError.cs, ErrorCode.cs, IErrorPresenter.cs
-│   └─ Result.cs, Result{T}.cs
-├─ Configuration/
-│   ├─ AppSettings.cs, IAppSettingsStore.cs, AppPaths.cs
-└─ Validation/
-    ├─ ProjectValidator.cs, ExportSettingsValidator.cs
+│   ├─ MeowsCutException.cs (+ наследники, AppError, ErrorCode)
+│   └─ ErrorPresenter.cs
+└─ Configuration/
+    ├─ AppSettings.cs, IAppSettingsStore.cs, JsonAppSettingsStore.cs, AppPaths.cs
 ```
 
 ### src/MeowsCut.Ffmpeg
@@ -116,88 +124,72 @@ MeowsCut.Core/
 MeowsCut.Ffmpeg/
 ├─ Toolset/
 │   ├─ FfmpegToolsetLocator.cs        # порядок поиска бинарников
-│   ├─ FfmpegToolset.cs               # пути + версия + возможности
-│   ├─ EncoderProbe.cs                # ffmpeg -encoders / -hwaccels → MediaCapabilities
-│   └─ FfmpegHealthCheck.cs           # старт приложения: есть ли, работает ли
+│   ├─ MediaToolsetProvider.cs        # найденный набор, доступный остальным
+│   └─ EncoderProbe.cs                # пробный кадр на каждый энкодер → MediaCapabilities
 ├─ Execution/
 │   ├─ IProcessRunner.cs, ProcessRunner.cs
-│   ├─ ProcessRequest.cs, ProcessResult.cs
-│   ├─ StdErrRingBuffer.cs            # последние N строк для диагностики
-│   └─ ProcessTerminator.cs           # q в stdin → grace period → Kill(entireProcessTree)
+│   └─ ProcessContracts.cs            # запрос, результат, хвост stderr
 ├─ Arguments/
-│   ├─ FfmpegArgumentBuilder.cs       # типобезопасная сборка IReadOnlyList<string>
-│   ├─ FilterGraphBuilder.cs, FilterChain.cs, FilterNode.cs
-│   ├─ FilterValueEscaper.cs          # экранирование внутри filter_complex
-│   └─ EncoderCatalog.cs              # VideoCodec → энкодер + профиль/preset/pix_fmt
+│   ├─ FfmpegArgumentBuilder.cs       # только ArgumentList, никакой конкатенации
+│   ├─ FilterGraphBuilder.cs, SpeedFilter.cs, SubtitleFilter.cs, AudioMixBuilder.cs
+│   ├─ TitleFilter.cs                 # drawtext: текст едет файлом (ADR-35)
+│   ├─ EncoderCatalog.cs              # VideoCodec → энкодер + профиль/preset/pix_fmt
+│   └─ HardwareEncoders.cs            # nvenc / qsv / amf
 ├─ Probing/
-│   ├─ FfprobeMediaProbe.cs
-│   ├─ Json/FfprobeResponse.cs (+ Stream/Format DTO)
-│   └─ MediaInfoMapper.cs
+│   ├─ FfprobeMediaProbe.cs, MediaInfoMapper.cs, FfmpegSilenceDetector.cs
+│   └─ Json/FfprobeJsonModels.cs
 ├─ Planning/
-│   ├─ FfmpegExportPlanner.cs         # ExportRequest → ExportPlan
-│   └─ Strategies/
-│       ├─ StreamCopyTrimStrategy.cs
-│       ├─ FilterGraphSegmentsStrategy.cs
-│       ├─ ConcatDemuxerStrategy.cs
-│       ├─ SpeedStrategy.cs
-│       └─ ScaleFpsStrategy.cs
-├─ Encoding/
-│   ├─ FfmpegExportEngine.cs          # выполняет ExportPlan стадия за стадией
-│   └─ TwoPassRunner.cs               # для целевого размера (стикеры)
+│   └─ FfmpegExportPlanner.cs         # ExportRequest → ExportPlan (стратегии — методы внутри)
+├─ Rendering/
+│   └─ FfmpegExportEngine.cs          # выполняет ExportPlan стадия за стадией
 ├─ Progress/
-│   ├─ FfmpegProgressReader.cs        # -progress pipe:1 → key=value
-│   ├─ ProgressSnapshot.cs, EtaEstimator.cs
-│   └─ StageProgressAggregator.cs     # веса стадий → общий процент
+│   ├─ FfmpegProgressParser.cs        # -progress pipe:1 → key=value
+│   └─ EtaEstimator.cs
 ├─ Temp/
-│   ├─ TempWorkspaceFactory.cs, TempWorkspace.cs
-│   ├─ ConcatListWriter.cs
-│   └─ OrphanTempCleaner.cs
+│   ├─ TempWorkspace.cs (+ TempWorkspaceFactory), ConcatListWriter.cs, TitleTextStore.cs
 └─ Thumbnails/
-    ├─ FfmpegThumbnailService.cs, ThumbnailCache.cs
+    ├─ FfmpegThumbnailService.cs, FfmpegWaveformService.cs
 ```
 
 ### src/MeowsCut.App
 
 ```
 MeowsCut.App/
-├─ App.xaml / App.xaml.cs             # Generic Host, DI, глобальный обработчик исключений
-├─ Composition/
-│   ├─ ServiceRegistration.cs         # AddCore(), AddFfmpeg(), AddUi()
-│   └─ ToolRegistration.cs            # регистрация инструментов редактора
+├─ App.xaml / App.xaml.cs             # Generic Host, DI, Serilog, глобальный обработчик
+├─ Composition/ServiceRegistration.cs # AddMeowsCutCore / AddMeowsCutFfmpeg / AddMeowsCutUi
 ├─ Views/
-│   ├─ ShellWindow.xaml               # рамка приложения
-│   ├─ Panes/  EmptyStateView, SourceBinView, PreviewView, TimelineView,
-│   │          InspectorView, ExportPanelView, ExportProgressView, ExportDoneView
-│   ├─ Inspector/  ClipPropertiesView, VideoSettingsView, AudioSettingsView,
-│   │              AdvancedSettingsView, PresetsView
-│   └─ Dialogs/ SettingsWindow, FfmpegSetupWindow, ErrorDialog
+│   ├─ ShellWindow.xaml               # строка меню вместо заголовка окна, доска, статус
+│   ├─ Panes/  PreviewPaneView, TimelinePaneView, SourcesView, InspectorView,
+│   │          AudioInspectorView, TitleInspectorView, PresetsView, ExportPanelView
+│   └─ Dialogs/ ExportWindow, SettingsWindow, ErrorDialog, ConfirmDialog, SilenceWindow
 ├─ ViewModels/
-│   ├─ ShellViewModel.cs, ProjectViewModel.cs
-│   ├─ SourceBinViewModel.cs, PreviewViewModel.cs
-│   ├─ TimelineViewModel.cs, ClipViewModel.cs, InspectorViewModel.cs
-│   └─ ExportViewModel.cs, PresetsViewModel.cs, SettingsViewModel.cs, FfmpegSetupViewModel.cs
+│   ├─ ShellViewModel.cs + .Project (черновик) + .Silence (вырезание пауз)
+│   ├─ TimelineViewModel.cs + .Audio / .Clipboard / .Pointer
+│   ├─ ClipViewModel.cs, PreviewViewModel.cs, SourcesViewModel.cs
+│   ├─ InspectorViewModel.cs, AudioInspectorViewModel.cs, TitleInspectorViewModel.cs
+│   ├─ PreviewTitle.cs, MediaSummaryViewModel.cs
+│   └─ ExportViewModel.cs, ExportOptions.cs, PresetsViewModel.cs, SettingsViewModel.cs
 ├─ Playback/
-│   ├─ IMediaPlayer.cs, MediaElementPlayer.cs
-│   └─ SequencePlaybackController.cs, PlayheadTimer.cs
+│   ├─ IMediaPlayer.cs, MediaElementPlayer.cs, SequencePlaybackController.cs
+│   └─ AudioLanePlayer.cs, AudioMixPreview.cs
 ├─ Timeline/                          # логика доски, отделённая от отрисовки
-│   ├─ TimelineTool.cs (Select | Razor | Hand | Zoom)
 │   ├─ TimelineMetrics.cs             # время ↔ пиксели, зум, скролл
-│   ├─ SnapEngine.cs, HitTester.cs, DragSession.cs
+│   ├─ TimelineLayout.cs, TimelineHitTester.cs, SnapEngine.cs, ToolCursors.cs
+│   └─ TimelineThumbnailLoader.cs, ThumbnailImageCache.cs, AudioWaveformCache.cs
 ├─ Controls/
-│   ├─ TimelineControl.cs, ClipRenderer.cs, WaveformRenderer.cs, PlayheadAdorner.cs
-│   └─ TimecodeBox.cs, DropZone.cs, LabeledSlider.cs, TransportBar.cs
-├─ Localization/
-│   ├─ Strings.ru.resx, Strings.en.resx, ILocalizer.cs
+│   └─ TimelineControl.cs, FramingHost.cs, AspectFrame.cs, SmoothScroll.cs,
+│      SliderInteraction.cs
+├─ Theming/  ThemeManager.cs, ThemeOption.cs
+├─ Localization/  Strings.resx, Strings.cs, LocalizationManager.cs (loc:Tr в разметке)
 ├─ Services/
-│   ├─ IDialogService / DialogService
-│   ├─ IFileDialogService / FileDialogService
-│   ├─ IShellIntegration / ShellIntegration      # открыть файл / показать в проводнике
-│   ├─ IUiDispatcher / UiDispatcher
-│   └─ RecentFilesService.cs, DragDropFileValidator.cs
-├─ Converters/, Behaviors/
+│   ├─ UiServices.cs (IDialogService, IFileDialogService, IUiDispatcher, DragDropFileValidator)
+│   └─ ShellIntegration.cs, CommandLine.cs, WindowSnapshot.cs, AutosaveService.cs
+├─ Formatting/  DisplayFormat.cs, SpeedScale.cs
+├─ Converters/CommonConverters.cs
+├─ Assets/  app.ico, logo.png
 └─ Resources/
-    ├─ Theme.Dark.xaml, Theme.Light.xaml, Colors.xaml
-    └─ Typography.xaml, Controls.xaml, Icons.xaml
+    ├─ Palette.Dark.xaml, Palette.Light.xaml   # подменяются на лету (ADR-25)
+    └─ Theme.xaml, Controls.xaml, Menu.xaml, Icons.xaml, Busy.xaml, Templates.xaml
 ```
 
 ## Поток данных (главный сценарий)

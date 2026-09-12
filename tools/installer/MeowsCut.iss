@@ -76,9 +76,13 @@ Filename: "{app}\{#AppExeName}"; Description: "Запустить Meows Cut"; \
     Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
-; Логи и кэш кадров создаются приложением уже после установки, и без этого
-; после удаления в профиле остаётся мусор. Пресеты пользователя не трогаем:
-; их писали руками, и вернуть их будет неоткуда.
+; Логи и кэш создаются приложением уже после установки, и без этого после
+; удаления в профиле остаётся мусор. Имена папок — те же, что в AppPaths:
+; разойдясь с ними, уборка молча перестаёт что-либо убирать (так и было
+; с кадрами: здесь стояло «thumbnails», а приложение пишет в «thumbs»).
+; Пресеты и черновики не трогаем: их делали руками.
 Type: filesandordirs; Name: "{localappdata}\MeowsCut\logs"
-Type: filesandordirs; Name: "{localappdata}\MeowsCut\thumbnails"
+Type: filesandordirs; Name: "{localappdata}\MeowsCut\thumbs"
+Type: filesandordirs; Name: "{localappdata}\MeowsCut\waveforms"
+Type: filesandordirs; Name: "{localappdata}\MeowsCut\autosave"
 Type: filesandordirs; Name: "{localappdata}\MeowsCut\temp"
