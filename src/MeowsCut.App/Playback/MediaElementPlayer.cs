@@ -69,6 +69,16 @@ public sealed class MediaElementPlayer : IMediaPlayer
         set => _element.Volume = Math.Clamp(value, 0d, 1d);
     }
 
+    /// <summary>
+    /// Звук выключен поверх громкости клипа. Громкость задаёт контроллер на каждом
+    /// клипе, поэтому заглушить предпросмотр на время записи можно только так.
+    /// </summary>
+    public bool IsMuted
+    {
+        get => _element.IsMuted;
+        set => _element.IsMuted = value;
+    }
+
     public bool IsPlaying { get; private set; }
 
     public event EventHandler? Opened;

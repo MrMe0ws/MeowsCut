@@ -88,6 +88,7 @@ public sealed partial class ShellViewModel : ObservableObject
         AudioInspectorViewModel audioInspector,
         TitleInspectorViewModel titleInspector,
         PresetsViewModel presets,
+        VoiceoverViewModel voiceover,
         TimelineThumbnailLoader thumbnailLoader,
         IErrorPresenter errorPresenter,
         IProjectStore projectStore,
@@ -116,6 +117,8 @@ public sealed partial class ShellViewModel : ObservableObject
         TitleInspector = titleInspector;
         Presets = presets;
         _logger = logger;
+
+        AttachVoiceover(voiceover);
 
         // Правка на доске меняет проект: сводку экспорта нужно пересчитать сразу.
         Timeline.SequenceChanged += (_, sequence) =>
@@ -457,6 +460,9 @@ public sealed partial class ShellViewModel : ObservableObject
     [RelayCommand]
     private void CloseMedia()
     {
+        // Незаконченный дубль выбрасывается: класть его уже некуда.
+        _ = Voiceover.AbortAsync();
+
         ProjectPath = null;
         Media = null;
         Project = null;
@@ -514,9 +520,11 @@ public sealed partial class ShellViewModel : ObservableObject
 
     partial void OnIsBusyChanged(bool value) => RefreshRecentFileAvailability();
 
-    /// <summary>Кнопки недавних файлов гаснут вместе с пунктами меню.</summary>
+    /// <summary>Кнопки недавних файлов и записи гаснут вместе с пунктами меню.</summary>
     private void RefreshRecentFileAvailability()
     {
+        Voiceover.RefreshAvailability();
+
         foreach (var file in RecentFiles)
         {
             file.RefreshAvailability();

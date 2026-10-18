@@ -20,6 +20,22 @@ public sealed class AudioMixPreview
 
     private Sequence _sequence = Sequence.Empty;
     private Project? _project;
+    private bool _isMuted;
+
+    /// <summary>Все дорожки молчат — пока пишется озвучка, динамики не должны попадать в микрофон.</summary>
+    public bool IsMuted
+    {
+        get => _isMuted;
+        set
+        {
+            _isMuted = value;
+
+            foreach (var lane in _lanes)
+            {
+                lane.IsMuted = value;
+            }
+        }
+    }
 
     public void Attach(Project project)
     {
@@ -77,7 +93,7 @@ public sealed class AudioMixPreview
     {
         while (_lanes.Count < count)
         {
-            _lanes.Add(new AudioLanePlayer());
+            _lanes.Add(new AudioLanePlayer { IsMuted = _isMuted });
         }
     }
 }

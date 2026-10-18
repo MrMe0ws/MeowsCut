@@ -63,6 +63,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         {
             _playback.Tick();
             _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: false);
+            ReportTick();
         };
 
         _playback.PositionChanged += OnPlaybackPositionChanged;
@@ -357,6 +358,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         _playback.Seek(_timeline.Playhead);
         _audio.Sync(_timeline.Playhead, _playback.IsPlaying, seeked: true);
         RequestFrame();
+        UserSeeked?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>Позицию сдвинуло воспроизведение — двигаем плейхед, не зациклившись.</summary>

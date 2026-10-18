@@ -588,7 +588,13 @@ public sealed class FfmpegExportPlanner(AppPaths paths) : IExportPlanner
             ? Temp.TitleTextStore.Materialize(sequence.Titles, paths.TempDirectory)
             : new Dictionary<TitleId, string>();
 
-        var graph = _graphBuilder.Build(sequence, indexBySource, graphSettings);
+        // Размер кадра — уже с поворотом из метаданных: ffmpeg разворачивает такие
+        // ролики при чтении сам, и склеивать предстоит именно развёрнутые кадры.
+        var sizeBySource = sources.ToDictionary(
+            source => source.Id,
+            source => source.Info.PrimaryVideo?.DisplaySize ?? default);
+
+        var graph = _graphBuilder.Build(sequence, indexBySource, graphSettings, sizeBySource);
 
         var builder = FfmpegArgumentBuilder.Create()
             .HideBanner()

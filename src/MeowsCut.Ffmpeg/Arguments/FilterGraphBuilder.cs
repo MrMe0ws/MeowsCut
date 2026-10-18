@@ -62,10 +62,15 @@ public sealed class FilterGraphBuilder
         new Dictionary<TitleId, string>();
 
     /// <param name="inputIndexBySource">Соответствие источника номеру входа -i.</param>
+    /// <param name="sourceSizes">
+    /// Размер кадра каждого источника. Нужен, чтобы заметить ролики разного размера:
+    /// concat склеивает только одинаковые кадры. Без него размеры считаются равными.
+    /// </param>
     public FilterGraph Build(
         Sequence sequence,
         IReadOnlyDictionary<SourceId, int> inputIndexBySource,
-        ExportSettings settings)
+        ExportSettings settings,
+        IReadOnlyDictionary<SourceId, FrameSize>? sourceSizes = null)
     {
         var clips = sequence.Video.Clips;
 
@@ -95,7 +100,9 @@ public sealed class FilterGraphBuilder
         // заново и параметров источника знать не могут.
         // Поворот и выбранный вручную формат ролика — сюда же: и то и другое
         // разводит размеры кусков, а concat требует их точного совпадения.
-        var normalize = sequence.NeedsUniformFrame;
+        // Ролик другого размера, поставленный вплотную, — тот же случай, что и фотография:
+        // без приведения к кадру проекта concat отказывается склеивать части.
+        var normalize = sequence.NeedsUniformFrame || HasForeignSizes(clips, sourceSizes, sequence.Format.Size);
 
         for (var i = 0; i < clips.Count; i++)
         {
@@ -302,6 +309,27 @@ public sealed class FilterGraphBuilder
         labels.Add(label);
     }
 
+    private static bool HasForeignSizes(
+        IReadOnlyList<Clip> clips,
+        IReadOnlyDictionary<SourceId, FrameSize>? sourceSizes,
+        FrameSize target)
+    {
+        if (sourceSizes is null)
+        {
+            return false;
+        }
+
+        foreach (var clip in clips)
+        {
+            if (sourceSizes.TryGetValue(clip.SourceId, out var size) && !size.IsEmpty && size != target)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Появление из чёрного и уход в чёрное.
     /// </summary>
@@ -356,7 +384,9 @@ public sealed class FilterGraphBuilder
         }
         else
         {
-            chain.Add($"pad=w=iw/{zoom}:h=ih/{zoom}:x=(ow-iw)/2+ow*{dx}:y=(oh-ih)/2+oh*{dy}:color=black");
+            // Знак как у обрезки и в предпросмотре: положительный сдвиг уводит
+            // картинку влево и вверх. С плюсом уменьшенный кадр ехал в обратную сторону.
+            chain.Add($"pad=w=iw/{zoom}:h=ih/{zoom}:x=(ow-iw)/2-ow*{dx}:y=(oh-ih)/2-oh*{dy}:color=black");
         }
     }
 

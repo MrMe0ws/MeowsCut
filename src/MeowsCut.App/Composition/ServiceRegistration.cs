@@ -18,6 +18,7 @@ using MeowsCut.Ffmpeg.Rendering;
 using MeowsCut.Ffmpeg.Temp;
 using MeowsCut.Ffmpeg.Thumbnails;
 using MeowsCut.Ffmpeg.Toolset;
+using MeowsCut.Recording;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MeowsCut.App.Composition;
@@ -59,6 +60,14 @@ public static class ServiceRegistration
         return services;
     }
 
+    /// <summary>Запись с микрофона — отдельный слой, как и ffmpeg (ADR-38).</summary>
+    public static IServiceCollection AddMeowsCutRecording(this IServiceCollection services)
+    {
+        services.AddSingleton<IVoiceRecorder, WasapiVoiceRecorder>();
+
+        return services;
+    }
+
     public static IServiceCollection AddMeowsCutUi(this IServiceCollection services)
     {
         services.AddSingleton<IUiDispatcher>(_ => new UiDispatcher(Application.Current.Dispatcher));
@@ -81,6 +90,7 @@ public static class ServiceRegistration
         services.AddSingleton<TitleInspectorViewModel>();
         services.AddSingleton<ExportViewModel>();
         services.AddSingleton<PresetsViewModel>();
+        services.AddSingleton<VoiceoverViewModel>();
         services.AddSingleton<Func<PresetsViewModel>>(provider => provider.GetRequiredService<PresetsViewModel>);
         services.AddSingleton<Func<ExportViewModel>>(provider => provider.GetRequiredService<ExportViewModel>);
         services.AddSingleton<ShellViewModel>();

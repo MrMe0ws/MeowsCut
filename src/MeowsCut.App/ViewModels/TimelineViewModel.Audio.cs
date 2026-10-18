@@ -14,6 +14,9 @@ namespace MeowsCut.App.ViewModels;
 /// </summary>
 public sealed partial class TimelineViewModel
 {
+    /// <summary>Дорожка прошлого дубля озвучки: следующий дубль ложится туда же.</summary>
+    private AudioTrackId? _lastRecordingTrack;
+
     /// <summary>
     /// Кладёт звук из файла на аудиодорожку, начиная с плейхеда.
     /// </summary>
@@ -47,6 +50,50 @@ public sealed partial class TimelineViewModel
         }
 
         _history.EndMergeGroup();
+    }
+
+    /// <summary>
+    /// Кладёт дубль озвучки туда, где стоял плейхед, когда пошла запись.
+    /// </summary>
+    /// <remarks>
+    /// Дубли идут на одну дорожку «Озвучка», пока на ней есть место, — их потом
+    /// сравнивают и режут вместе. Если место занято (переписали тот же кусок),
+    /// дубль ложится на новую дорожку, а не затирает прошлый.
+    /// </remarks>
+    /// <returns>false, если после выравнивания от записи ничего не осталось.</returns>
+    public bool PlaceRecording(Project project, MediaSource source, TimeSpan start, TimeSpan leadIn)
+    {
+        _project = project;
+
+        if (_history is null || RecordingTake.Create(source, start, leadIn) is not { } clip)
+        {
+            return false;
+        }
+
+        var preferred = _lastRecordingTrack is { } last && Sequence.FindTrack(last) is not null ? last : (AudioTrackId?)null;
+        Execute(new AddRecordingCommand(clip, preferred, AudioTrack.Empty(NextRecordingTrackTitle())));
+        _history.EndMergeGroup();
+
+        if (Sequence.AudioTracks.FirstOrDefault(track => track.Find(clip.Id) is not null) is not { } placed)
+        {
+            return false;
+        }
+
+        _lastRecordingTrack = placed.Id;
+        SelectAudio(placed.Id, clip);
+        Metrics.EnsureVisible(clip.TimelineEnd);
+        RequestRedraw();
+        return true;
+    }
+
+    private string NextRecordingTrackTitle()
+    {
+        var baseName = Localization.Strings.VoiceoverTrackName;
+        var taken = Sequence.AudioTracks.Count(track => track.Title.StartsWith(baseName, StringComparison.CurrentCulture));
+
+        return taken == 0
+            ? baseName
+            : string.Format(System.Globalization.CultureInfo.CurrentUICulture, Localization.Strings.VoiceoverTrackNumbered, taken + 1);
     }
 
     /// <summary>Добавляет пустую дорожку — под неё кладут второй слой звука.</summary>

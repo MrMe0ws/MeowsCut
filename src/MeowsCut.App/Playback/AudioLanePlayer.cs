@@ -103,6 +103,13 @@ public sealed class AudioLanePlayer
         }
     }
 
+    /// <summary>Заглушить дорожку, не трогая её громкость: на время записи озвучки.</summary>
+    public bool IsMuted
+    {
+        get => _player.IsMuted;
+        set => _player.IsMuted = value;
+    }
+
     public void Silence()
     {
         _wantsPlay = false;

@@ -14,7 +14,8 @@ public enum ErrorCode
     NotEnoughDiskSpace,
     TempWorkspaceFailed,
     SettingsFailed,
-    EditOperationFailed
+    EditOperationFailed,
+    RecordingFailed
 }
 
 /// <summary>
@@ -87,3 +88,32 @@ public sealed class EditOperationException(string message)
 /// </summary>
 public sealed class OutputWriteException(string message, Exception? innerException = null)
     : MeowsCutException(ErrorCode.OutputWriteFailed, message, innerException);
+
+/// <summary>Что именно помешало записи с микрофона — от этого зависит совет пользователю.</summary>
+public enum RecordingProblem
+{
+    /// <summary>В системе нет ни одного включённого микрофона.</summary>
+    NoDevice = 0,
+
+    /// <summary>Windows запретила приложениям доступ к микрофону.</summary>
+    AccessDenied,
+
+    /// <summary>Микрофон захвачен другой программой в монопольном режиме.</summary>
+    DeviceBusy,
+
+    /// <summary>Микрофон пропал посреди записи.</summary>
+    DeviceLost,
+
+    /// <summary>Микрофон открылся, но звук от него так и не пришёл.</summary>
+    NoResponse,
+
+    /// <summary>Файл записи не удалось создать или дописать.</summary>
+    FileFailed
+}
+
+/// <summary>Не удалось записать звук с микрофона.</summary>
+public sealed class VoiceRecordingException(RecordingProblem problem, string message, Exception? innerException = null)
+    : MeowsCutException(ErrorCode.RecordingFailed, message, innerException)
+{
+    public RecordingProblem Problem { get; } = problem;
+}

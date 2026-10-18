@@ -181,6 +181,49 @@ public class FilterGraphBuilderTests
     }
 
     [Fact]
+    public void Clip_of_another_size_is_brought_to_the_project_frame()
+    {
+        var wide = Fake.Source(seconds: 10);
+        var square = Fake.Source(seconds: 10, width: 720, height: 720, path: @"C:\видео\квадрат.mp4");
+        var sequence = new Sequence(
+            new VideoTrack([Clip.FromSource(wide), Clip.FromSource(square)]),
+            SequenceFormat.FromMedia(wide.Info));
+
+        var map = new Dictionary<SourceId, int> { [wide.Id] = 0, [square.Id] = 1 };
+        var sizes = new Dictionary<SourceId, FrameSize> { [wide.Id] = new(1920, 1080), [square.Id] = new(720, 720) };
+
+        Builder.Build(sequence, map, ExportSettings.Default, sizes).Text
+            .Should().Contain("[1:v]trim=start=0:end=10,setpts=PTS-STARTPTS,scale=1920:1080");
+    }
+
+    [Fact]
+    public void Clips_of_the_project_size_are_not_rescaled()
+    {
+        var source = Fake.Source(seconds: 10);
+        var sequence = new Sequence(
+            new VideoTrack([Clip.FromSource(source), Clip.FromSource(source)]),
+            SequenceFormat.FromMedia(source.Info));
+
+        var map = new Dictionary<SourceId, int> { [source.Id] = 0 };
+        var sizes = new Dictionary<SourceId, FrameSize> { [source.Id] = new(1920, 1080) };
+
+        Builder.Build(sequence, map, ExportSettings.Default, sizes).Text
+            .Should().NotContain("scale=", "лишнее масштабирование — потерянное время и качество");
+    }
+
+    [Fact]
+    public void Shrunk_frame_moves_the_same_way_as_a_zoomed_one()
+    {
+        var source = Fake.Source(seconds: 10);
+        var clip = Clip.FromSource(source).WithTransform(new ClipTransform(0.5, 0.1, 0.2));
+        var sequence = new Sequence(new VideoTrack([clip]), SequenceFormat.FromMedia(source.Info));
+
+        // Положительный сдвиг уводит картинку влево и вверх и при увеличении,
+        // и при уменьшении — как в предпросмотре.
+        Build(sequence).Text.Should().Contain("x=(ow-iw)/2-ow*0.1:y=(oh-ih)/2-oh*0.2");
+    }
+
+    [Fact]
     public void Graph_never_ends_with_a_stray_separator()
     {
         var source = Fake.Source(seconds: 10);

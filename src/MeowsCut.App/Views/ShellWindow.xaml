@@ -78,6 +78,8 @@
             </KeyBinding.CommandParameter>
         </KeyBinding>
         <KeyBinding Key="Space" Command="{Binding Preview.TogglePlayCommand}" />
+        <KeyBinding Key="R" Command="{Binding Voiceover.ToggleRecordCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding Voiceover.CancelCommand}" />
         <KeyBinding Key="Home" Command="{Binding Preview.GoToStartCommand}" />
         <KeyBinding Key="End" Command="{Binding Preview.GoToEndCommand}" />
     </Window.InputBindings>

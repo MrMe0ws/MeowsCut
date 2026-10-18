@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Запись с микрофона через WASAPI (NAudio). Отдельный проект по той же причине,
+       что и MeowsCut.Ffmpeg: ядро не знает, чем захватывается звук, а интерфейс
+       создаёт реализацию только в Composition/. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>MeowsCut.Recording</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeowsCut.Core\MeowsCut.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MeowsCut.App.Tests" />
+  </ItemGroup>
+
+</Project>

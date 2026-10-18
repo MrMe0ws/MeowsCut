@@ -1,4 +1,5 @@
 using MeowsCut.Core.Diagnostics;
+using MeowsCut.Core.Media;
 
 namespace MeowsCut.Core.Editing.Timeline;
 
@@ -80,6 +81,9 @@ public sealed record AudioTrack(AudioTrackId Id, string Title, IReadOnlyList<Aud
     /// <summary>Кусок, звучащий в этот момент. Пауза между кусками — не ошибка, а тишина.</summary>
     public AudioClip? ClipAt(TimeSpan time) =>
         Clips.FirstOrDefault(clip => clip.TimelineRange.Contains(time));
+
+    /// <summary>Свободен ли отрезок: ни один кусок дорожки его не задевает.</summary>
+    public bool IsFree(TimeRange range) => Clips.All(clip => !clip.TimelineRange.Overlaps(range));
 
     /// <summary>Куски по порядку на таймлайне — так их рисуют и так подают в микшер.</summary>
     public IEnumerable<AudioClip> InTimelineOrder() => Clips.OrderBy(clip => clip.TimelineStart);

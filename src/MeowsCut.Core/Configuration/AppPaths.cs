@@ -42,6 +42,13 @@ public sealed class AppPaths
     /// <summary>Картинки звуковых волн. Отдельно от кадров: чистятся они по-разному.</summary>
     public string WaveformsDirectory => Path.Combine(LocalRoot, "waveforms");
 
+    /// <summary>
+    /// Записи с микрофона для ещё не сохранённого монтажа. Не во временной папке:
+    /// запись — такой же исходник, как видео, и чистить её вместе с кэшем нельзя.
+    /// У сохранённого черновика записи лежат рядом с ним.
+    /// </summary>
+    public string RecordingsDirectory => Path.Combine(LocalRoot, "recordings");
+
     /// <summary>Папка ffmpeg для разработки: бинарники не хранятся в репозитории.</summary>
     public string LocalFfmpegDirectory => Path.Combine(LocalRoot, "ffmpeg");
 

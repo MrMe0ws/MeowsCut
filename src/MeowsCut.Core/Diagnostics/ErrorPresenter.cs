@@ -66,6 +66,13 @@ public sealed class ErrorPresenter : IErrorPresenter
             null,
             null),
 
+        VoiceRecordingException recording => new AppError(
+            ErrorCode.RecordingFailed,
+            "Не удалось записать звук",
+            recording.Message,
+            SuggestFor(recording.Problem),
+            recording.InnerException?.Message),
+
         OperationCanceledException => new AppError(
             ErrorCode.Unknown,
             "Отменено",
@@ -96,6 +103,26 @@ public sealed class ErrorPresenter : IErrorPresenter
             "Попробуйте другой исходный файл.",
 
         _ => "Подробности ниже можно приложить к сообщению об ошибке."
+    };
+
+    private static string? SuggestFor(RecordingProblem problem) => problem switch
+    {
+        RecordingProblem.NoDevice =>
+            "Подключите микрофон или включите его в «Параметры → Система → Звук → Ввод».",
+
+        RecordingProblem.AccessDenied =>
+            "Разрешите доступ: «Параметры → Конфиденциальность → Микрофон» — и для классических приложений тоже.",
+
+        RecordingProblem.DeviceBusy =>
+            "Закройте программу, которая держит микрофон (звонок, запись, стрим), и попробуйте снова.",
+
+        RecordingProblem.DeviceLost =>
+            "Записанное до отключения сохранено. Проверьте разъём или выберите другой микрофон в настройках.",
+
+        RecordingProblem.NoResponse =>
+            "Выберите другой микрофон в настройках или переподключите этот.",
+
+        _ => "Проверьте свободное место на диске и права на папку с записями."
     };
 
     /// <summary>

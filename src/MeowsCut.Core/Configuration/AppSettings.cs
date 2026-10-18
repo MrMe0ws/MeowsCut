@@ -35,6 +35,21 @@ public sealed record AppSettings
 
     public IReadOnlyList<string> RecentFiles { get; init; } = [];
 
+    /// <summary>Микрофон для озвучки. null — системный по умолчанию.</summary>
+    public string? RecordingDeviceId { get; init; }
+
+    /// <summary>
+    /// Глушить звук ролика, пока идёт запись. Без наушников динамики попадают
+    /// в микрофон, и в озвучке слышно эхо исходника.
+    /// </summary>
+    public bool MuteWhileRecording { get; init; } = true;
+
+    /// <summary>
+    /// Поправка синхронности озвучки в миллисекундах. Положительная сдвигает
+    /// голос раньше — на случай, если микрофон этой машины отдаёт звук с задержкой.
+    /// </summary>
+    public int RecordingOffsetMs { get; init; }
+
     public AppSettings WithRecentFile(string path, int limit = 10)
     {
         var list = new List<string> { path };

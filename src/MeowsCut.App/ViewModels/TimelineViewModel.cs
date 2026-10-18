@@ -193,6 +193,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         _project = project;
         _history = new EditHistory(project.Sequence);
         _history.Changed += OnHistoryChanged;
+        _lastRecordingTrack = null;
 
         Playhead = TimeSpan.Zero;
         _selection.Clear();

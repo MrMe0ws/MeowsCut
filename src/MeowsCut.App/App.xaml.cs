@@ -42,6 +42,7 @@ public partial class App : Application
 
         builder.Services.AddMeowsCutCore();
         builder.Services.AddMeowsCutFfmpeg();
+        builder.Services.AddMeowsCutRecording();
         builder.Services.AddMeowsCutUi();
 
         _host = builder.Build();
@@ -78,6 +79,10 @@ public partial class App : Application
     {
         if (_host is not null)
         {
+            // Незаконченный дубль выбрасываем: микрофон нужно отпустить, а файл
+            // без конца записи всё равно никуда не ляжет.
+            await _host.Services.GetRequiredService<VoiceoverViewModel>().AbortAsync();
+
             // Сначала отменяем работающие задачи и ждём, пока ffmpeg завершится
             // и уберёт за собой временные файлы, и только потом гасим хост.
             var jobs = _host.Services.GetRequiredService<IJobQueue>();

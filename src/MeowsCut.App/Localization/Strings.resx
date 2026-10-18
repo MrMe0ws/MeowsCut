@@ -848,4 +848,85 @@
   <data name="Cancel" xml:space="preserve">
     <value>Отмена</value>
   </data>
+  <data name="Voiceover" xml:space="preserve">
+    <value>Озвучка</value>
+  </data>
+  <data name="VoiceoverTrackName" xml:space="preserve">
+    <value>Озвучка</value>
+  </data>
+  <data name="VoiceoverTrackNumbered" xml:space="preserve">
+    <value>Озвучка {0}</value>
+  </data>
+  <data name="BusyAddingRecording" xml:space="preserve">
+    <value>Добавляю запись на доску…</value>
+  </data>
+  <data name="VoiceoverStarting" xml:space="preserve">
+    <value>Включаю микрофон…</value>
+  </data>
+  <data name="VoiceoverRecordingHint" xml:space="preserve">
+    <value>R или пробел — закончить дубль, Esc — выбросить</value>
+  </data>
+  <data name="VoiceoverSaving" xml:space="preserve">
+    <value>Сохраняю запись…</value>
+  </data>
+  <data name="VoiceoverSilent" xml:space="preserve">
+    <value>Микрофон присылает тишину — проверьте «Параметры → Конфиденциальность → Микрофон»</value>
+  </data>
+  <data name="VoiceoverPastEnd" xml:space="preserve">
+    <value>Ролик закончился, запись идёт — R, чтобы закончить</value>
+  </data>
+  <data name="VoiceoverTooShort" xml:space="preserve">
+    <value>Запись слишком короткая: на доске от неё ничего не остаётся.</value>
+  </data>
+  <data name="RecordingsFolderName" xml:space="preserve">
+    <value>Записи</value>
+  </data>
+  <data name="RecordingFileName" xml:space="preserve">
+    <value>Озвучка {0:yyyy-MM-dd HH-mm-ss}.wav</value>
+  </data>
+  <data name="MicrophoneDefault" xml:space="preserve">
+    <value>Системный по умолчанию</value>
+  </data>
+  <data name="MicrophoneDefaultSuffix" xml:space="preserve">
+    <value>{0} (по умолчанию)</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>Запись</value>
+  </data>
+  <data name="RecordHint" xml:space="preserve">
+    <value>Записать озвучку с микрофона от плейхеда (R). Ролик играет, голос ложится на дорожку «Озвучка»</value>
+  </data>
+  <data name="RecordStop" xml:space="preserve">
+    <value>Стоп</value>
+  </data>
+  <data name="RecordStopHint" xml:space="preserve">
+    <value>Закончить дубль и положить его на доску (R)</value>
+  </data>
+  <data name="RecordDiscard" xml:space="preserve">
+    <value>Выбросить</value>
+  </data>
+  <data name="RecordDiscardHint" xml:space="preserve">
+    <value>Остановить запись без сохранения (Esc)</value>
+  </data>
+  <data name="RecordLevelHint" xml:space="preserve">
+    <value>Уровень микрофона. Красный — перегруз, голос срезается</value>
+  </data>
+  <data name="SectionRecording" xml:space="preserve">
+    <value>Запись голоса</value>
+  </data>
+  <data name="FieldMicrophone" xml:space="preserve">
+    <value>Микрофон</value>
+  </data>
+  <data name="MuteWhileRecording" xml:space="preserve">
+    <value>Глушить звук ролика во время записи</value>
+  </data>
+  <data name="MuteWhileRecordingHint" xml:space="preserve">
+    <value>Без наушников звук динамиков попадает в микрофон. В наушниках можно выключить.</value>
+  </data>
+  <data name="RecordingOffset" xml:space="preserve">
+    <value>Поправка синхронности, мс</value>
+  </data>
+  <data name="RecordingOffsetHint" xml:space="preserve">
+    <value>Плюс сдвигает голос раньше, минус — позже. Нужна, если озвучка стабильно отстаёт от картинки.</value>
+  </data>
 </root>

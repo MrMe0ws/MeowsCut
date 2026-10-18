@@ -25,6 +25,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IShellIntegration _shell;
     private readonly AppPaths _paths;
     private readonly ThemeManager _themes;
+    private readonly IVoiceRecorder _recorder;
     private readonly ILogger<SettingsViewModel> _logger;
 
     public SettingsViewModel(
@@ -37,6 +38,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IShellIntegration shell,
         AppPaths paths,
         ThemeManager themes,
+        IVoiceRecorder recorder,
         ILogger<SettingsViewModel> logger)
     {
         _store = store;
@@ -48,6 +50,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _shell = shell;
         _paths = paths;
         _themes = themes;
+        _recorder = recorder;
         _logger = logger;
 
         Load();
@@ -76,6 +79,22 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _status = string.Empty;
 
+    [ObservableProperty]
+    private MicrophoneOption _microphone = MicrophoneOption.SystemDefault;
+
+    [ObservableProperty]
+    private IReadOnlyList<MicrophoneOption> _microphones = [MicrophoneOption.SystemDefault];
+
+    [ObservableProperty]
+    private bool _muteWhileRecording;
+
+    /// <summary>Поправка синхронности озвучки — редкая настройка, спрятана за «Расширенными».</summary>
+    [ObservableProperty]
+    private int _recordingOffsetMs;
+
+    [ObservableProperty]
+    private bool _showAdvancedRecording;
+
     /// <summary>Где приложение нашло FFmpeg на самом деле — это не всегда то, что в настройках.</summary>
     public string ToolsetSummary =>
         _toolsetProvider.Current is { } toolset
@@ -93,9 +112,18 @@ public sealed partial class SettingsViewModel : ObservableObject
         OutputNameTemplate = settings.OutputNameTemplate;
         VerboseLogging = settings.VerboseLogging;
         Theme = ThemeOption.For(settings.Theme);
+
+        Microphones = MicrophoneOption.Build(_recorder.ListDevices(), settings.RecordingDeviceId);
+        Microphone = Microphones.First(option => option.Id == settings.RecordingDeviceId);
+        MuteWhileRecording = settings.MuteWhileRecording;
+        RecordingOffsetMs = settings.RecordingOffsetMs;
+        ShowAdvancedRecording = settings.RecordingOffsetMs != 0;
     }
 
     public IReadOnlyList<ThemeOption> Themes { get; } = ThemeOption.All;
+
+    /// <summary>Больше секунды поправки — уже не задержка устройства, а ошибка ввода.</summary>
+    public const int MaxRecordingOffsetMs = 1000;
 
     /// <summary>Настройки записаны — окну пора закрыться.</summary>
     public event EventHandler? Saved;
@@ -150,7 +178,10 @@ public sealed partial class SettingsViewModel : ObservableObject
                 ? "{name}_meows{ext}"
                 : OutputNameTemplate.Trim(),
             Theme = Theme.Value,
-            VerboseLogging = VerboseLogging
+            VerboseLogging = VerboseLogging,
+            RecordingDeviceId = Microphone.Id,
+            MuteWhileRecording = MuteWhileRecording,
+            RecordingOffsetMs = Math.Clamp(RecordingOffsetMs, -MaxRecordingOffsetMs, MaxRecordingOffsetMs)
         };
 
         await _store.SaveAsync(settings, cancellationToken).ConfigureAwait(true);

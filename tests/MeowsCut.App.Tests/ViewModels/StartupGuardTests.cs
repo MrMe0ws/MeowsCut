@@ -59,6 +59,7 @@ public class StartupGuardTests
             .AddLogging()
             .AddMeowsCutCore()
             .AddMeowsCutFfmpeg()
+            .AddMeowsCutRecording()
             .AddMeowsCutUi()
             .BuildServiceProvider();
 

@@ -537,5 +537,33 @@ public static class Strings
 
     public static string Cancel => Get(nameof(Cancel));
 
+    public static string Voiceover => Get(nameof(Voiceover));
+
+    public static string VoiceoverTrackName => Get(nameof(VoiceoverTrackName));
+
+    public static string VoiceoverTrackNumbered => Get(nameof(VoiceoverTrackNumbered));
+
+    public static string BusyAddingRecording => Get(nameof(BusyAddingRecording));
+
+    public static string VoiceoverStarting => Get(nameof(VoiceoverStarting));
+
+    public static string VoiceoverRecordingHint => Get(nameof(VoiceoverRecordingHint));
+
+    public static string VoiceoverSaving => Get(nameof(VoiceoverSaving));
+
+    public static string VoiceoverSilent => Get(nameof(VoiceoverSilent));
+
+    public static string VoiceoverPastEnd => Get(nameof(VoiceoverPastEnd));
+
+    public static string VoiceoverTooShort => Get(nameof(VoiceoverTooShort));
+
+    public static string RecordingsFolderName => Get(nameof(RecordingsFolderName));
+
+    public static string RecordingFileName => Get(nameof(RecordingFileName));
+
+    public static string MicrophoneDefault => Get(nameof(MicrophoneDefault));
+
+    public static string MicrophoneDefaultSuffix => Get(nameof(MicrophoneDefaultSuffix));
+
     private static string Get(string key) => LocalizationManager.Get(key);
 }
