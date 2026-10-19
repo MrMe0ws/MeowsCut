@@ -1,0 +1,225 @@
+﻿<UserControl x:Class="MeowsCut.App.Views.ShellTitleBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:config="clr-namespace:MeowsCut.Core.Configuration;assembly=MeowsCut.Core"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:ShellViewModel}">
+
+    <!--
+        Строка меню вместо заголовка окна: меню слева, имя монтажа по центру,
+        справа — правка, тема и одна главная кнопка «Экспорт». Это единственная
+        сплошная акцентная кнопка наверху: всё остальное плоское.
+        Всё, кроме кнопок окна, высотой 34 и по центру строки 46: сверху и снизу
+        по 6 — ровный зазор, а не прилипание к краю экрана.
+    -->
+    <Border Height="46"
+            Background="{DynamicResource Brush.Surface}"
+            BorderBrush="{DynamicResource Brush.Border}"
+            BorderThickness="0,0,0,1"
+            Padding="14,0,0,0">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Image Grid.Column="0"
+                   Width="20"
+                   Height="20"
+                   Margin="0,0,10,0"
+                   VerticalAlignment="Center"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Source="../Assets/logo.png" />
+
+            <Menu Grid.Column="1"
+                  VerticalAlignment="Center"
+                  WindowChrome.IsHitTestVisibleInChrome="True">
+                <MenuItem Header="{loc:Tr MenuFile}">
+                    <MenuItem Command="{Binding AddFileCommand}"
+                              Header="{loc:Tr MenuAddFile}"
+                              Icon="{StaticResource Icon.Film}"
+                              InputGestureText="Ctrl+O" />
+                    <MenuItem Command="{Binding AddSoundCommand}"
+                              Header="{loc:Tr MenuAddAudio}"
+                              Icon="{StaticResource Icon.Note}" />
+                    <Separator Style="{StaticResource MenuSeparator}" />
+                    <MenuItem Command="{Binding OpenProjectCommand}"
+                              Header="{loc:Tr MenuOpenProject}"
+                              Icon="{StaticResource Icon.Open}" />
+                    <MenuItem Command="{Binding SaveProjectCommand}"
+                              Header="{loc:Tr MenuSaveProject}"
+                              Icon="{StaticResource Icon.Save}"
+                              InputGestureText="Ctrl+S" />
+                    <MenuItem Command="{Binding SaveProjectAsCommand}"
+                              Header="{loc:Tr MenuSaveProjectAs}"
+                              Icon="{StaticResource Icon.SaveAs}" />
+                    <Separator Style="{StaticResource MenuSeparator}" />
+                    <MenuItem Command="{Binding OpenExportCommand}"
+                              Header="{loc:Tr MenuExport}"
+                              Icon="{StaticResource Icon.Export}"
+                              InputGestureText="Ctrl+E" />
+                    <MenuItem Command="{Binding OpenSettingsCommand}"
+                              Header="{loc:Tr MenuSettings}"
+                              Icon="{StaticResource Icon.Sliders}" />
+                    <Separator Style="{StaticResource MenuSeparator}" />
+                    <!-- «Закрыть проект» внизу, рядом с «Выходом»: стоя вплотную
+                         к частой команде, он ловил промахи мышью -->
+                    <MenuItem Command="{Binding CloseMediaCommand}"
+                              Header="{loc:Tr MenuCloseFile}"
+                              Icon="{StaticResource Icon.CloseProject}" />
+                    <MenuItem Click="OnExit"
+                              Header="{loc:Tr MenuExit}"
+                              Icon="{StaticResource Icon.Exit}" />
+                </MenuItem>
+
+                <MenuItem Header="{loc:Tr MenuEdit}">
+                    <MenuItem Command="{Binding Timeline.UndoCommand}"
+                              Header="{loc:Tr MenuUndo}"
+                              Icon="{StaticResource Icon.Undo}"
+                              InputGestureText="Ctrl+Z" />
+                    <MenuItem Command="{Binding Timeline.RedoCommand}"
+                              Header="{loc:Tr MenuRedo}"
+                              Icon="{StaticResource Icon.Redo}"
+                              InputGestureText="Ctrl+Y" />
+                    <Separator Style="{StaticResource MenuSeparator}" />
+                    <MenuItem Command="{Binding Timeline.SplitAtPlayheadCommand}"
+                              Header="{loc:Tr MenuSplit}"
+                              Icon="{StaticResource Icon.Split}"
+                              InputGestureText="S" />
+                    <MenuItem Command="{Binding Timeline.DuplicateSelectedCommand}"
+                              Header="{loc:Tr MenuDuplicate}"
+                              Icon="{StaticResource Icon.Duplicate}"
+                              InputGestureText="Ctrl+D" />
+                    <MenuItem Command="{Binding Timeline.DeleteSelectedCommand}"
+                              Header="{loc:Tr MenuDelete}"
+                              Icon="{StaticResource Icon.Trash}"
+                              InputGestureText="Del" />
+                </MenuItem>
+
+                <MenuItem Header="{loc:Tr MenuView}">
+                    <MenuItem Command="{Binding SetThemeCommand}"
+                              CommandParameter="{x:Static config:AppTheme.Dark}"
+                              Header="{loc:Tr MenuThemeDark}"
+                              Icon="{StaticResource Icon.Moon}" />
+                    <MenuItem Command="{Binding SetThemeCommand}"
+                              CommandParameter="{x:Static config:AppTheme.Light}"
+                              Header="{loc:Tr MenuThemeLight}"
+                              Icon="{StaticResource Icon.Sun}" />
+                    <MenuItem Command="{Binding SetThemeCommand}"
+                              CommandParameter="{x:Static config:AppTheme.System}"
+                              Header="{loc:Tr MenuThemeSystem}"
+                              Icon="{StaticResource Icon.Frame}" />
+                    <Separator Style="{StaticResource MenuSeparator}" />
+                    <MenuItem Click="OnBigPreview"
+                              Header="{loc:Tr MenuBigPreview}"
+                              Icon="{StaticResource Icon.Fullscreen}"
+                              InputGestureText="F11" />
+                </MenuItem>
+            </Menu>
+
+            <!-- Имя монтажа и сохранено ли оно. Без явной отметки было непонятно,
+                 записались правки или нет. -->
+            <StackPanel Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <TextBlock MaxWidth="320"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Style="{StaticResource Text.Base}"
+                           Text="{Binding ProjectFileName, TargetNullValue={loc:Tr UntitledProject}}"
+                           TextTrimming="CharacterEllipsis" />
+                <Border Margin="10,0,0,0"
+                        Padding="9,3"
+                        Background="{DynamicResource Brush.SurfaceRaised}"
+                        CornerRadius="11"
+                        ToolTip="{loc:Tr ProjectStateHint}"
+                        Visibility="{Binding SaveStateText, Converter={StaticResource NullToVisibility}}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="6"
+                                 Height="6"
+                                 Margin="0,0,6,0"
+                                 VerticalAlignment="Center"
+                                 Fill="{DynamicResource Brush.Warning}"
+                                 Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Style="{StaticResource Text.Caption}" Text="{Binding SaveStateText}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Column="3"
+                        VerticalAlignment="Stretch"
+                        Orientation="Horizontal"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button Command="{Binding Timeline.UndoCommand}"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource FlatIconButton}"
+                        ToolTip="{loc:Tr UndoHint}">
+                    <Path Data="{StaticResource Icon.Undo}" Style="{StaticResource Glyph}" />
+                </Button>
+                <Button Command="{Binding Timeline.RedoCommand}"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource FlatIconButton}"
+                        ToolTip="{loc:Tr RedoHint}">
+                    <Path Data="{StaticResource Icon.Redo}" Style="{StaticResource Glyph}" />
+                </Button>
+
+                <Border Style="{StaticResource ToolbarDivider}" />
+
+                <!-- Значок говорит, куда переключит: в тёмной теме — солнце -->
+                <Button Command="{Binding ToggleThemeCommand}"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource FlatIconButton}"
+                        ToolTip="{loc:Tr ThemeToggleHint}">
+                    <Path Data="{Binding IsDarkTheme, Converter={StaticResource ThemeGlyph}}" Style="{StaticResource Glyph}" />
+                </Button>
+                <Button Command="{Binding OpenSettingsCommand}"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource FlatIconButton}"
+                        ToolTip="{loc:Tr SettingsHint}">
+                    <Path Data="{StaticResource Icon.Sliders}" Style="{StaticResource Glyph}" />
+                </Button>
+
+                <Button Height="34"
+                        Margin="10,0,4,0"
+                        Padding="14,0,16,0"
+                        VerticalAlignment="Center"
+                        Command="{Binding OpenExportCommand}"
+                        Style="{StaticResource Button.Primary}"
+                        ToolTip="{loc:Tr ExportButtonHint}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource Icon.Export}"
+                              Stroke="{DynamicResource Brush.OnAccent}"
+                              StrokeThickness="2"
+                              Style="{StaticResource GlyphLead}" />
+                        <TextBlock VerticalAlignment="Center" Text="{loc:Tr ExportButton}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Height="46"
+                        Margin="8,0,0,0"
+                        Click="OnMinimize"
+                        Style="{StaticResource WindowButton}"
+                        Tag="{StaticResource Icon.WindowMinimize}"
+                        ToolTip="{loc:Tr WindowMinimize}" />
+                <Button x:Name="MaximizeButton"
+                        Height="46"
+                        Click="OnMaximizeOrRestore"
+                        Style="{StaticResource WindowButton}"
+                        Tag="{StaticResource Icon.WindowMaximize}"
+                        ToolTip="{loc:Tr WindowMaximize}" />
+                <Button Height="46"
+                        Click="OnExit"
+                        Style="{StaticResource WindowButton.Close}"
+                        Tag="{StaticResource Icon.WindowClose}"
+                        ToolTip="{loc:Tr WindowClose}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

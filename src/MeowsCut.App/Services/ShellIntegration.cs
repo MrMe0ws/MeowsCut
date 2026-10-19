@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace MeowsCut.App.Services;
 
 /// <summary>
-/// Открытие файла и папки в проводнике.
+/// Открытие файла и папки в проводнике, страницы — в браузере.
 /// </summary>
 public sealed class ShellIntegration(ILogger<ShellIntegration> logger) : IShellIntegration
 {
@@ -40,6 +40,18 @@ public sealed class ShellIntegration(ILogger<ShellIntegration> logger) : IShellI
         {
             Start(new ProcessStartInfo(directory) { UseShellExecute = true });
         }
+    }
+
+    public void OpenWebPage(Uri address)
+    {
+        // Браузер открывается только на https: адрес вида file:// или с другой
+        // схемой через оболочку запустил бы что угодно.
+        if (!address.IsAbsoluteUri || address.Scheme != Uri.UriSchemeHttps)
+        {
+            return;
+        }
+
+        Start(new ProcessStartInfo(address.AbsoluteUri) { UseShellExecute = true });
     }
 
     private void Start(ProcessStartInfo startInfo)

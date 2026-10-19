@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using FluentAssertions;
@@ -57,7 +57,7 @@ internal static class WpfRunner
 
         var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
 
-        foreach (var source in new[] { "Palette.Dark.xaml", "Theme.xaml", "Icons.xaml", "Controls.xaml", "Busy.xaml", "Templates.xaml" })
+        foreach (var source in new[] { "Palette.Dark.xaml", "Theme.xaml", "Icons.xaml", "Controls.xaml", "Busy.xaml", "Menu.xaml", "Templates.xaml", "Design.Buttons.xaml", "Design.Panels.xaml" })
         {
             application.Resources.MergedDictionaries.Add(new ResourceDictionary
             {
@@ -84,6 +84,29 @@ public class XamlSmokeTests
         new PresetsView().Should().NotBeNull();
         new TimelinePaneView().Should().NotBeNull();
         new PreviewPaneView().Should().NotBeNull();
+    });
+
+    [Fact]
+    public void Interface_2_views_are_created() => WpfRunner.Run(() =>
+    {
+        // Новые панели версии 2.0: строка меню, медиа, вкладки свойств, чипы у клипа,
+        // части окна экспорта. Стили и значки в них ищутся только при создании.
+        new MeowsCut.App.Views.ShellTitleBar().Should().NotBeNull();
+        new MeowsCut.App.Views.ShellEmptyState().Should().NotBeNull();
+        new SourcesView().Should().NotBeNull();
+        new TitleInspectorView().Should().NotBeNull();
+        new ClipTabView().Should().NotBeNull();
+        new FrameTabView().Should().NotBeNull();
+        new SoundTabView().Should().NotBeNull();
+        new PreviewStage().Should().NotBeNull();
+        new PreviewRecordingBar().Should().NotBeNull();
+        new ExportSummaryView().Should().NotBeNull();
+        new ExportSoundSection().Should().NotBeNull();
+        new ExportAdvancedSection().Should().NotBeNull();
+        new ExportFooterView().Should().NotBeNull();
+        new MeowsCut.App.Views.Chips.VideoChipEditors().Should().NotBeNull();
+        new MeowsCut.App.Views.Chips.AudioChipEditors().Should().NotBeNull();
+        new MeowsCut.App.Views.Chips.TitleChipEditors().Should().NotBeNull();
     });
 
     [Fact]
@@ -128,7 +151,8 @@ public class XamlSmokeTests
     {
         // Кнопки результата когда-то жили в прокручиваемой части и появлялись
         // под всеми настройками — до них надо было листать, и пользователь их не нашёл.
-        var view = new ExportPanelView { DataContext = new FinishedExport() };
+        // С версии 2.0 они в нижней полосе окна экспорта, вне прокрутки.
+        var view = new ExportFooterView { DataContext = new FinishedExport() };
 
         view.Measure(new Size(340, 800));
         view.Arrange(new Rect(0, 0, 340, 800));
@@ -234,6 +258,10 @@ public class XamlSmokeTests
         }
 
         public void RevealInExplorer(string path)
+        {
+        }
+
+        public void OpenWebPage(Uri address)
         {
         }
     }

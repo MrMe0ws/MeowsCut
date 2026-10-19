@@ -29,6 +29,7 @@ public sealed partial class InspectorViewModel : ObservableObject
         };
 
         _timeline.SequenceChanged += (_, _) => Refresh();
+        PropertyChanged += OnHeaderSourceChanged;
     }
 
     [ObservableProperty]

@@ -8,17 +8,17 @@
     -->
 
     <!-- Фон окна серее панелей: на белом поверх белого не видно границ доски -->
-    <Color x:Key="Color.Background">#FFF7F7FA</Color>
+    <Color x:Key="Color.Background">#FFECEEF1</Color>
     <Color x:Key="Color.Surface">#FFFFFFFF</Color>
     <!-- «Приподнятый» на светлом — наоборот, темнее: поля ввода и клипы
          должны читаться на белой панели -->
-    <Color x:Key="Color.SurfaceRaised">#FFE6E6EE</Color>
-    <Color x:Key="Color.Border">#FFD0D0D9</Color>
+    <Color x:Key="Color.SurfaceRaised">#FFDFE2E8</Color>
+    <Color x:Key="Color.Border">#FFD5D9E0</Color>
     <!-- 17:1 на белом -->
-    <Color x:Key="Color.Text">#FF1A1A1F</Color>
+    <Color x:Key="Color.Text">#FF15171C</Color>
     <!-- 7.4:1 — столько же, сколько у приглушённого текста в тёмной теме -->
-    <Color x:Key="Color.TextMuted">#FF55555F</Color>
-    <Color x:Key="Color.TextDisabled">#FF8A8A94</Color>
+    <Color x:Key="Color.TextMuted">#FF4F5562</Color>
+    <Color x:Key="Color.TextDisabled">#FF858A95</Color>
     <!-- Зелёный тёмный, а не яркий: на белом ярко-зелёная кнопка слепит,
          и белая надпись на ней не читается. Здесь белый текст даёт 5.5:1 -->
     <Color x:Key="Color.Accent">#FF0F7A22</Color>
@@ -26,10 +26,22 @@
     <Color x:Key="Color.OnAccent">#FFFFFFFF</Color>
     <Color x:Key="Color.Warning">#FF8A6100</Color>
     <Color x:Key="Color.Danger">#FFB32430</Color>
-    <Color x:Key="Color.AudioClip">#FFD9E6F2</Color>
+    <Color x:Key="Color.AudioClip">#FFD2ECE5</Color>
     <!-- Подложка подписей поверх кадров. Светлая: текст на ней рисуется цветом темы,
          а он здесь тёмный — на тёмной подложке он был бы не виден вовсе -->
     <Color x:Key="Color.Scrim">#E8FFFFFF</Color>
+
+    <Color x:Key="Color.AccentSoft">#1F0F7A22</Color>
+    <Color x:Key="Color.Hover">#FFEBEDF1</Color>
+    <Color x:Key="Color.Stage">#FFD6D9DF</Color>
+    <!-- Тёмно-жёлтый: на белой панели светлый жёлтый не отличить от фона -->
+    <Color x:Key="Color.TitleClip">#FFF0C34E</Color>
+    <Color x:Key="Color.OnTitleClip">#FF2A1F00</Color>
+    <Color x:Key="Color.VoiceClip">#FFE6DDF6</Color>
+    <!-- Значок «Т» у полосы надписей: на светлом фоне жёлтый пропадает -->
+    <Color x:Key="Color.TitleMark">#FF8F6400</Color>
+    <Color x:Key="Color.MusicMark">#FF1F7D6A</Color>
+    <Color x:Key="Color.VoiceMark">#FF7A4FC4</Color>
 
     <!--
         Кисти живут рядом со своими цветами: смена темы подменяет этот словарь
@@ -50,5 +62,14 @@
     <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
     <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
     <SolidColorBrush x:Key="Brush.Scrim" Color="{StaticResource Color.Scrim}" />
+    <SolidColorBrush x:Key="Brush.AccentSoft" Color="{StaticResource Color.AccentSoft}" />
+    <SolidColorBrush x:Key="Brush.Hover" Color="{StaticResource Color.Hover}" />
+    <SolidColorBrush x:Key="Brush.Stage" Color="{StaticResource Color.Stage}" />
+    <SolidColorBrush x:Key="Brush.TitleClip" Color="{StaticResource Color.TitleClip}" />
+    <SolidColorBrush x:Key="Brush.OnTitleClip" Color="{StaticResource Color.OnTitleClip}" />
+    <SolidColorBrush x:Key="Brush.VoiceClip" Color="{StaticResource Color.VoiceClip}" />
+    <SolidColorBrush x:Key="Brush.TitleMark" Color="{StaticResource Color.TitleMark}" />
+    <SolidColorBrush x:Key="Brush.MusicMark" Color="{StaticResource Color.MusicMark}" />
+    <SolidColorBrush x:Key="Brush.VoiceMark" Color="{StaticResource Color.VoiceMark}" />
 
 </ResourceDictionary>

@@ -55,6 +55,9 @@ public interface IFileDialogService
 
     /// <summary>Куда сохранить черновик. <paramref name="suggestedName"/> — имя без расширения.</summary>
     string? PickProjectToSave(string suggestedName);
+
+    /// <summary>Куда записать готовый ролик. Расширение задаёт выбранный формат.</summary>
+    string? PickExportTarget(string currentPath);
 }
 
 public sealed class FileDialogService : IFileDialogService
@@ -130,6 +133,25 @@ public sealed class FileDialogService : IFileDialogService
             Filter = ProjectFilter,
             FileName = suggestedName,
             DefaultExt = IProjectStore.Extension,
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public string? PickExportTarget(string currentPath)
+    {
+        var extension = Path.GetExtension(currentPath);
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.ExportTargetTitle,
+            FileName = Path.GetFileName(currentPath),
+            InitialDirectory = Path.GetDirectoryName(currentPath) ?? string.Empty,
+            Filter = string.IsNullOrEmpty(extension)
+                ? $"{Strings.FilterAllFiles}|*.*"
+                : $"*{extension}|*{extension}|{Strings.FilterAllFiles}|*.*",
+            DefaultExt = extension,
             AddExtension = true,
             OverwritePrompt = true
         };

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -996,12 +996,339 @@
     <value>Отмена</value>
   </data>
   <data name="ProjectStateUnsaved" xml:space="preserve">
-    <value>● не сохранено</value>
+    <value>не сохранено</value>
   </data>
   <data name="ProjectStateSaved" xml:space="preserve">
     <value>сохранено в {0:HH:mm}</value>
   </data>
   <data name="ProjectStateHint" xml:space="preserve">
     <value>Ctrl+S — сохранить черновик</value>
+  </data>
+  <data name="MenuView" xml:space="preserve">
+    <value>Вид</value>
+  </data>
+  <data name="MenuThemeDark" xml:space="preserve">
+    <value>Тёмная тема</value>
+  </data>
+  <data name="MenuThemeLight" xml:space="preserve">
+    <value>Светлая тема</value>
+  </data>
+  <data name="MenuThemeSystem" xml:space="preserve">
+    <value>Как в системе</value>
+  </data>
+  <data name="MenuBigPreview" xml:space="preserve">
+    <value>Крупный просмотр</value>
+  </data>
+  <data name="ThemeToggleHint" xml:space="preserve">
+    <value>Сменить тему: светлая или тёмная</value>
+  </data>
+  <data name="SettingsHint" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="ExportButton" xml:space="preserve">
+    <value>Экспорт</value>
+  </data>
+  <data name="ExportButtonHint" xml:space="preserve">
+    <value>Экспорт видео — Ctrl+E</value>
+  </data>
+  <data name="UndoHint" xml:space="preserve">
+    <value>Отменить — Ctrl+Z</value>
+  </data>
+  <data name="RedoHint" xml:space="preserve">
+    <value>Вернуть — Ctrl+Y</value>
+  </data>
+  <data name="SectionMedia" xml:space="preserve">
+    <value>Медиа</value>
+  </data>
+  <data name="ImportFiles" xml:space="preserve">
+    <value>Импорт</value>
+  </data>
+  <data name="ImportFilesHint" xml:space="preserve">
+    <value>Добавить видео, фото или звук — Ctrl+O</value>
+  </data>
+  <data name="ImportSoundHint" xml:space="preserve">
+    <value>Добавить звук на дорожку</value>
+  </data>
+  <data name="FilterAll" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="FilterVideo" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="FilterImage" xml:space="preserve">
+    <value>Фото</value>
+  </data>
+  <data name="FilterAudio" xml:space="preserve">
+    <value>Звук</value>
+  </data>
+  <data name="SourceBadgeImage" xml:space="preserve">
+    <value>фото</value>
+  </data>
+  <data name="SourceOnBoardHint" xml:space="preserve">
+    <value>Уже лежит на доске</value>
+  </data>
+  <data name="MediaEmpty" xml:space="preserve">
+    <value>Перетащите файлы сюда или нажмите «Импорт»</value>
+  </data>
+  <data name="PreviewZoomHint" xml:space="preserve">
+    <value>Увеличить кадр, чтобы рассмотреть детали</value>
+  </data>
+  <data name="PreviewZoomFit" xml:space="preserve">
+    <value>Вписать</value>
+  </data>
+  <data name="GoToStartHint" xml:space="preserve">
+    <value>В начало — Home</value>
+  </data>
+  <data name="StepBackHint" xml:space="preserve">
+    <value>Назад на секунду — Shift+←</value>
+  </data>
+  <data name="PlayHint" xml:space="preserve">
+    <value>Играть и пауза — пробел</value>
+  </data>
+  <data name="StepForwardHint" xml:space="preserve">
+    <value>Вперёд на секунду — Shift+→</value>
+  </data>
+  <data name="GoToEndHint" xml:space="preserve">
+    <value>В конец — End</value>
+  </data>
+  <data name="BigPreviewHint" xml:space="preserve">
+    <value>Крупный просмотр — F11, выход — Esc</value>
+  </data>
+  <data name="TabClip" xml:space="preserve">
+    <value>Клип</value>
+  </data>
+  <data name="TabFrame" xml:space="preserve">
+    <value>Кадр</value>
+  </data>
+  <data name="TabSound" xml:space="preserve">
+    <value>Звук</value>
+  </data>
+  <data name="InspectorManySelected" xml:space="preserve">
+    <value>Выбрано кусков: {0}</value>
+  </data>
+  <data name="InspectorMoreHint" xml:space="preserve">
+    <value>Ещё действия с куском</value>
+  </data>
+  <data name="ReadoutStart" xml:space="preserve">
+    <value>Начало</value>
+  </data>
+  <data name="ReadoutEnd" xml:space="preserve">
+    <value>Конец</value>
+  </data>
+  <data name="ReadoutLength" xml:space="preserve">
+    <value>Длина</value>
+  </data>
+  <data name="SectionPosition" xml:space="preserve">
+    <value>Положение</value>
+  </data>
+  <data name="SectionSpeedPresetsHint" xml:space="preserve">
+    <value>Готовые скорости. Любую другую впишите в поле справа</value>
+  </data>
+  <data name="InspectorEmptyHint" xml:space="preserve">
+    <value>Выберите кусок на доске — здесь появятся его свойства. Правая кнопка по куску открывает меню параметров.</value>
+  </data>
+  <data name="AddMenu" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="AddMenuHint" xml:space="preserve">
+    <value>Добавить на доску</value>
+  </data>
+  <data name="DuplicateHint" xml:space="preserve">
+    <value>Дублировать кусок — Ctrl+D</value>
+  </data>
+  <data name="ZoomInHint" xml:space="preserve">
+    <value>Приблизить доску — Ctrl+колесо</value>
+  </data>
+  <data name="ZoomOutHint" xml:space="preserve">
+    <value>Отдалить доску — Ctrl+колесо</value>
+  </data>
+  <data name="ZoomSliderHint" xml:space="preserve">
+    <value>Масштаб доски</value>
+  </data>
+  <data name="SnappingHint" xml:space="preserve">
+    <value>Прилипание к краям кусков и курсору</value>
+  </data>
+  <data name="TrackVideo" xml:space="preserve">
+    <value>Видеоряд</value>
+  </data>
+  <data name="TrackTitles" xml:space="preserve">
+    <value>Надписи</value>
+  </data>
+  <data name="CtxSpeed" xml:space="preserve">
+    <value>Скорость</value>
+  </data>
+  <data name="CtxVolume" xml:space="preserve">
+    <value>Громкость</value>
+  </data>
+  <data name="CtxFadeIn" xml:space="preserve">
+    <value>Появление</value>
+  </data>
+  <data name="CtxFadeOut" xml:space="preserve">
+    <value>Затухание</value>
+  </data>
+  <data name="CtxFit" xml:space="preserve">
+    <value>Подгонка</value>
+  </data>
+  <data name="CtxRotate" xml:space="preserve">
+    <value>Поворот</value>
+  </data>
+  <data name="CtxZoom" xml:space="preserve">
+    <value>Масштаб</value>
+  </data>
+  <data name="CtxPosition" xml:space="preserve">
+    <value>Положение</value>
+  </data>
+  <data name="CtxMotion" xml:space="preserve">
+    <value>Наезд</value>
+  </data>
+  <data name="CtxPitch" xml:space="preserve">
+    <value>Тональность</value>
+  </data>
+  <data name="CtxTrackGain" xml:space="preserve">
+    <value>Громкость дорожки</value>
+  </data>
+  <data name="CtxTitleText" xml:space="preserve">
+    <value>Текст надписи</value>
+  </data>
+  <data name="CtxTitleDuration" xml:space="preserve">
+    <value>Длительность</value>
+  </data>
+  <data name="CtxTitleSize" xml:space="preserve">
+    <value>Размер</value>
+  </data>
+  <data name="CtxTitlePlace" xml:space="preserve">
+    <value>Место</value>
+  </data>
+  <data name="CtxTitleColor" xml:space="preserve">
+    <value>Цвет и плашка</value>
+  </data>
+  <data name="CtxSplit" xml:space="preserve">
+    <value>Разрезать по курсору</value>
+  </data>
+  <data name="CtxDuplicate" xml:space="preserve">
+    <value>Дублировать</value>
+  </data>
+  <data name="CtxDelete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="CtxDetachAudio" xml:space="preserve">
+    <value>Отделить звук</value>
+  </data>
+  <data name="CtxResetFrame" xml:space="preserve">
+    <value>Сбросить кадрирование</value>
+  </data>
+  <data name="CtxClearFades" xml:space="preserve">
+    <value>Убрать затемнение</value>
+  </data>
+  <data name="ChipCloseHint" xml:space="preserve">
+    <value>Закрыть — Esc</value>
+  </data>
+  <data name="ExportDialogTitle" xml:space="preserve">
+    <value>Экспорт видео</value>
+  </data>
+  <data name="SectionPreset" xml:space="preserve">
+    <value>Пресет</value>
+  </data>
+  <data name="SectionSoundSubtitles" xml:space="preserve">
+    <value>Звук и субтитры</value>
+  </data>
+  <data name="AdvancedHint" xml:space="preserve">
+    <value>кодек, ускорение, скорость кодирования</value>
+  </data>
+  <data name="ChangeOutput" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
+  <data name="ExportTargetTitle" xml:space="preserve">
+    <value>Куда сохранить ролик</value>
+  </data>
+  <data name="CrfSmaller" xml:space="preserve">
+    <value>Меньше файл</value>
+  </data>
+  <data name="CrfBetter" xml:space="preserve">
+    <value>Лучше картинка</value>
+  </data>
+  <data name="ApplyPresetToEdit" xml:space="preserve">
+    <value>Применить к монтажу</value>
+  </data>
+  <data name="ExportClose" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="UntitledProject" xml:space="preserve">
+    <value>Новый монтаж</value>
+  </data>
+  <data name="PreviewZoom150" xml:space="preserve">
+    <value>150%</value>
+  </data>
+  <data name="PreviewZoom200" xml:space="preserve">
+    <value>200%</value>
+  </data>
+  <data name="PreviewZoom300" xml:space="preserve">
+    <value>300%</value>
+  </data>
+  <data name="SectionTiming" xml:space="preserve">
+    <value>Время на доске</value>
+  </data>
+  <data name="SectionLook" xml:space="preserve">
+    <value>Вид надписи</value>
+  </data>
+  <data name="TrackHeaderHint" xml:space="preserve">
+    <value>Щелчок — выключить или вернуть звук дорожки, правая кнопка — меню</value>
+  </data>
+  <data name="CtxSplitHere" xml:space="preserve">
+    <value>Разрезать здесь</value>
+  </data>
+  <data name="CtxTrackMute" xml:space="preserve">
+    <value>Выключить звук дорожки</value>
+  </data>
+  <data name="ApplyPresetToEditHint" xml:space="preserve">
+    <value>Подогнать сам монтаж под пресет: формат кадра и длину под лимит площадки. Отменяется Ctrl+Z</value>
+  </data>
+  <data name="SectionFormatQuality" xml:space="preserve">
+    <value>Формат и качество</value>
+  </data>
+  <data name="FrameEditHint" xml:space="preserve">
+    <value>Тяните — сдвинуть кадр, колесо — масштаб (Shift — крупнее шаг)</value>
+  </data>
+  <data name="SoundSectionResizeHint" xml:space="preserve">
+    <value>Потяните, чтобы изменить высоту раздела</value>
+  </data>
+  <data name="SectionAbout" xml:space="preserve">
+    <value>О программе</value>
+  </data>
+  <data name="AboutVersion" xml:space="preserve">
+    <value>Версия {0}</value>
+  </data>
+  <data name="AboutTagline" xml:space="preserve">
+    <value>Видеоредактор для Windows: доска монтажа без тяжести большого NLE. Всё считается на этом компьютере, ничего никуда не отправляется.</value>
+  </data>
+  <data name="AboutComponents" xml:space="preserve">
+    <value>.NET {0} · FFmpeg {1}</value>
+  </data>
+  <data name="AboutFfmpegMissing" xml:space="preserve">
+    <value>не найден</value>
+  </data>
+  <data name="AboutProjectPage" xml:space="preserve">
+    <value>Страница проекта</value>
+  </data>
+  <data name="AboutProjectPageHint" xml:space="preserve">
+    <value>github.com/MrMe0ws/MeowsCut — исходники и описание</value>
+  </data>
+  <data name="AboutReleases" xml:space="preserve">
+    <value>Новые версии</value>
+  </data>
+  <data name="AboutReleasesHint" xml:space="preserve">
+    <value>Последний выпуск: установщик и portable-архив</value>
+  </data>
+  <data name="AboutAppFolder" xml:space="preserve">
+    <value>Папка программы</value>
+  </data>
+  <data name="AboutAppFolderHint" xml:space="preserve">
+    <value>Где лежит MeowsCut.exe и встроенный FFmpeg</value>
+  </data>
+  <data name="AboutDataFolder" xml:space="preserve">
+    <value>Папка данных</value>
+  </data>
+  <data name="AboutDataFolderHint" xml:space="preserve">
+    <value>Логи, кэш кадров и волн, автосохранение</value>
   </data>
 </root>

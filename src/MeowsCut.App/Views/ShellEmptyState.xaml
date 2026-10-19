@@ -1,0 +1,93 @@
+<UserControl x:Class="MeowsCut.App.Views.ShellEmptyState"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:ShellViewModel}">
+
+    <!-- Пустое окно: куда бросить файл, кнопка открытия и недавние черновики -->
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border Width="540"
+                    Height="250"
+                    Background="{DynamicResource Brush.Surface}"
+                    BorderBrush="{DynamicResource Brush.Border}"
+                    BorderThickness="1.5"
+                    CornerRadius="16">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image Width="72"
+                           Height="72"
+                           HorizontalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           Source="../Assets/logo.png" />
+                    <TextBlock Margin="0,14,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="17"
+                               FontWeight="SemiBold"
+                               Style="{StaticResource Text.Base}"
+                               Text="{loc:Tr EmptyStateTitle}" />
+                    <TextBlock Margin="0,6,0,0"
+                               HorizontalAlignment="Center"
+                               Style="{StaticResource Text.Muted}"
+                               Text="{loc:Tr EmptyStateOr}" />
+                    <Button Margin="0,14,0,0"
+                            HorizontalAlignment="Center"
+                            Command="{Binding OpenFileCommand}"
+                            Content="{loc:Tr OpenVideo}"
+                            Style="{StaticResource Button.Primary}"
+                            Visibility="{Binding IsPreparing, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                    <!-- Пока идёт подготовка, вместо серой кнопки видно, чем занято приложение -->
+                    <StackPanel Margin="0,14,0,0"
+                                HorizontalAlignment="Center"
+                                Visibility="{Binding IsPreparing, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                            <Path Style="{StaticResource Spinner}" />
+                            <TextBlock Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Style="{StaticResource Text.Base}"
+                                       Text="{loc:Tr StartupPreparing}" />
+                        </StackPanel>
+                        <TextBlock Margin="0,8,0,0"
+                                   HorizontalAlignment="Center"
+                                   MaxWidth="400"
+                                   Style="{StaticResource Text.Muted}"
+                                   Text="{loc:Tr StartupPreparingHint}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Недавние файлы -->
+            <StackPanel Margin="0,22,0,0"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Visibility="{Binding RecentFiles.Count, Converter={StaticResource CountToVisibility}}">
+                <TextBlock Margin="0,0,10,0"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource Text.Section}"
+                           Text="{loc:Tr RecentFiles}" />
+                <ItemsControl ItemsSource="{Binding RecentFiles}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:RecentFileViewModel}">
+                            <Button Margin="0,0,8,0"
+                                    Command="{Binding OpenCommand}"
+                                    Content="{Binding FileName}"
+                                    Style="{StaticResource SoftButton}"
+                                    ToolTip="{Binding Path}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

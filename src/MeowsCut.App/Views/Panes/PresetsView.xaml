@@ -1,109 +1,115 @@
-﻿<UserControl x:Class="MeowsCut.App.Views.Panes.PresetsView"
+<UserControl x:Class="MeowsCut.App.Views.Panes.PresetsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:core="clr-namespace:MeowsCut.Core.Presets;assembly=MeowsCut.Core"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
-             xmlns:presets="clr-namespace:MeowsCut.Core.Presets;assembly=MeowsCut.Core"
              xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:PresetsViewModel}">
 
-    <!-- Колонка слева от настроек вывода: пресет задаёт их разом, и стоять он
-         должен перед ними, а не над ними. Своя прокрутка — заметки и нарушения
-         площадки бывают длиннее окна. -->
-    <Border Padding="18,14"
-            Background="{DynamicResource Brush.Surface}"
-            BorderBrush="{DynamicResource Brush.Border}"
-            BorderThickness="0,0,1,0">
-        <ScrollViewer controls:SmoothScroll.IsEnabled="True"
-                      HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Auto">
-        <StackPanel>
-            <TextBlock Margin="0,0,0,10"
-                       Style="{StaticResource Text.Section}"
-                       Text="{loc:Tr SectionPresets}" />
+    <!--
+        Пресеты карточками: площадка (Общие, Telegram) сегментом сверху, под ним
+        её пресеты. Выбранная карточка сразу выставляет формат и качество — ниже
+        всё остаётся доступным для правки: пресет — стартовая точка, а не клетка.
+        Лимиты площадок живут в JSON, интерфейс их не знает.
+    -->
+    <StackPanel>
+        <Grid Margin="0,0,0,8">
+            <TextBlock VerticalAlignment="Center" Style="{StaticResource ParamSection}" Margin="0" Text="{loc:Tr SectionPreset}" />
+            <Border HorizontalAlignment="Right" Style="{StaticResource SegmentHost}">
+                <ListBox ItemTemplate="{StaticResource TitleTemplate}"
+                         ItemsSource="{Binding Groups}"
+                         SelectedItem="{Binding SelectedGroup}"
+                         Style="{StaticResource SegmentList}" />
+            </Border>
+        </Grid>
 
-            <ComboBox Margin="0,0,0,8"
-                      ItemTemplate="{StaticResource TitleTemplate}"
-                      ItemsSource="{Binding Groups}"
-                      SelectedItem="{Binding SelectedGroup}" />
-
-            <ComboBox Margin="0,0,0,8"
-                      ItemTemplate="{StaticResource TitleTemplate}"
-                      ItemsSource="{Binding Presets}"
-                      SelectedItem="{Binding SelectedPreset}" />
-
-            <TextBlock Margin="0,0,0,8"
-                       Style="{StaticResource Text.Muted}"
-                       Text="{Binding SelectedPreset.Description}"
-                       TextWrapping="Wrap" />
-
-            <!-- Только для пресетов с пределом длительности: обрезать или ускорить
-                 нечего, когда лимита нет -->
-            <StackPanel Visibility="{Binding HasDurationLimit, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Style="{StaticResource Text.Muted}" Text="{loc:Tr DurationFitLabel}" />
-                <ComboBox Margin="0,4,0,10"
-                          ItemsSource="{Binding DurationFits}"
-                          SelectedItem="{Binding DurationFit}" />
-            </StackPanel>
-
-            <Button Command="{Binding ApplyCommand}"
-                    Content="{loc:Tr ApplyPreset}"
-                    Style="{StaticResource Button.Primary}" />
-
-            <!-- Заметки пресета -->
-            <ItemsControl Margin="0,10,0,0" ItemsSource="{Binding Notes}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Margin="0,0,0,4"
-                                   Style="{StaticResource Text.Muted}"
-                                   Text="{Binding}"
+        <ListBox ItemContainerStyle="{StaticResource CardItem}"
+                 ItemsSource="{Binding Presets}"
+                 SelectedItem="{Binding SelectedPreset}"
+                 Style="{StaticResource PlainList}">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="2" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type core:PresetDefinition}">
+                    <StackPanel ToolTip="{Binding Description}">
+                        <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Base}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Margin="0,3,0,0"
+                                   MaxHeight="34"
+                                   Style="{StaticResource Text.Caption}"
+                                   Text="{Binding Description}"
+                                   TextTrimming="CharacterEllipsis"
                                    TextWrapping="Wrap" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
-            <!-- Что именно пресет поменял -->
-            <StackPanel Margin="0,10,0,0"
-                        Visibility="{Binding Changes.Count, Converter={StaticResource CountToVisibility}}">
-                <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr PresetChanges}" />
-                <ItemsControl Margin="0,6,0,0" ItemsSource="{Binding Changes}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Margin="0,0,0,4"
-                                       Foreground="{DynamicResource Brush.Accent}"
-                                       Style="{StaticResource Text.Base}"
-                                       Text="{Binding}"
-                                       TextWrapping="Wrap" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+        <!-- Формат и качество пресет выставляет сразу при выборе. Монтаж (формат
+             кадра, длину под лимит площадки) он трогает только по этой кнопке:
+             правка доски должна быть осознанной и отменяемой. -->
+        <Grid Margin="0,2,0,8" Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock VerticalAlignment="Center"
+                       Style="{StaticResource ParamLabel}"
+                       Text="{loc:Tr DurationFitLabel}"
+                       Visibility="{Binding HasDurationLimit, Converter={StaticResource BoolToVisibility}}" />
+            <ComboBox Grid.Column="1"
+                      Margin="10,0"
+                      ItemsSource="{Binding DurationFits}"
+                      SelectedItem="{Binding DurationFit}"
+                      Visibility="{Binding HasDurationLimit, Converter={StaticResource BoolToVisibility}}" />
+            <Button Grid.Column="2" Command="{Binding ApplyCommand}" Content="{loc:Tr ApplyPresetToEdit}" Style="{StaticResource SoftButton}" ToolTip="{loc:Tr ApplyPresetToEditHint}" />
+        </Grid>
 
-            <!-- Нарушения требований площадки -->
-            <StackPanel Margin="0,10,0,0"
-                        Visibility="{Binding Violations.Count, Converter={StaticResource CountToVisibility}}">
-                <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr PresetViolations}" />
+        <!-- Заметки пресета и что он поменял -->
+        <ItemsControl ItemsSource="{Binding Notes}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Margin="0,0,0,3" Style="{StaticResource Text.Caption}" Text="{Binding}" TextWrapping="Wrap" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding Changes}" Visibility="{Binding Changes.Count, Converter={StaticResource CountToVisibility}}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="0,0,0,3" Orientation="Horizontal">
+                        <Path Width="11" Height="11" Margin="0,0,6,0" Data="{StaticResource Icon.Check}" Stretch="Uniform" Stroke="{DynamicResource Brush.Accent}" StrokeThickness="2" />
+                        <TextBlock FontSize="12" Foreground="{DynamicResource Brush.Accent}" Style="{StaticResource Text.Base}" Text="{Binding}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Нарушения требований площадки: заметно и с кнопкой «Исправить» -->
+        <Border Margin="0,6,0,0"
+                Padding="12,10"
+                Background="{DynamicResource Brush.SurfaceRaised}"
+                BorderBrush="{DynamicResource Brush.Warning}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Visibility="{Binding Violations.Count, Converter={StaticResource CountToVisibility}}">
+            <StackPanel>
+                <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Brush.Warning}" Style="{StaticResource Text.Base}" Text="{loc:Tr PresetViolations}" />
                 <ItemsControl Margin="0,6,0,0" ItemsSource="{Binding Violations}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type presets:ConstraintViolation}">
-                            <TextBlock Margin="0,0,0,4"
-                                       Foreground="{DynamicResource Brush.Warning}"
-                                       Style="{StaticResource Text.Base}"
-                                       Text="{Binding Message}"
-                                       TextWrapping="Wrap" />
+                        <DataTemplate DataType="{x:Type core:ConstraintViolation}">
+                            <TextBlock Margin="0,0,0,4" FontSize="12.5" Style="{StaticResource Text.Base}" Text="{Binding Message}" TextWrapping="Wrap" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-
-                <Button Margin="0,6,0,0"
-                        Command="{Binding FixViolationsCommand}"
-                        Content="{loc:Tr FixViolations}"
-                        Style="{StaticResource Button.Ghost}" />
+                <Button Margin="0,4,0,0" HorizontalAlignment="Left" Command="{Binding FixViolationsCommand}" Content="{loc:Tr FixViolations}" Style="{StaticResource SoftButton}" />
             </StackPanel>
-        </StackPanel>
-        </ScrollViewer>
-    </Border>
+        </Border>
+    </StackPanel>
 </UserControl>

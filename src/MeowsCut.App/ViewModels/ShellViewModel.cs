@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MeowsCut.App.Localization;
 using MeowsCut.App.Services;
+using MeowsCut.App.Theming;
 using MeowsCut.App.Timeline;
 using MeowsCut.Core.Abstractions;
 using MeowsCut.Core.Configuration;
@@ -32,6 +33,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IShellIntegration _shellIntegration;
     private readonly AutosaveService _autosave;
     private readonly ISilenceDetector _silenceDetector;
+    private readonly ThemeManager _themes;
     private readonly ILogger<ShellViewModel> _logger;
 
     [ObservableProperty]
@@ -95,8 +97,12 @@ public sealed partial class ShellViewModel : ObservableObject
         IShellIntegration shellIntegration,
         AutosaveService autosave,
         ISilenceDetector silenceDetector,
+        ThemeManager themes,
+        SourceThumbnailLoader sourceThumbnails,
         ILogger<ShellViewModel> logger)
     {
+        _themes = themes;
+        Sources = new SourcesViewModel(sourceThumbnails);
         _mediaProbe = mediaProbe;
         _toolsetLocator = toolsetLocator;
         _toolsetProvider = toolsetProvider;
@@ -130,6 +136,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
             Project = Project.WithSequence(sequence);
             HasUnsavedChanges = true;
+            Sources.MarkUsage(sequence);
             Export.UpdateProject(Project);
             Presets.UpdateProject(Project);
 
@@ -163,7 +170,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public PresetsViewModel Presets { get; }
 
     /// <summary>Файлы, добавленные в проект.</summary>
-    public SourcesViewModel Sources { get; } = new();
+    public SourcesViewModel Sources { get; }
 
     /// <summary>
     /// Видна ли нижняя строка состояния. В обычной работе версия ffmpeg —
@@ -343,7 +350,10 @@ public sealed partial class ShellViewModel : ObservableObject
 
             Project = project;
             Preview.UpdateProject(project);
-            Timeline.AppendSource(project, source);
+
+            // Звук — на дорожку, а не чёрным куском в конец видеоряда: через
+            // «Импорт» в панели медиа и перетаскиванием приходит и музыка.
+            PlaceOnBoard(source);
             Sources.Update(project);
 
             var settings = _settingsStore.Current.WithRecentFile(path);
@@ -443,7 +453,13 @@ public sealed partial class ShellViewModel : ObservableObject
     private void OpenExport() => _dialogService.ShowExport();
 
     [RelayCommand]
-    private void OpenSettings() => _dialogService.ShowSettings();
+    private void OpenSettings()
+    {
+        _dialogService.ShowSettings();
+
+        // Тему могли сменить в окне настроек — кнопка в строке меню идёт следом.
+        OnPropertyChanged(nameof(IsDarkTheme));
+    }
 
     /// <summary>
     /// Ставит проект на доску и раздаёт его панелям. Общее место для обоих входов:

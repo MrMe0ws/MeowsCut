@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Export;
@@ -55,6 +55,11 @@ public sealed class JsonPresetProvider(AppPaths paths, ILogger<JsonPresetProvide
         EnsureLoaded();
         return _presets.GetValueOrDefault(id);
     }
+
+    public PresetDefinition? DefaultFor(FrameOrientation orientation) =>
+        Groups
+            .SelectMany(group => GetPresets(group.Id))
+            .FirstOrDefault(preset => preset.IsDefaultFor(orientation));
 
     public void Reload()
     {
@@ -190,7 +195,8 @@ public sealed class JsonPresetProvider(AppPaths paths, ILogger<JsonPresetProvide
             json.Order,
             ReadTemplate(json.Template),
             ReadConstraints(json.Constraints),
-            json.Notes ?? []);
+            json.Notes ?? [],
+            ParseEnumList<FrameOrientation>(json.DefaultFor));
     }
 
     private static PresetTemplate ReadTemplate(PresetTemplateJson? json)

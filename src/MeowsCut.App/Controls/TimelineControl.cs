@@ -17,7 +17,7 @@ namespace MeowsCut.App.Controls;
 /// дерево визуальных элементов начинает заметно тормозить, а здесь достаточно
 /// перерисовать видимый диапазон.
 /// </remarks>
-public sealed class TimelineControl : Control
+public sealed partial class TimelineControl : Control
 {
     private const double RulerHeight = 24d;
     private const double TrackPadding = 10d;
@@ -37,9 +37,11 @@ public sealed class TimelineControl : Control
         Focusable = true;
         SnapsToDevicePixels = true;
         DataContextChanged += OnDataContextChanged;
+        AddVisualChild(_playhead);
     }
 
-    private Brush TrackBackground => (Brush)FindResource("Brush.Background");
+    /// <summary>Доска лежит на своей карточке-панели, полосы — утопленные дорожки на ней.</summary>
+    private Brush TrackBackground => (Brush)FindResource("Brush.Surface");
 
     private Brush ClipFill => (Brush)FindResource("Brush.SurfaceRaised");
 
@@ -53,11 +55,11 @@ public sealed class TimelineControl : Control
 
     private Brush RazorBrush => (Brush)FindResource("Brush.Danger");
 
-    private Brush LaneFill => (Brush)FindResource("Brush.Surface");
+    private Brush LaneFill => (Brush)FindResource("Brush.Background");
 
-    private Brush AudioFill => (Brush)FindResource("Brush.AudioClip");
+    private Brush TitleFill => (Brush)FindResource("Brush.TitleClip");
 
-    private Brush MutedAudioFill => (Brush)FindResource("Brush.SurfaceRaised");
+    private Brush OnTitleBrush => (Brush)FindResource("Brush.OnTitleClip");
 
     /// <summary>Подложка подписей, лежащих поверх кадров.</summary>
     private Brush ScrimBrush => (Brush)FindResource("Brush.Scrim");
@@ -142,6 +144,7 @@ public sealed class TimelineControl : Control
         if (_model is not null)
         {
             _model.VisualInvalidated -= OnVisualInvalidated;
+            _model.PlayheadMoved -= OnPlayheadMoved;
         }
 
         _model = e.NewValue as TimelineViewModel;
@@ -149,6 +152,7 @@ public sealed class TimelineControl : Control
         if (_model is not null)
         {
             _model.VisualInvalidated += OnVisualInvalidated;
+            _model.PlayheadMoved += OnPlayheadMoved;
 
             if (ActualWidth > 0)
             {
@@ -196,6 +200,7 @@ public sealed class TimelineControl : Control
 
         if (_model is null || !_model.HasProject)
         {
+            PositionPlayhead();
             return;
         }
 
@@ -232,125 +237,7 @@ public sealed class TimelineControl : Control
         }
 
         DrawRazorGuide(context, metrics, video.Top, ActualHeight - video.Top - TrackPadding);
-        DrawPlayhead(context, metrics);
-    }
-
-    /// <summary>
-    /// Полоса звука: подложка, подпись дорожки и её куски.
-    /// </summary>
-    /// <remarks>
-    /// Волна берётся готовой картинкой на весь файл, из которой вырезается кусок
-    /// по точкам входа и выхода. Пока она считается, кусок рисуется без неё —
-    /// ждать на перерисовке нельзя.
-    /// </remarks>
-    private void DrawAudioLane(DrawingContext context, TimelineMetrics metrics, AudioTrack track, TimelineLane lane)
-    {
-        var laneRect = new Rect(0, lane.Top, ActualWidth, lane.Height);
-        context.DrawRoundedRectangle(LaneFill, null, laneRect, 4, 4);
-
-        var muted = track.IsMuted;
-
-        foreach (var clip in track.Clips)
-        {
-            var left = metrics.TimeToX(clip.TimelineStart);
-            var right = metrics.TimeToX(clip.TimelineEnd);
-
-            if (right < 0 || left > ActualWidth)
-            {
-                continue;
-            }
-
-            var rect = new Rect(left + ClipGap, lane.Top + 3, Math.Max(2d, right - left - (ClipGap * 2)), lane.Height - 6);
-            var selected = _model?.SelectedAudioClip?.Id == clip.Id;
-
-            var pen = new Pen(selected ? Accent : ClipBorder, selected ? 2 : 1);
-            context.DrawRoundedRectangle(muted ? MutedAudioFill : AudioFill, pen, rect, 4, 4);
-
-            DrawWaveform(context, clip, rect, muted);
-            DrawFades(context, metrics, rect, clip.FadeIn, clip.FadeOut);
-            DrawAudioCaption(context, clip, track, rect);
-            DrawBadges(context, rect, ClipBadges.For(clip));
-        }
-
-        // Имя дорожки рисуется последним и на подложке: кусок звука может начинаться
-        // с нуля, и без подложки подпись сливалась бы с его названием.
-        var trackLabel = track.Title;
-
-        if (muted)
-        {
-            trackLabel += "  ·  " + Localization.Strings.TrackMuted;
-        }
-        else if (Math.Abs(track.Gain - 1d) > 0.0001)
-        {
-            // Громкость дорожки лежит поверх громкости кусков, поэтому стоит
-            // у её имени: повторять её на каждом куске значило бы врать про то,
-            // что правку делали именно там.
-            trackLabel += $"  ·  {track.Gain * 100:0}%";
-        }
-
-        var title = new FormattedText(
-            trackLabel,
-            CultureInfo.CurrentUICulture,
-            FlowDirection.LeftToRight,
-            LabelTypeface,
-            10,
-            MutedBrush,
-            VisualTreeHelper.GetDpi(this).PixelsPerDip);
-
-        var badge = new Rect(4, lane.Top + 2, title.Width + 10, title.Height + 3);
-        context.DrawRoundedRectangle(ScrimBrush, null, badge, 3, 3);
-        context.DrawText(title, new Point(9, lane.Top + 3));
-    }
-
-    /// <summary>
-    /// Волна внутри куска звука.
-    /// </summary>
-    /// <remarks>
-    /// Рисуется под подписью и с отступом сверху: подпись обязана оставаться
-    /// читаемой, а волна на всю высоту перечёркивала бы её.
-    /// Кисть скругления не знает, поэтому прямоугольник обрезается по форме куска.
-    /// </remarks>
-    private void DrawWaveform(DrawingContext context, AudioClip clip, Rect rect, bool muted)
-    {
-        if (rect.Width < 4 || rect.Height < 10 || _model?.WaveformFor(clip) is not { } brush)
-        {
-            return;
-        }
-
-        brush.Opacity = muted ? 0.25 : 0.75;
-
-        var area = new Rect(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2);
-
-        context.PushClip(new RectangleGeometry(area, 3, 3));
-        context.DrawRectangle(brush, null, area);
-        context.Pop();
-    }
-
-    private void DrawAudioCaption(DrawingContext context, AudioClip clip, AudioTrack track, Rect rect)
-    {
-        if (rect.Width < 40)
-        {
-            return;
-        }
-
-        // Тональность и громкость ушли в значки, громкость дорожки — к её имени.
-        var caption = clip.Title.Length > 0 ? clip.Title : Localization.Strings.SectionSound;
-
-        var text = new FormattedText(
-            caption,
-            CultureInfo.CurrentUICulture,
-            FlowDirection.LeftToRight,
-            LabelTypeface,
-            10,
-            TextBrush,
-            VisualTreeHelper.GetDpi(this).PixelsPerDip)
-        {
-            MaxTextWidth = Math.Max(10, rect.Width - 10),
-            MaxLineCount = 1,
-            Trimming = TextTrimming.CharacterEllipsis
-        };
-
-        context.DrawText(text, new Point(rect.X + 6, rect.Bottom - text.Height - 4));
+        PositionPlayhead();
     }
 
     /// <summary>
@@ -393,12 +280,13 @@ public sealed class TimelineControl : Control
             var rect = new Rect(left, lane.Top + 2, Math.Max(3, right - left), lane.Height - 4);
             var isSelected = selected == title.Id;
 
+            // Надпись тёплая, как буква «Т» у её полосы; выбранная — в акцентной рамке.
             context.DrawRoundedRectangle(
-                isSelected ? Accent : ClipFill,
-                new Pen(isSelected ? Accent : ClipBorder, 1),
+                TitleFill,
+                isSelected ? new Pen(Accent, 2) : null,
                 rect,
-                3,
-                3);
+                5,
+                5);
 
             if (rect.Width < 34)
             {
@@ -411,7 +299,7 @@ public sealed class TimelineControl : Control
                 FlowDirection.LeftToRight,
                 LabelTypeface,
                 10,
-                isSelected ? TrackBackground : TextBrush,
+                OnTitleBrush,
                 VisualTreeHelper.GetDpi(this).PixelsPerDip)
             {
                 MaxTextWidth = Math.Max(10, rect.Width - 10),
@@ -710,34 +598,6 @@ public sealed class TimelineControl : Control
         context.DrawText(text, new Point(rect.X + 8, rect.Bottom - text.Height - 4));
     }
 
-    private void DrawPlayhead(DrawingContext context, TimelineMetrics metrics)
-    {
-        if (_model is null)
-        {
-            return;
-        }
-
-        var x = metrics.TimeToX(_model.Playhead);
-        if (x < 0 || x > ActualWidth)
-        {
-            return;
-        }
-
-        var pen = new Pen(Accent, 1.5);
-        context.DrawLine(pen, new Point(x, 0), new Point(x, ActualHeight));
-
-        var head = new StreamGeometry();
-        using (var figure = head.Open())
-        {
-            figure.BeginFigure(new Point(x - 5, 0), true, true);
-            figure.LineTo(new Point(x + 5, 0), true, false);
-            figure.LineTo(new Point(x, 8), true, false);
-        }
-
-        head.Freeze();
-        context.DrawGeometry(Accent, null, head);
-    }
-
     // ───────────────────────────── ввод ─────────────────────────────
 
     protected override void OnMouseDown(MouseButtonEventArgs e)
@@ -756,65 +616,6 @@ public sealed class TimelineControl : Control
         _model.PointerDown(position.X, position.Y, ResolveMode(e.ChangedButton));
         CaptureMouse();
         InvalidateVisual();
-    }
-
-    /// <summary>
-    /// Правая кнопка по звуковой дорожке открывает её меню. Кнопку-корзину пришлось бы
-    /// рисовать в плашке заголовка размером с ноготь, и промах по ней удалял бы дорожку
-    /// целиком; правый клик к тому же работает и на пустой дорожке, где выбирать нечего.
-    /// </summary>
-    protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
-    {
-        base.OnMouseRightButtonDown(e);
-
-        ContextMenu = null;
-
-        if (_model is null)
-        {
-            return;
-        }
-
-        var position = e.GetPosition(this);
-        var lanes = _layout.Build(
-            ActualHeight,
-            [.. _model.Sequence.AudioTracks.Select(track => track.Id)],
-            _model.Sequence.Titles.Count > 0);
-        var lane = lanes.FirstOrDefault(item => item.Kind == LaneKind.Audio && item.Contains(position.Y));
-
-        if (lane.Kind != LaneKind.Audio || _model.Sequence.FindTrack(lane.TrackId) is not { } track)
-        {
-            return;
-        }
-
-        Focus();
-        e.Handled = true;
-
-        ContextMenu = BuildTrackMenu(track);
-        ContextMenu.IsOpen = true;
-    }
-
-    private ContextMenu BuildTrackMenu(AudioTrack track)
-    {
-        var menu = new ContextMenu { DataContext = _model };
-
-        var mute = new MenuItem
-        {
-            Header = track.IsMuted ? Localization.Strings.TrackUnmute : Localization.Strings.TrackMuted,
-            Command = _model!.ToggleAudioTrackMutedCommand,
-            CommandParameter = track.Id
-        };
-
-        var remove = new MenuItem
-        {
-            Header = Localization.Strings.RemoveTrack,
-            Command = _model.RemoveAudioTrackCommand,
-            CommandParameter = track.Id
-        };
-
-        menu.Items.Add(mute);
-        menu.Items.Add(remove);
-
-        return menu;
     }
 
     /// <summary>

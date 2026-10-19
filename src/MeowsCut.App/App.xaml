@@ -1,4 +1,4 @@
-<Application x:Class="MeowsCut.App.App"
+﻿<Application x:Class="MeowsCut.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
@@ -13,6 +13,9 @@
                 <ResourceDictionary Source="Resources/Busy.xaml" />
                 <ResourceDictionary Source="Resources/Menu.xaml" />
                 <ResourceDictionary Source="Resources/Templates.xaml" />
+                <!-- Стили версии 2.0: опираются на шрифты, значки и поля выше -->
+                <ResourceDictionary Source="Resources/Design.Buttons.xaml" />
+                <ResourceDictionary Source="Resources/Design.Panels.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

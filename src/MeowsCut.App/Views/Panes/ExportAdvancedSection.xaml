@@ -1,0 +1,69 @@
+<UserControl x:Class="MeowsCut.App.Views.Panes.ExportAdvancedSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:ExportViewModel}">
+
+    <UserControl.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="FieldBox" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Раздел «Расширенные»: кодек, ускорение, скорость кодирования и прочее редкое -->
+    <StackPanel>
+        <StackPanel Visibility="{Binding HasVideoOutput, Converter={StaticResource BoolToVisibility}}">
+            <UniformGrid Columns="2">
+                <StackPanel Margin="0,0,6,0">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldVideoCodec}" />
+                    <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}" ItemsSource="{Binding VideoCodecs}" SelectedItem="{Binding VideoCodec}" Style="{StaticResource FieldBox}" />
+                </StackPanel>
+                <StackPanel Margin="6,0,0,0">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldEncodingSpeed}" />
+                    <ComboBox ItemsSource="{Binding EncodingSpeeds}" SelectedItem="{Binding EncodingSpeed}" Style="{StaticResource FieldBox}" />
+                </StackPanel>
+            </UniformGrid>
+
+            <TextBlock Margin="0,0,0,12"
+                       Foreground="{DynamicResource Brush.Warning}"
+                       Style="{StaticResource Text.Base}"
+                       Text="{Binding CodecNotice}"
+                       TextWrapping="Wrap"
+                       Visibility="{Binding CodecNotice, Converter={StaticResource NullToVisibility}}" />
+
+            <StackPanel Visibility="{Binding HasHardwareChoice, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldHardware}" />
+                <ComboBox ItemTemplate="{StaticResource EnumLabelTemplate}" ItemsSource="{Binding HardwareOptions}" SelectedItem="{Binding Hardware}" Style="{StaticResource FieldBox}" />
+                <TextBlock Margin="0,-6,0,12" Style="{StaticResource Text.Caption}" Text="{loc:Tr HardwareHint}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <UniformGrid Columns="2">
+                <StackPanel Margin="0,0,6,0">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldPixelFormat}" />
+                    <TextBox Margin="0,0,0,12" Text="{Binding PixelFormat, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Margin="6,0,0,0">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldKeyframeInterval}" />
+                    <TextBox Margin="0,0,0,12" Text="{Binding KeyframeIntervalFrames, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </UniformGrid>
+
+            <CheckBox Margin="0,0,0,8" Content="{loc:Tr TwoPass}" IsChecked="{Binding TwoPass}" />
+
+            <!-- Быстрый режим: копирование потоков без перекодирования -->
+            <CheckBox Content="{loc:Tr FastMode}" IsChecked="{Binding PreferStreamCopy}" />
+        </StackPanel>
+
+        <TextBlock Style="{StaticResource Text.Caption}"
+                   Text="{loc:Tr ExportAudioOnlyNotice}"
+                   TextWrapping="Wrap"
+                   Visibility="{Binding IsAudioOnly, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+</UserControl>

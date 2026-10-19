@@ -1,0 +1,118 @@
+<UserControl x:Class="MeowsCut.App.Views.Panes.ClipTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:fmt="clr-namespace:MeowsCut.App.Formatting"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:InspectorViewModel}">
+
+    <!-- Вкладка «Клип»: где кусок стоит, его скорость и затемнение краёв -->
+    <StackPanel>
+        <UniformGrid Columns="3">
+            <Border Margin="0,0,4,0" Style="{StaticResource ReadoutTile}">
+                <StackPanel>
+                    <TextBlock FontSize="11" Style="{StaticResource Text.Caption}" Text="{loc:Tr ReadoutStart}" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Mono}" Text="{Binding StartText}" />
+                </StackPanel>
+            </Border>
+            <Border Margin="2,0" Style="{StaticResource ReadoutTile}">
+                <StackPanel>
+                    <TextBlock FontSize="11" Style="{StaticResource Text.Caption}" Text="{loc:Tr ReadoutEnd}" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Mono}" Text="{Binding EndText}" />
+                </StackPanel>
+            </Border>
+            <Border Margin="4,0,0,0" Style="{StaticResource ReadoutTile}">
+                <StackPanel>
+                    <TextBlock FontSize="11" Style="{StaticResource Text.Caption}" Text="{loc:Tr ReadoutLength}" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Mono}" Text="{Binding DurationText}" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- Скорость: готовые значения одним нажатием, любое своё — в поле справа -->
+        <TextBlock Style="{StaticResource ParamSection}" Text="{loc:Tr FieldSpeed}" />
+        <ItemsControl ItemsSource="{Binding SpeedPresets}" ToolTip="{loc:Tr SectionSpeedPresetsHint}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:ChoiceChip}">
+                    <Button Margin="0,0,4,0"
+                            Command="{Binding PickCommand}"
+                            Content="{Binding Title}"
+                            Style="{StaticResource Chip}"
+                            Tag="{Binding IsActive}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <controls:ParamRow Margin="0,8,0,3"
+                           Icon="{StaticResource Icon.Speed}"
+                           Label="{loc:Tr FieldSpeed}"
+                           ToolTip="{loc:Tr FieldSpeedHint}">
+            <Slider LargeChange="1"
+                    Maximum="{x:Static fmt:SpeedScale.Max}"
+                    Minimum="{x:Static fmt:SpeedScale.Min}"
+                    SmallChange="0.08"
+                    Value="{Binding SpeedSlider}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.##"
+                                    Maximum="16"
+                                    Minimum="0.1"
+                                    Step="0.05"
+                                    Suffix="×"
+                                    ToolTip="{loc:Tr FieldSpeedCustomHint}"
+                                    Value="{Binding Speed}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <!-- Затемнение краёв: из чёрного и в чёрное, на самой ленте видно рампой -->
+        <Grid Margin="0,14,0,4">
+            <TextBlock Margin="0" Style="{StaticResource ParamSection}" Text="{loc:Tr SectionFade}" />
+            <Button HorizontalAlignment="Right"
+                    Command="{Binding ClearFadesCommand}"
+                    Content="{loc:Tr ClipFadesClear}"
+                    MinHeight="26"
+                    Padding="8,3"
+                    Style="{StaticResource FlatButton}" />
+        </Grid>
+
+        <controls:ParamRow Icon="{StaticResource Icon.Fade}" Label="{loc:Tr ClipFadeIn}" ToolTip="{loc:Tr ClipFadeInHint}">
+            <Slider IsSnapToTickEnabled="True"
+                    Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                    Minimum="0"
+                    TickFrequency="0.1"
+                    Value="{Binding FadeInSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0"
+                                    Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                                    Minimum="0"
+                                    Step="0.1"
+                                    Suffix=" с"
+                                    Value="{Binding FadeInSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <controls:ParamRow Icon="{StaticResource Icon.FadeOut}" Label="{loc:Tr ClipFadeOut}" ToolTip="{loc:Tr ClipFadeOutHint}">
+            <Slider IsSnapToTickEnabled="True"
+                    Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                    Minimum="0"
+                    TickFrequency="0.1"
+                    Value="{Binding FadeOutSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0"
+                                    Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                                    Minimum="0"
+                                    Step="0.1"
+                                    Suffix=" с"
+                                    Value="{Binding FadeOutSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+    </StackPanel>
+</UserControl>

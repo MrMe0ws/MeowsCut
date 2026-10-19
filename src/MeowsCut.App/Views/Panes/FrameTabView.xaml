@@ -1,0 +1,122 @@
+<UserControl x:Class="MeowsCut.App.Views.Panes.FrameTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:fmt="clr-namespace:MeowsCut.App.Formatting"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:InspectorViewModel}">
+
+    <!-- Вкладка «Кадр»: подгонка, поворот, масштаб, сдвиг и наезд -->
+    <StackPanel>
+        <!-- Подгонка куска к кадру ролика — исключение из галочки «Заполнить кадр» -->
+        <TextBlock Margin="0,0,0,6" Style="{StaticResource ParamSection}" Text="{loc:Tr ClipFit}" ToolTip="{loc:Tr ClipFitHint}" />
+        <Border Style="{StaticResource SegmentHost}" ToolTip="{loc:Tr ClipFitHint}">
+            <ListBox ItemsSource="{Binding FitOptions}"
+                     ItemTemplate="{StaticResource TitleTemplate}"
+                     SelectedItem="{Binding FitOption}"
+                     Style="{StaticResource SegmentList}" />
+        </Border>
+
+        <!-- Поворот: три кнопки и текущий угол; без числа справа строка
+             отдаёт кнопкам всю ширину -->
+        <controls:ParamRow Margin="0,12,0,3" Icon="{StaticResource Icon.RotateRight}" Label="{loc:Tr FieldRotation}">
+            <DockPanel>
+                <TextBlock Margin="8,0,6,0" VerticalAlignment="Center" DockPanel.Dock="Right" Style="{StaticResource Text.Mono}" Text="{Binding RotationText}" />
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                    <Button Command="{Binding RotateLeftCommand}" Style="{StaticResource SoftButton}" Padding="7,5" ToolTip="{loc:Tr RotateLeft}">
+                        <Path Data="{StaticResource Icon.RotateLeft}" Style="{StaticResource Glyph}" />
+                    </Button>
+                    <Button Margin="4,0,0,0" Command="{Binding RotateRightCommand}" Style="{StaticResource SoftButton}" Padding="7,5" ToolTip="{loc:Tr RotateRight}">
+                        <Path Data="{StaticResource Icon.RotateRight}" Style="{StaticResource Glyph}" />
+                    </Button>
+                    <Button Margin="4,0,0,0" Command="{Binding RotateHalfTurnCommand}" Style="{StaticResource SoftButton}" Padding="7,5" ToolTip="{loc:Tr RotateHalfTurn}">
+                        <Path Data="{StaticResource Icon.RotateHalf}" Style="{StaticResource Glyph}" />
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </controls:ParamRow>
+
+        <!-- Масштаб по логарифму: от 10% до 5000%, и 100% ближе к середине -->
+        <controls:ParamRow Icon="{StaticResource Icon.Zoom}" Label="{loc:Tr FieldZoom}">
+            <Slider LargeChange="1"
+                    Maximum="{x:Static fmt:ZoomScale.Max}"
+                    Minimum="{x:Static fmt:ZoomScale.Min}"
+                    SmallChange="0.05"
+                    Value="{Binding ZoomSlider}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0"
+                                    Maximum="{x:Static fmt:ZoomScale.MaxPercent}"
+                                    Minimum="{x:Static fmt:ZoomScale.MinPercent}"
+                                    Step="1"
+                                    Suffix="%"
+                                    Value="{Binding ZoomPercent}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <TextBlock Style="{StaticResource ParamSection}" Text="{loc:Tr SectionPosition}" />
+
+        <controls:ParamRow controls:ParamWheel.Step="1" Icon="{StaticResource Icon.MoveHorizontal}" Label="{loc:Tr FieldOffsetX}">
+            <Slider Maximum="{Binding OffsetLimitPercent}" Minimum="{Binding MinOffsetPercent}" SmallChange="1" Value="{Binding OffsetXPercent}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0"
+                                    Maximum="{Binding OffsetLimitPercent}"
+                                    Minimum="{Binding MinOffsetPercent}"
+                                    Step="1"
+                                    Suffix="%"
+                                    Value="{Binding OffsetXPercent}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <controls:ParamRow controls:ParamWheel.Step="1" Icon="{StaticResource Icon.MoveVertical}" Label="{loc:Tr FieldOffsetY}">
+            <Slider Maximum="{Binding OffsetLimitPercent}" Minimum="{Binding MinOffsetPercent}" SmallChange="1" Value="{Binding OffsetYPercent}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0"
+                                    Maximum="{Binding OffsetLimitPercent}"
+                                    Minimum="{Binding MinOffsetPercent}"
+                                    Step="1"
+                                    Suffix="%"
+                                    Value="{Binding OffsetYPercent}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <!-- Наезд: от 100% к масштабу и сдвигу выше за это время с начала куска -->
+        <controls:ParamRow Margin="0,10,0,3"
+                           Icon="{StaticResource Icon.Motion}"
+                           Label="{loc:Tr FieldMotion}"
+                           ToolTip="{loc:Tr FieldMotionHint}">
+            <Slider IsSnapToTickEnabled="True"
+                    Maximum="{Binding MotionSliderMax}"
+                    Minimum="0"
+                    TickFrequency="0.1"
+                    Value="{Binding MotionSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0"
+                                    Maximum="{x:Static vm:InspectorViewModel.MaxMotionSeconds}"
+                                    Minimum="0"
+                                    Step="0.1"
+                                    Suffix=" с"
+                                    Value="{Binding MotionSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <CheckBox Margin="0,4,0,0"
+                  Content="{loc:Tr FieldMotionOut}"
+                  FontSize="12.5"
+                  IsChecked="{Binding MotionOut}"
+                  ToolTip="{loc:Tr FieldMotionOutHint}" />
+
+        <Button Margin="0,14,0,0"
+                HorizontalAlignment="Stretch"
+                Command="{Binding ResetTransformCommand}"
+                Style="{StaticResource SoftButton}">
+            <StackPanel Orientation="Horizontal">
+                <Path Data="{StaticResource Icon.Reset}" Style="{StaticResource GlyphLead}" />
+                <TextBlock Text="{loc:Tr ResetTransform}" />
+            </StackPanel>
+        </Button>
+    </StackPanel>
+</UserControl>

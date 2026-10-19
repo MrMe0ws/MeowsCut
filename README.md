@@ -82,7 +82,7 @@ Telegram) живут в JSON и правятся без пересборки —
 
 ```powershell
 ./tools/publish-portable.ps1 -Zip      # архив
-./tools/build-installer.ps1 -Version 0.4.0   # установщик
+./tools/build-installer.ps1 -Version 2.0.0   # установщик
 dotnet run --project src/MeowsCut.App  # запуск при разработке
 ```
 

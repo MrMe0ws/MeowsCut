@@ -22,8 +22,11 @@
             </Setter.Value>
         </Setter>
         <Style.Triggers>
-            <!-- Анимация только пока элемент на экране: спрятанный спиннер не должен крутиться -->
-            <Trigger Property="Visibility" Value="Visible">
+            <!-- Анимация только пока элемент на экране: спрятанный спиннер не должен крутиться.
+                 IsVisible, а не Visibility: спиннер обычно прячут вместе с родителем,
+                 и его собственная Visibility остаётся Visible. Тогда анимация шла
+                 вечно, окно перерисовывалось с частотой монитора и душило видео. -->
+            <Trigger Property="IsVisible" Value="True">
                 <Trigger.EnterActions>
                     <BeginStoryboard Name="SpinStoryboard">
                         <Storyboard>
@@ -36,7 +39,7 @@
                     </BeginStoryboard>
                 </Trigger.EnterActions>
                 <Trigger.ExitActions>
-                    <StopStoryboard BeginStoryboardName="SpinStoryboard" />
+                    <RemoveStoryboard BeginStoryboardName="SpinStoryboard" />
                 </Trigger.ExitActions>
             </Trigger>
         </Style.Triggers>

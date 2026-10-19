@@ -1,6 +1,7 @@
-﻿<UserControl x:Class="MeowsCut.App.Views.Panes.TimelinePaneView"
+<UserControl x:Class="MeowsCut.App.Views.Panes.TimelinePaneView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:chips="clr-namespace:MeowsCut.App.Views.Chips"
              xmlns:controls="clr-namespace:MeowsCut.App.Controls"
              xmlns:loc="clr-namespace:MeowsCut.App.Localization"
              xmlns:timeline="clr-namespace:MeowsCut.App.Timeline"
@@ -10,163 +11,177 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:TimelineViewModel}">
 
-    <Border Background="{DynamicResource Brush.Surface}"
-            BorderBrush="{DynamicResource Brush.Border}"
-            BorderThickness="0,1,0,0">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <!-- Инструменты доски -->
-            <Grid Grid.Row="0" Margin="12,8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <!--
+            Панель доски 2.0: инструменты — значками (подпись и клавиша в подсказке),
+            правка — значками, добавление — одной кнопкой с меню. Справа прилипание
+            и масштаб. Строка переносится в узком окне, а не уезжает за край.
+        -->
+        <Border Grid.Row="0" Padding="10,6" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1">
+            <DockPanel LastChildFill="False">
+                <WrapPanel DockPanel.Dock="Left" VerticalAlignment="Center" Orientation="Horizontal">
+                    <Border VerticalAlignment="Center" Style="{StaticResource SegmentHost}">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton GroupName="Tool"
+                                         IsChecked="{Binding ActiveTool, Mode=TwoWay, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static timeline:TimelineTool.Select}}"
+                                         Style="{StaticResource SegmentIcon}"
+                                         ToolTip="{loc:Tr ToolSelectHint}">
+                                <Path Data="{StaticResource Icon.Pointer}" StrokeThickness="1.5" Style="{StaticResource Glyph}" />
+                            </RadioButton>
+                            <RadioButton GroupName="Tool"
+                                         IsChecked="{Binding ActiveTool, Mode=TwoWay, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static timeline:TimelineTool.Razor}}"
+                                         Style="{StaticResource SegmentIcon}"
+                                         ToolTip="{loc:Tr ToolRazorHint}">
+                                <Path Data="{StaticResource Icon.Scissors}" Style="{StaticResource Glyph}" />
+                            </RadioButton>
+                        </StackPanel>
+                    </Border>
 
-                <!-- Переносящаяся строка, а не прокрутка: кнопок больше, чем влезает
-                     в узкое окно, и последняя просто уезжала за край — добраться
-                     до «вернуть» было нельзя вовсе. Отступы задаются стилями,
-                     чтобы при переносе строки не слипались. -->
-                <WrapPanel Grid.Column="0" Orientation="Horizontal">
-                    <WrapPanel.Resources>
-                        <Style TargetType="Button" BasedOn="{StaticResource Button.Ghost}">
-                            <Setter Property="Margin" Value="0,2,6,2" />
-                        </Style>
-                        <Style TargetType="RadioButton" BasedOn="{StaticResource ToolButton}">
-                            <Setter Property="Margin" Value="0,2,6,2" />
-                        </Style>
-                        <!-- Разделители: в переносящейся строке высота не тянется
-                             сама, и без неё полоска схлопывалась в ничто. -->
-                        <Style TargetType="Border">
-                            <Setter Property="Margin" Value="2,4,8,4" />
-                            <Setter Property="Height" Value="20" />
-                            <Setter Property="VerticalAlignment" Value="Center" />
-                        </Style>
-                    </WrapPanel.Resources>
-                        <RadioButton GroupName="Tool"
-                                     IsChecked="{Binding ActiveTool, Mode=TwoWay,
-                                         Converter={StaticResource EnumToBool},
-                                         ConverterParameter={x:Static timeline:TimelineTool.Select}}"
-                                     Style="{StaticResource ToolButton}"
-                                     ToolTip="{loc:Tr ToolSelectHint}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Pointer}" Style="{StaticResource ToolIcon}" />
-                                <TextBlock Text="{loc:Tr ToolSelect}" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton GroupName="Tool"
-                                     IsChecked="{Binding ActiveTool, Mode=TwoWay,
-                                         Converter={StaticResource EnumToBool},
-                                         ConverterParameter={x:Static timeline:TimelineTool.Razor}}"
-                                     Style="{StaticResource ToolButton}"
-                                     ToolTip="{loc:Tr ToolRazorHint}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Scissors}" Style="{StaticResource ToolIconStroke}" />
-                                <TextBlock Text="{loc:Tr ToolRazor}" />
-                            </StackPanel>
-                        </RadioButton>
+                    <Border Style="{StaticResource ToolbarDivider}" />
 
-                        <Border Width="1" Background="{DynamicResource Brush.Border}" />
+                    <Button Command="{Binding SplitAtPlayheadCommand}" Style="{StaticResource FlatIconButton}" ToolTip="{loc:Tr SplitHereHint}">
+                        <Path Data="{StaticResource Icon.Split}" Style="{StaticResource Glyph}" />
+                    </Button>
+                    <Button Command="{Binding DuplicateSelectedCommand}" Style="{StaticResource FlatIconButton}" ToolTip="{loc:Tr DuplicateHint}">
+                        <Path Data="{StaticResource Icon.Duplicate}" Style="{StaticResource Glyph}" />
+                    </Button>
+                    <Button Command="{Binding DeleteSelectedCommand}" Style="{StaticResource FlatIconButton}" ToolTip="{loc:Tr DeleteClipHint}">
+                        <Path Data="{StaticResource Icon.Trash}" Style="{StaticResource Glyph}" />
+                    </Button>
 
-                        <Button Command="{Binding DataContext.AddFileCommand,
-                                    RelativeSource={RelativeSource AncestorType=Window}}"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr AddFileHint}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Plus}" Style="{StaticResource ToolIconStroke}" />
-                                <TextBlock Text="{loc:Tr AddFile}" />
-                            </StackPanel>
-                        </Button>
+                    <Border Style="{StaticResource ToolbarDivider}" />
 
-                        <Button Command="{Binding DataContext.AddSoundCommand,
-                                    RelativeSource={RelativeSource AncestorType=Window}}"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr AddSoundHint}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Note}" Style="{StaticResource ToolIconStroke}" />
-                                <TextBlock Text="{loc:Tr AddSound}" />
-                            </StackPanel>
-                        </Button>
+                    <!-- Всё, что кладут на доску, — одной кнопкой с меню -->
+                    <Button controls:DropDownMenu.IsEnabled="True"
+                            Style="{StaticResource SoftButton}"
+                            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
+                            ToolTip="{loc:Tr AddMenuHint}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Plus}" StrokeThickness="2" Style="{StaticResource GlyphLead}" />
+                            <TextBlock Text="{loc:Tr AddMenu}" />
+                            <Path Width="11" Height="11" Margin="6,1,0,0" Data="{StaticResource Icon.ChevronDown}" Style="{StaticResource Glyph}" />
+                        </StackPanel>
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Command="{Binding PlacementTarget.Tag.AddFileCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          Header="{loc:Tr AddFile}"
+                                          Icon="{StaticResource Icon.Film}"
+                                          InputGestureText="Ctrl+O" />
+                                <MenuItem Command="{Binding PlacementTarget.Tag.AddSoundCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          Header="{loc:Tr AddSound}"
+                                          Icon="{StaticResource Icon.Note}" />
+                                <MenuItem Command="{Binding PlacementTarget.Tag.Timeline.AddAudioTrackCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          Header="{loc:Tr AddAudioTrack}"
+                                          Icon="{StaticResource Icon.Layers}" />
+                                <Separator Style="{StaticResource MenuSeparator}" />
+                                <MenuItem Command="{Binding PlacementTarget.Tag.Timeline.AddTitleAtPlayheadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          Header="{loc:Tr AddTitle}"
+                                          Icon="{StaticResource Icon.Text}" />
+                                <MenuItem Command="{Binding PlacementTarget.Tag.Voiceover.ToggleRecordCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          Header="{loc:Tr Voiceover}"
+                                          Icon="{StaticResource Icon.Mic}"
+                                          InputGestureText="R" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
 
-                        <Button Command="{Binding AddAudioTrackCommand}"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr AddAudioTrackHint}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Layers}" Style="{StaticResource ToolIconStroke}" />
-                                <TextBlock Text="{loc:Tr AddAudioTrack}" />
-                            </StackPanel>
-                        </Button>
+                    <Button Margin="4,0,0,0" Command="{Binding AddTitleAtPlayheadCommand}" Style="{StaticResource FlatButton}" ToolTip="{loc:Tr AddTitleHint}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Text}" Style="{StaticResource GlyphLead}" />
+                            <TextBlock Text="{loc:Tr AddTitle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Button Command="{Binding DataContext.RemoveSilenceCommand,
-                                    RelativeSource={RelativeSource AncestorType=Window}}"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr RemoveSilenceHint}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Scissors}" Style="{StaticResource ToolIconStroke}" />
-                                <TextBlock Text="{loc:Tr RemoveSilence}" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding AddTitleAtPlayheadCommand}"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr AddTitleHint}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource Icon.Text}" Style="{StaticResource ToolIconStroke}" />
-                                <TextBlock Text="{loc:Tr AddTitle}" />
-                            </StackPanel>
-                        </Button>
-
-                        <Border Width="1" Background="{DynamicResource Brush.Border}" />
-
-                        <Button Command="{Binding SplitAtPlayheadCommand}"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr SplitHereHint}">
-                            <Path Data="{StaticResource Icon.Split}" Style="{StaticResource ToolIconOnly}" />
-                        </Button>
-                        <Button Command="{Binding DeleteSelectedCommand}"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="{loc:Tr DeleteClipHint}">
-                            <Path Data="{StaticResource Icon.Trash}" Style="{StaticResource ToolIconOnly}" />
-                        </Button>
-
-                        <Border Width="1" Background="{DynamicResource Brush.Border}" />
-
-                        <Button Command="{Binding UndoCommand}"
-                                Content="↶"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="Ctrl+Z" />
-                        <Button Command="{Binding RedoCommand}"
-                                Content="↷"
-                                Style="{StaticResource Button.Ghost}"
-                                ToolTip="Ctrl+Shift+Z" />
+                    <Button Command="{Binding DataContext.RemoveSilenceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            Style="{StaticResource FlatButton}"
+                            ToolTip="{loc:Tr RemoveSilenceHint}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Silence}" Style="{StaticResource GlyphLead}" />
+                            <TextBlock Text="{loc:Tr RemoveSilence}" />
+                        </StackPanel>
+                    </Button>
                 </WrapPanel>
 
-                <StackPanel Grid.Column="1" Margin="12,0,0,0" Orientation="Horizontal">
-                    <CheckBox VerticalAlignment="Center"
-                              Content="{loc:Tr Snapping}"
-                              IsChecked="{Binding SnapEnabled}" />
+                <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Orientation="Horizontal">
+                    <ToggleButton IsChecked="{Binding SnapEnabled}" Style="{StaticResource FlatToggle}" ToolTip="{loc:Tr SnappingHint}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Magnet}" Style="{StaticResource GlyphLead}" />
+                            <TextBlock Text="{loc:Tr Snapping}" />
+                        </StackPanel>
+                    </ToggleButton>
 
-                    <Button Margin="12,0,0,0"
-                            Command="{Binding ZoomOutCommand}"
-                            Content="−"
-                            Style="{StaticResource Button.Ghost}" />
-                    <Button Margin="6,0,0,0"
-                            Command="{Binding ZoomInCommand}"
-                            Content="+"
-                            Style="{StaticResource Button.Ghost}" />
-                    <Button Margin="6,0,0,0"
-                            Command="{Binding ZoomToFitCommand}"
-                            Style="{StaticResource Button.Ghost}"
-                            ToolTip="{loc:Tr ZoomFit}">
-                        <Path Data="{StaticResource Icon.Fit}" Style="{StaticResource ToolIconOnly}" />
+                    <Border Style="{StaticResource ToolbarDivider}" />
+
+                    <Button Width="30" Command="{Binding ZoomOutCommand}" Style="{StaticResource FlatIconButton}" ToolTip="{loc:Tr ZoomOutHint}">
+                        <Path Width="15" Height="15" Data="{StaticResource Icon.ZoomOut}" Style="{StaticResource Glyph}" />
+                    </Button>
+                    <Slider Width="120"
+                            Margin="4,0"
+                            VerticalAlignment="Center"
+                            Maximum="{x:Static vm:TimelineViewModel.ZoomLevelMax}"
+                            Minimum="0"
+                            SmallChange="2"
+                            ToolTip="{loc:Tr ZoomSliderHint}"
+                            Value="{Binding ZoomLevel}"
+                            controls:ParamWheel.IsEnabled="True" />
+                    <Button Width="30" Command="{Binding ZoomInCommand}" Style="{StaticResource FlatIconButton}" ToolTip="{loc:Tr ZoomInHint}">
+                        <Path Width="15" Height="15" Data="{StaticResource Icon.Zoom}" Style="{StaticResource Glyph}" />
+                    </Button>
+                    <Button Command="{Binding ZoomToFitCommand}" Style="{StaticResource FlatIconButton}" ToolTip="{loc:Tr ZoomFit}">
+                        <Path Data="{StaticResource Icon.Fit}" Style="{StaticResource Glyph}" />
                     </Button>
                 </StackPanel>
-            </Grid>
+            </DockPanel>
+        </Border>
 
-            <controls:TimelineControl x:Name="Board" Grid.Row="1" Margin="0,0,0,0" />
+        <!-- Значки полос слева, сама доска справа: одна раскладка на двоих -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="44" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <controls:TrackHeaderStrip Grid.Column="0" />
+            <controls:TimelineControl x:Name="Board" Grid.Column="1" ParameterRequested="OnParameterRequested" />
         </Grid>
-    </Border>
+
+        <!-- Чип параметра у куска: открывается из меню по правой кнопке, закрывается
+             щелчком мимо или Esc. Правки идут через те же модели, что и панель свойств. -->
+        <controls:ChipPopup x:Name="Chip" PlacementTarget="{Binding ElementName=Board}">
+            <Border x:Name="ChipCard" Width="340" Style="{StaticResource FloatingCard}">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                        <Button x:Name="ChipClose"
+                                Width="26"
+                                Height="26"
+                                Click="OnChipClose"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource FlatIconButton}"
+                                ToolTip="{loc:Tr ChipCloseHint}">
+                            <Path Width="11" Height="11" Data="{StaticResource Icon.WindowClose}" Style="{StaticResource Glyph}" />
+                        </Button>
+                        <Path x:Name="ChipIcon"
+                              Width="16"
+                              Height="16"
+                              Margin="0,0,8,0"
+                              Stretch="Uniform"
+                              Stroke="{DynamicResource Brush.Accent}"
+                              StrokeEndLineCap="Round"
+                              StrokeStartLineCap="Round"
+                              StrokeThickness="1.7" />
+                        <TextBlock x:Name="ChipTitle" VerticalAlignment="Center" FontWeight="SemiBold" Style="{StaticResource Text.Base}" />
+                    </DockPanel>
+
+                    <chips:VideoChipEditors x:Name="VideoEditors" />
+                    <chips:AudioChipEditors x:Name="AudioEditors" />
+                    <chips:TitleChipEditors x:Name="TitleEditors" />
+                </StackPanel>
+            </Border>
+        </controls:ChipPopup>
+    </Grid>
 </UserControl>

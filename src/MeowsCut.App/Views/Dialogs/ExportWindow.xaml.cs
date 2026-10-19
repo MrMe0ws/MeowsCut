@@ -17,7 +17,9 @@ public partial class ExportWindow : Window
     {
         InitializeComponent();
 
+        DataContext = export;
         Presets.DataContext = presets;
-        Export.DataContext = export;
     }
+
+    private void OnClose(object sender, RoutedEventArgs e) => Close();
 }

@@ -1,0 +1,365 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+                    xmlns:loc="clr-namespace:MeowsCut.App.Localization">
+
+    <!--
+        Поверхности версии 2.0: панели — скруглённые карточки на фоне окна,
+        а не полосы, разлинованные рамками. Между ними просвет в 6 пикселей.
+    -->
+
+    <Style x:Key="Panel" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <!-- Плавающая карточка: чип параметра у клипа, выпадающие списки -->
+    <Style x:Key="FloatingCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Margin" Value="10" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="24" Opacity="0.35" ShadowDepth="6" Direction="270" Color="Black" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Тонкая вертикальная черта между группами кнопок -->
+    <Style x:Key="ToolbarDivider" TargetType="Border">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Margin" Value="6,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+    </Style>
+
+    <!-- Плитка «Начало · Конец · Длина» в шапке клипа -->
+    <Style x:Key="ReadoutTile" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceRaised}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="9,6" />
+    </Style>
+
+    <!--
+        Строка параметра: значок и подпись, ползунок, число. Колесо мыши над всей
+        строкой двигает значение (ParamWheel), а не прокручивает панель.
+    -->
+    <Style x:Key="ParamRow" TargetType="Grid">
+        <Setter Property="Margin" Value="0,3" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="controls:ParamWheel.IsEnabled" Value="True" />
+    </Style>
+
+    <Style x:Key="ParamLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Подзаголовок раздела внутри вкладки: «Затемнение краёв», «Положение» -->
+    <Style x:Key="ParamSection" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,14,0,6" />
+    </Style>
+
+    <!-- Число рядом с ползунком: моноширинное, на подложке, без рамки -->
+    <Style x:Key="FieldNumber" TargetType="controls:NumberBox" BasedOn="{StaticResource Inspector.NumberBox}">
+        <Setter Property="Width" Value="64" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Padding" Value="6,0" />
+    </Style>
+
+    <!--
+        Строка параметра (controls:ParamRow). Ширины подписей общие на всю
+        панель (SharedSizeGroup) — поля разных разделов стоят по одной линии.
+    -->
+    <Style TargetType="controls:ParamRow">
+        <Setter Property="Margin" Value="0,3" />
+        <Setter Property="controls:ParamWheel.IsEnabled" Value="True" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:ParamRow">
+                    <Grid Background="Transparent" MinHeight="30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ParamLabel" />
+                            <ColumnDefinition Width="*" MinWidth="56" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ParamValue" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,10,0" VerticalAlignment="Center" Orientation="Horizontal">
+                            <Path x:Name="Glyph" Data="{TemplateBinding Icon}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource ParamLabel}" Text="{TemplateBinding Label}" />
+                        </StackPanel>
+                        <ContentPresenter x:Name="Body" Grid.Column="1" VerticalAlignment="Center" />
+                        <ContentPresenter Grid.Column="2"
+                                          Margin="10,0,0,0"
+                                          HorizontalAlignment="Right"
+                                          VerticalAlignment="Center"
+                                          Content="{TemplateBinding Trailing}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Icon" Value="{x:Null}">
+                            <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <!-- Без числа справа орган занимает и его место: выпадающий
+                             список «Снизу по центру» не должен обрезаться -->
+                        <Trigger Property="Trailing" Value="{x:Null}">
+                            <Setter TargetName="Body" Property="Grid.ColumnSpan" Value="2" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Меню по правой кнопке: в тон панелям, со значками перед пунктами -->
+    <Style TargetType="ContextMenu">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Ui}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Margin="0,0,8,8"
+                            Background="{DynamicResource Brush.SurfaceRaised}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            MinWidth="210"
+                            Padding="4">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="18" Opacity="0.3" ShadowDepth="4" Direction="270" Color="Black" />
+                        </Border.Effect>
+                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Подсказка под курсором: тёмная плашка вместо системной жёлтой -->
+    <Style TargetType="ToolTip">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Ui}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{DynamicResource Brush.SurfaceRaised}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            MaxWidth="360"
+                            Padding="8,5">
+                        <ContentPresenter>
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Раскрывающийся раздел: «Расширенные» в экспорте. Редкие параметры не
+        урезаны, а спрятаны — стрелка вниз показывает, что раздел открыт.
+    -->
+    <Style x:Key="Disclosure" TargetType="Expander">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="10">
+                        <DockPanel>
+                            <ToggleButton DockPanel.Dock="Top"
+                                          Cursor="Hand"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent" Padding="12,10">
+                                            <DockPanel>
+                                                <Path x:Name="Chevron"
+                                                      Width="11"
+                                                      Height="11"
+                                                      Margin="0,0,8,0"
+                                                      Data="{StaticResource Icon.Chevron}"
+                                                      RenderTransformOrigin="0.5,0.5"
+                                                      Stretch="Uniform"
+                                                      Stroke="{DynamicResource Brush.TextMuted}"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeThickness="2" />
+                                                <ContentPresenter VerticalAlignment="Center" />
+                                            </DockPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Chevron" Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <RotateTransform Angle="90" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <ContentPresenter ContentSource="Header" />
+                            </ToggleButton>
+                            <ContentPresenter x:Name="Body" Margin="12,0,12,12" Visibility="Collapsed" />
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True">
+                            <Setter TargetName="Body" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Список без системной подсветки: карточки пресетов рисуют выделение сами -->
+    <Style x:Key="PlainList" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <ItemsPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Карточка пресета экспорта: выбранная — в акцентной рамке -->
+    <Style x:Key="CardItem" TargetType="ListBoxItem">
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Root"
+                            Background="{DynamicResource Brush.SurfaceRaised}"
+                            BorderBrush="Transparent"
+                            BorderThickness="1.5"
+                            CornerRadius="10"
+                            Padding="12,9">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentSoft}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Сегмент-переключатель на списке: «Как в проекте · Вписать · Заполнить» -->
+    <Style x:Key="SegmentList" TargetType="ListBox" BasedOn="{StaticResource PlainList}">
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="Root" Background="Transparent" CornerRadius="6" Padding="6,5">
+                                    <ContentPresenter HorizontalAlignment="Center" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceRaised}" />
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Граница раздела внутри панели, которую можно тянуть: видна всегда тонкой
+        линией, под курсором — зелёная с ручкой посередине. Ручка подсказывает,
+        что линия двигается, а не просто разделяет.
+    -->
+    <Style x:Key="SectionResizer" TargetType="Thumb">
+        <Setter Property="Height" Value="9" />
+        <Setter Property="Cursor" Value="SizeNS" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Grid Background="Transparent">
+                        <Rectangle x:Name="Line"
+                                   Height="1"
+                                   VerticalAlignment="Center"
+                                   Fill="{DynamicResource Brush.Border}" />
+                        <Border x:Name="Grip"
+                                Width="32"
+                                Height="4"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource Brush.Accent}"
+                                CornerRadius="2"
+                                Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Line" Property="Fill" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Grip" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="Line" Property="Fill" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Grip" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MeowsCut.Core.Configuration;
 using MeowsCut.Core.Editing;
 using MeowsCut.Core.Export;
@@ -72,6 +72,52 @@ public class JsonPresetProviderTests
     {
         Provider().Find("telegram.не-существует").Should().BeNull();
     }
+
+    [Theory]
+    [InlineData(FrameOrientation.Landscape, "general.web-1080")]
+    [InlineData(FrameOrientation.Square, "general.web-1080")]
+    [InlineData(FrameOrientation.Portrait, "vertical.video-1080")]
+    public void Default_preset_is_ordinary_web_video_not_a_sticker(FrameOrientation orientation, string expected)
+    {
+        // Обычный монтаж встречается чаще стикеров: экспорт стартует с 1080p
+        // под ориентацию кадра, а стикер выбирают руками.
+        Provider().DefaultFor(orientation)!.Id.Should().Be(expected);
+    }
+
+    [Fact]
+    public void General_group_comes_before_telegram()
+    {
+        var groups = Provider().Groups.Select(group => group.Id).ToList();
+
+        groups.IndexOf("general").Should().BeLessThan(groups.IndexOf("telegram"));
+        groups.IndexOf("vertical").Should().BeLessThan(groups.IndexOf("telegram"));
+    }
+
+    [Theory]
+    [InlineData("vertical.video-1080")]
+    [InlineData("vertical.tiktok")]
+    [InlineData("vertical.youtube-shorts")]
+    public void Vertical_presets_are_full_hd_portrait(string id)
+    {
+        var preset = Provider().Find(id)!;
+
+        preset.Template.Width.Should().Be(1080);
+        preset.Template.Height.Should().Be(1920);
+        preset.Template.PixelFormat.Should().Be("yuv420p", "10-битное видео с телефона иначе не откроется на части устройств");
+    }
+
+    [Fact]
+    public void Shorts_are_limited_to_three_minutes()
+    {
+        Provider().Find("vertical.youtube-shorts")!.Constraints.MaxDuration.Should().Be(TimeSpan.FromMinutes(3));
+    }
+
+    [Theory]
+    [InlineData(1920, 1080, FrameOrientation.Landscape)]
+    [InlineData(1080, 1920, FrameOrientation.Portrait)]
+    [InlineData(1080, 1080, FrameOrientation.Square)]
+    public void Orientation_follows_the_frame(int width, int height, FrameOrientation expected) =>
+        FrameOrientations.Of(new MeowsCut.Core.Media.FrameSize(width, height)).Should().Be(expected);
 }
 
 /// <summary>Применение пресета к проекту и настройкам.</summary>

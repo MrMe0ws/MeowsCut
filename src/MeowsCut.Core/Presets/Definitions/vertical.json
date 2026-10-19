@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "group": {
+    "id": "vertical",
+    "title": "Вертикальные",
+    "description": "Кадр 9:16 для телефона: TikTok, Shorts, сторис",
+    "order": 8
+  },
+  "presets": [
+    {
+      "id": "vertical.video-1080",
+      "title": "Вертикальное видео · 1080×1920",
+      "description": "9:16, H.264, постоянное качество — для любой площадки",
+      "order": 10,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "crf": 21,
+        "width": 1080,
+        "height": 1920,
+        "fit": "Contain",
+        "pixelFormat": "yuv420p",
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 192,
+        "audioSampleRateHz": 48000,
+        "audioChannels": 2
+      },
+      "constraints": {},
+      "notes": [
+        "Монтаж в 16:9 встанет с чёрными полями — для вертикального ролика выберите формат кадра 9:16"
+      ],
+      "defaultFor": ["portrait"]
+    },
+    {
+      "id": "vertical.tiktok",
+      "title": "TikTok",
+      "description": "1080×1920, H.264 с запасом качества — TikTok всё равно пережмёт",
+      "order": 20,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "crf": 19,
+        "width": 1080,
+        "height": 1920,
+        "fit": "Contain",
+        "pixelFormat": "yuv420p",
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 192,
+        "audioSampleRateHz": 48000,
+        "audioChannels": 2
+      },
+      "constraints": {},
+      "notes": [
+        "TikTok перекодирует каждый ролик: запас качества здесь уходит в его копию",
+        "Текст держите подальше от нижнего и правого края — там подпись и кнопки приложения"
+      ]
+    },
+    {
+      "id": "vertical.youtube-shorts",
+      "title": "YouTube Shorts",
+      "description": "1080×1920 до 3 минут, битрейт и звук по рекомендациям YouTube",
+      "order": 30,
+      "template": {
+        "container": "Mp4",
+        "videoCodec": "H264",
+        "bitrateKbps": 12000,
+        "width": 1080,
+        "height": 1920,
+        "fit": "Contain",
+        "pixelFormat": "yuv420p",
+        "audioEnabled": true,
+        "audioCodec": "Aac",
+        "audioBitrateKbps": 384,
+        "audioSampleRateHz": 48000,
+        "audioChannels": 2
+      },
+      "constraints": {
+        "maxDurationSeconds": 180
+      },
+      "notes": [
+        "Shorts — это вертикальный или квадратный ролик до 3 минут; длиннее станет обычным видео",
+        "12 Мбит/с и звук 384 кбит/с, 48 кГц — рекомендации загрузки YouTube"
+      ]
+    }
+  ]
+}

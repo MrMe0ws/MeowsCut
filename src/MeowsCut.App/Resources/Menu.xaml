@@ -105,10 +105,11 @@
                             <Setter TargetName="Gesture" Property="Visibility" Value="Collapsed" />
                         </Trigger>
 
-                        <!-- Корневой пункт тянется во всю высоту строки меню, значка у него нет -->
+                        <!-- Корневой пункт — той же высоты 34, что и кнопки справа в строке меню; значка у него нет -->
                         <Trigger Property="Role" Value="TopLevelHeader">
                             <Setter TargetName="Root" Property="VerticalAlignment" Value="Stretch" />
-                            <Setter TargetName="Root" Property="MinHeight" Value="26" />
+                            <Setter TargetName="Root" Property="MinHeight" Value="34" />
+                            <Setter TargetName="Root" Property="CornerRadius" Value="8" />
                             <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
                         </Trigger>
 

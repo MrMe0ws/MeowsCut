@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using MeowsCut.App.Services;
@@ -75,30 +75,24 @@ public partial class ShellWindow : Window
         e.Handled = true;
     }
 
-    /// <summary>Пункт «Выход» и крестик в строке меню делают одно и то же.</summary>
-    private void OnExit(object sender, RoutedEventArgs e) => Close();
-
-    private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-
-    private void OnMaximizeOrRestore(object sender, RoutedEventArgs e) =>
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-
     /// <summary>
     /// Разворачивая окно, Windows уводит его края за экран на толщину рамки: у окна
     /// со своим заголовком это срезает кнопки. Отступ возвращает их на место, а заодно
     /// кнопка меняет значок на «восстановить».
     /// </summary>
+    /// <remarks>
+    /// Вылет меряется ещё раз после раскладки: окно, развёрнутое при запуске,
+    /// получает свой размер чуть позже события.
+    /// </remarks>
     private void OnWindowStateChanged(object? sender, EventArgs e)
     {
-        var maximized = WindowState == WindowState.Maximized;
-
-        BorderThickness = maximized
-            ? new Thickness(SystemParameters.WindowResizeBorderThickness.Left + SystemParameters.BorderWidth)
-            : default;
-
-        MaximizeButton.Tag = FindResource(maximized ? "Icon.WindowRestore" : "Icon.WindowMaximize");
-        MaximizeButton.ToolTip = maximized ? Strings.WindowRestore : Strings.WindowMaximize;
+        FitMaximizedFrame();
+        TitleBar.ShowMaximized(WindowState == WindowState.Maximized);
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(FitMaximizedFrame));
     }
+
+    private void FitMaximizedFrame() =>
+        BorderThickness = WindowState == WindowState.Maximized ? MaximizedFrame.Overhang(this) : default;
 
     private async void OnDrop(object sender, DragEventArgs e)
     {

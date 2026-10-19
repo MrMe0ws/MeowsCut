@@ -1,4 +1,4 @@
-<Window x:Class="MeowsCut.App.Views.Dialogs.SettingsWindow"
+﻿<Window x:Class="MeowsCut.App.Views.Dialogs.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:MeowsCut.App.Localization"
@@ -183,6 +183,102 @@
                            Style="{StaticResource Text.Base}"
                            Text="{Binding Status}"
                            TextWrapping="Wrap" />
+
+                <!-- О программе: версия, из чего собрано, куда идти за новой -->
+                <TextBlock Margin="0,18,0,8" Style="{StaticResource Text.Section}" Text="{loc:Tr SectionAbout}" />
+
+                <Border Padding="16"
+                        Background="{DynamicResource Brush.Surface}"
+                        BorderBrush="{DynamicResource Brush.Border}"
+                        BorderThickness="1"
+                        CornerRadius="10">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Image Width="48"
+                                   Height="48"
+                                   Margin="0,0,14,0"
+                                   VerticalAlignment="Top"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   Source="/MeowsCut;component/Assets/logo.png" />
+
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="17"
+                                               FontWeight="SemiBold"
+                                               Style="{StaticResource Text.Base}"
+                                               Text="{loc:Tr AppTitle}" />
+                                    <Border Margin="10,0,0,0"
+                                            Padding="8,2"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource Brush.AccentSoft}"
+                                            CornerRadius="10">
+                                        <TextBlock Foreground="{DynamicResource Brush.Accent}"
+                                                   FontWeight="SemiBold"
+                                                   Style="{StaticResource Text.Caption}"
+                                                   Text="{Binding AppVersion, Mode=OneTime}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Margin="0,6,0,0"
+                                           Style="{StaticResource Text.Muted}"
+                                           Text="{loc:Tr AboutTagline}"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Margin="0,8,0,0"
+                                           Foreground="{DynamicResource Brush.TextMuted}"
+                                           Style="{StaticResource Text.Mono}"
+                                           Text="{Binding AboutComponents}" />
+                                <TextBlock Margin="0,4,0,0"
+                                           Style="{StaticResource Text.Caption}"
+                                           Text="{Binding AboutCopyright, Mode=OneTime}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Сеткой два на два: в строку четыре кнопки не влезают, а перенос рвал ряд -->
+                        <UniformGrid Margin="0,14,-8,-8" Columns="2">
+                            <Button Margin="0,0,8,8"
+                                    Command="{Binding OpenProjectPageCommand}"
+                                    Style="{StaticResource SoftButton}"
+                                    ToolTip="{loc:Tr AboutProjectPageHint}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource Icon.Open}" Style="{StaticResource GlyphLead}" />
+                                    <TextBlock Text="{loc:Tr AboutProjectPage}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="0,0,8,8"
+                                    Command="{Binding OpenReleasesPageCommand}"
+                                    Style="{StaticResource SoftButton}"
+                                    ToolTip="{loc:Tr AboutReleasesHint}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource Icon.Export}" Style="{StaticResource GlyphLead}" />
+                                    <TextBlock Text="{loc:Tr AboutReleases}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="0,0,8,8"
+                                    Command="{Binding OpenAppFolderCommand}"
+                                    Style="{StaticResource SoftButton}"
+                                    ToolTip="{loc:Tr AboutAppFolderHint}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource Icon.Folder}" Style="{StaticResource GlyphLead}" />
+                                    <TextBlock Text="{loc:Tr AboutAppFolder}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="0,0,8,8"
+                                    Command="{Binding OpenDataFolderCommand}"
+                                    Style="{StaticResource SoftButton}"
+                                    ToolTip="{loc:Tr AboutDataFolderHint}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource Icon.Folder}" Style="{StaticResource GlyphLead}" />
+                                    <TextBlock Text="{loc:Tr AboutDataFolder}" />
+                                </StackPanel>
+                            </Button>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

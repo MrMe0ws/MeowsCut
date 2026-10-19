@@ -1,0 +1,125 @@
+<UserControl x:Class="MeowsCut.App.Views.Chips.VideoChipEditors"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:fmt="clr-namespace:MeowsCut.App.Formatting"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Name="Root"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:InspectorViewModel}">
+
+    <UserControl.Resources>
+        <Style TargetType="Slider" BasedOn="{StaticResource Inspector.Slider}">
+            <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource FieldNumber}">
+            <Setter Property="EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Чип у клипа: ровно один параметр, тот, что выбрали в меню.
+         Готовые значения — для скорости, любое своё — в поле справа. -->
+    <Grid Grid.IsSharedSizeScope="True">
+        <StackPanel Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Speed}}">
+            <ItemsControl ItemsSource="{Binding SpeedPresets}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:ChoiceChip}">
+                        <Button Margin="0,0,4,0" Command="{Binding PickCommand}" Content="{Binding Title}" Style="{StaticResource Chip}" Tag="{Binding IsActive}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <controls:ParamRow Margin="0,8,0,0" Icon="{StaticResource Icon.Speed}" Label="{loc:Tr FieldSpeed}">
+                <Slider LargeChange="1" Maximum="{x:Static fmt:SpeedScale.Max}" Minimum="{x:Static fmt:SpeedScale.Min}" SmallChange="0.08" Value="{Binding SpeedSlider}" />
+                <controls:ParamRow.Trailing>
+                    <controls:NumberBox Format="0.##" Maximum="16" Minimum="0.1" Step="0.05" Suffix="×" Value="{Binding Speed}" />
+                </controls:ParamRow.Trailing>
+            </controls:ParamRow>
+        </StackPanel>
+
+        <StackPanel Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Volume}}">
+            <CheckBox Margin="0,0,0,6" Content="{loc:Tr ClipAudioEnabled}" IsChecked="{Binding AudioEnabled}" />
+            <controls:ParamRow IsEnabled="{Binding AudioEnabled}" Icon="{StaticResource Icon.Volume}" Label="{loc:Tr FieldVolume}">
+                <Slider IsSnapToTickEnabled="True" Maximum="400" Minimum="0" TickFrequency="5" Value="{Binding VolumePercent}" />
+                <controls:ParamRow.Trailing>
+                    <controls:NumberBox Format="0" Maximum="400" Minimum="0" Step="1" Suffix="%" Value="{Binding VolumePercent}" />
+                </controls:ParamRow.Trailing>
+            </controls:ParamRow>
+        </StackPanel>
+
+        <controls:ParamRow Icon="{StaticResource Icon.Fade}" Label="{loc:Tr ClipFadeIn}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.FadeIn}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}" Minimum="0" TickFrequency="0.1" Value="{Binding FadeInSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0" Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}" Minimum="0" Step="0.1" Suffix=" с" Value="{Binding FadeInSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <controls:ParamRow Icon="{StaticResource Icon.FadeOut}" Label="{loc:Tr ClipFadeOut}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.FadeOut}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}" Minimum="0" TickFrequency="0.1" Value="{Binding FadeOutSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0" Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}" Minimum="0" Step="0.1" Suffix=" с" Value="{Binding FadeOutSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <Border Style="{StaticResource SegmentHost}"
+                Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Fit}}">
+            <ListBox ItemsSource="{Binding FitOptions}" ItemTemplate="{StaticResource TitleTemplate}" SelectedItem="{Binding FitOption}" Style="{StaticResource SegmentList}" />
+        </Border>
+
+        <StackPanel Orientation="Horizontal"
+                    Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Rotation}}">
+            <Button Command="{Binding RotateLeftCommand}" Padding="8,6" Style="{StaticResource SoftButton}" ToolTip="{loc:Tr RotateLeft}">
+                <Path Data="{StaticResource Icon.RotateLeft}" Style="{StaticResource Glyph}" />
+            </Button>
+            <Button Margin="6,0,0,0" Command="{Binding RotateRightCommand}" Padding="8,6" Style="{StaticResource SoftButton}" ToolTip="{loc:Tr RotateRight}">
+                <Path Data="{StaticResource Icon.RotateRight}" Style="{StaticResource Glyph}" />
+            </Button>
+            <Button Margin="6,0,0,0" Command="{Binding RotateHalfTurnCommand}" Padding="8,6" Style="{StaticResource SoftButton}" ToolTip="{loc:Tr RotateHalfTurn}">
+                <Path Data="{StaticResource Icon.RotateHalf}" Style="{StaticResource Glyph}" />
+            </Button>
+            <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Mono}" Text="{Binding RotationText}" />
+        </StackPanel>
+
+        <controls:ParamRow Icon="{StaticResource Icon.Zoom}" Label="{loc:Tr FieldZoom}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Zoom}}">
+            <Slider LargeChange="1" Maximum="{x:Static fmt:ZoomScale.Max}" Minimum="{x:Static fmt:ZoomScale.Min}" SmallChange="0.05" Value="{Binding ZoomSlider}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0" Maximum="{x:Static fmt:ZoomScale.MaxPercent}" Minimum="{x:Static fmt:ZoomScale.MinPercent}" Step="1" Suffix="%" Value="{Binding ZoomPercent}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <StackPanel Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Position}}">
+            <controls:ParamRow controls:ParamWheel.Step="1" Icon="{StaticResource Icon.MoveHorizontal}" Label="{loc:Tr FieldOffsetX}">
+                <Slider Maximum="{Binding OffsetLimitPercent}" Minimum="{Binding MinOffsetPercent}" SmallChange="1" Value="{Binding OffsetXPercent}" />
+                <controls:ParamRow.Trailing>
+                    <controls:NumberBox Format="0" Maximum="{Binding OffsetLimitPercent}" Minimum="{Binding MinOffsetPercent}" Step="1" Suffix="%" Value="{Binding OffsetXPercent}" />
+                </controls:ParamRow.Trailing>
+            </controls:ParamRow>
+            <controls:ParamRow controls:ParamWheel.Step="1" Icon="{StaticResource Icon.MoveVertical}" Label="{loc:Tr FieldOffsetY}">
+                <Slider Maximum="{Binding OffsetLimitPercent}" Minimum="{Binding MinOffsetPercent}" SmallChange="1" Value="{Binding OffsetYPercent}" />
+                <controls:ParamRow.Trailing>
+                    <controls:NumberBox Format="0" Maximum="{Binding OffsetLimitPercent}" Minimum="{Binding MinOffsetPercent}" Step="1" Suffix="%" Value="{Binding OffsetYPercent}" />
+                </controls:ParamRow.Trailing>
+            </controls:ParamRow>
+        </StackPanel>
+
+        <StackPanel Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Motion}}">
+            <controls:ParamRow Icon="{StaticResource Icon.Motion}" Label="{loc:Tr FieldMotion}" ToolTip="{loc:Tr FieldMotionHint}">
+                <Slider IsSnapToTickEnabled="True" Maximum="{Binding MotionSliderMax}" Minimum="0" TickFrequency="0.1" Value="{Binding MotionSeconds}" />
+                <controls:ParamRow.Trailing>
+                    <controls:NumberBox Format="0.0" Maximum="{x:Static vm:InspectorViewModel.MaxMotionSeconds}" Minimum="0" Step="0.1" Suffix=" с" Value="{Binding MotionSeconds}" />
+                </controls:ParamRow.Trailing>
+            </controls:ParamRow>
+            <CheckBox Margin="0,4,0,0" Content="{loc:Tr FieldMotionOut}" FontSize="12.5" IsChecked="{Binding MotionOut}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

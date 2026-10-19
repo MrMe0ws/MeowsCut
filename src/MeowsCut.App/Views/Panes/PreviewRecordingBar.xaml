@@ -1,0 +1,99 @@
+﻿<UserControl x:Class="MeowsCut.App.Views.Panes.PreviewRecordingBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:VoiceoverViewModel}">
+
+    <!-- Полоса идущей записи: время, уровень микрофона и что происходит -->
+    <StackPanel Margin="18,0,18,10"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+        <Path Width="16"
+              Height="16"
+              VerticalAlignment="Center"
+              Stretch="Uniform"
+              Style="{StaticResource Spinner}"
+              Visibility="{Binding IsWaiting, Converter={StaticResource BoolToVisibility}}" />
+
+        <Ellipse Width="10"
+                 Height="10"
+                 VerticalAlignment="Center"
+                 Fill="{DynamicResource Brush.Danger}"
+                 Visibility="{Binding IsRecording, Converter={StaticResource BoolToVisibility}}">
+            <Ellipse.Style>
+                <Style TargetType="Ellipse">
+                    <Style.Triggers>
+                        <!-- Лампа мигает только на виду (IsVisible, как и спиннер) -->
+                        <Trigger Property="IsVisible" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Name="BlinkStoryboard">
+                                    <Storyboard>
+                                        <DoubleAnimation AutoReverse="True"
+                                                         RepeatBehavior="Forever"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="1"
+                                                         To="0.25"
+                                                         Duration="0:0:0.7" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <RemoveStoryboard BeginStoryboardName="BlinkStoryboard" />
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Ellipse.Style>
+        </Ellipse>
+
+        <TextBlock Margin="8,0,0,0"
+                   VerticalAlignment="Center"
+                   Style="{StaticResource Text.Base}"
+                   Text="{Binding ElapsedText}"
+                   Visibility="{Binding IsRecording, Converter={StaticResource BoolToVisibility}}" />
+
+        <Border Width="120"
+                Height="6"
+                Margin="10,0,0,0"
+                VerticalAlignment="Center"
+                Background="{DynamicResource Brush.SurfaceRaised}"
+                CornerRadius="3"
+                ToolTip="{loc:Tr RecordLevelHint}"
+                Visibility="{Binding IsRecording, Converter={StaticResource BoolToVisibility}}">
+            <Border CornerRadius="3" RenderTransformOrigin="0,0.5">
+                <Border.RenderTransform>
+                    <ScaleTransform ScaleX="{Binding Level}" />
+                </Border.RenderTransform>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsClipping}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Brush.Danger}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+            </Border>
+        </Border>
+
+        <TextBlock Margin="12,0,0,0"
+                   VerticalAlignment="Center"
+                   Style="{StaticResource Text.Muted}"
+                   Text="{Binding StatusText}"
+                   TextTrimming="CharacterEllipsis" />
+
+        <Button Margin="12,0,0,0"
+                Padding="10,3"
+                Command="{Binding CancelCommand}"
+                Content="{loc:Tr RecordDiscard}"
+                Style="{StaticResource Button.Ghost}"
+                ToolTip="{loc:Tr RecordDiscardHint}"
+                Visibility="{Binding IsRecording, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+</UserControl>

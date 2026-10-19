@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace MeowsCut.Core.Presets.Json;
 
@@ -55,6 +55,10 @@ internal sealed class PresetJson
 
     [JsonPropertyName("notes")]
     public List<string>? Notes { get; set; }
+
+    /// <summary>Ориентации монтажа, для которых пресет выбран заранее: landscape, portrait, square.</summary>
+    [JsonPropertyName("defaultFor")]
+    public List<string>? DefaultFor { get; set; }
 }
 
 internal sealed class PresetTemplateJson

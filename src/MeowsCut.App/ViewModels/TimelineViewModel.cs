@@ -132,10 +132,10 @@ public sealed partial class TimelineViewModel : ObservableObject
     public bool HasClipInspector => !HasAudioSelection && !HasTitleSelection;
 
     /// <summary>
-    /// Кисть с волной для куска звука. null — волна ещё считается или её нет.
+    /// Волна куска звука. null — волна ещё считается или её нет.
     /// Отрисовка спрашивает и рисует то, что есть: ждать на доске нельзя.
     /// </summary>
-    public System.Windows.Media.Brush? WaveformFor(AudioClip clip)
+    public WaveformSlice? WaveformFor(AudioClip clip)
     {
         if (_waveforms is null || _project?.Find(clip.SourceId) is not { } source)
         {
@@ -148,7 +148,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             return null;
         }
 
-        return _waveforms.Brush(
+        return _waveforms.Slice(
             source.FilePath,
             clip.SourceRange.Start / duration,
             clip.SourceRange.End / duration);
@@ -177,6 +177,13 @@ public sealed partial class TimelineViewModel : ObservableObject
 
     /// <summary>Нужно перерисовать контрол (изменились масштаб, выделение или кадры).</summary>
     public event EventHandler? VisualInvalidated;
+
+    /// <summary>
+    /// Сдвинулся только курсор времени. Отдельно от <see cref="VisualInvalidated"/>:
+    /// при воспроизведении он двигается 30 раз в секунду, и перерисовывать ради
+    /// этого все кадры и волны доски нельзя — отрисовка не успевает за видео.
+    /// </summary>
+    public event EventHandler? PlayheadMoved;
 
     /// <summary>Клипам нужны кадры для видимой области.</summary>
     public event EventHandler? ThumbnailsRequested;
@@ -378,7 +385,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         VisualInvalidated?.Invoke(this, EventArgs.Empty);
     }
 
-    partial void OnPlayheadChanged(TimeSpan value) => VisualInvalidated?.Invoke(this, EventArgs.Empty);
+    partial void OnPlayheadChanged(TimeSpan value) => PlayheadMoved?.Invoke(this, EventArgs.Empty);
 
     partial void OnActiveToolChanged(TimelineTool value) => VisualInvalidated?.Invoke(this, EventArgs.Empty);
 
@@ -698,5 +705,9 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         ThumbnailsRequested?.Invoke(this, EventArgs.Empty);
         VisualInvalidated?.Invoke(this, EventArgs.Empty);
+
+        // Масштаб меняют и колесом, и кнопками: ползунок на панели доски
+        // обязан идти следом, откуда бы правка ни пришла.
+        OnPropertyChanged(nameof(ZoomLevel));
     }
 }

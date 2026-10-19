@@ -1,4 +1,4 @@
-using MeowsCut.Core.Jobs;
+﻿using MeowsCut.Core.Jobs;
 using MeowsCut.Core.Processing;
 
 namespace MeowsCut.Core.Abstractions;
@@ -39,4 +39,7 @@ public interface IShellIntegration
     void OpenFile(string path);
 
     void RevealInExplorer(string path);
+
+    /// <summary>Открывает страницу в браузере. Только https: другие адреса молча отклоняются.</summary>
+    void OpenWebPage(Uri address);
 }

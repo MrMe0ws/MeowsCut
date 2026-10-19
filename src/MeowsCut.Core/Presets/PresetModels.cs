@@ -1,4 +1,4 @@
-using MeowsCut.Core.Export;
+﻿using MeowsCut.Core.Export;
 
 namespace MeowsCut.Core.Presets;
 
@@ -71,6 +71,10 @@ public sealed record PresetConstraints
 /// <summary>
 /// Готовый пресет: подпись для человека, шаблон настроек и ограничения площадки.
 /// </summary>
+/// <param name="DefaultFor">
+/// Для монтажа какой ориентации пресет стоит в экспорте по умолчанию — пока
+/// пользователь не выбрал свой. Пусто — никогда.
+/// </param>
 public sealed record PresetDefinition(
     string Id,
     string GroupId,
@@ -79,4 +83,8 @@ public sealed record PresetDefinition(
     int Order,
     PresetTemplate Template,
     PresetConstraints Constraints,
-    IReadOnlyList<string> Notes);
+    IReadOnlyList<string> Notes,
+    IReadOnlyList<FrameOrientation>? DefaultFor = null)
+{
+    public bool IsDefaultFor(FrameOrientation orientation) => DefaultFor?.Contains(orientation) == true;
+}

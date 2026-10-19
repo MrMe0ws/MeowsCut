@@ -154,6 +154,45 @@
     <PathGeometry x:Key="Icon.Motion"
                   Figures="M 9,9 L 15,9 L 15,15 L 9,15 Z M 3.5,3.5 L 7,7 M 3.5,3.5 L 3.5,7 M 3.5,3.5 L 7,3.5 M 20.5,20.5 L 17,17 M 20.5,20.5 L 20.5,17 M 20.5,20.5 L 17,20.5" />
 
+    <!-- Версия 2.0: проигрывание, тема, доска -->
+    <!-- Треугольник «Играть» и две черты «Пауза». Рисуются заливкой, не обводкой -->
+    <PathGeometry x:Key="Icon.Play" Figures="M 7,4.5 L 7,19.5 L 19.5,12 Z" />
+    <PathGeometry x:Key="Icon.Pause" Figures="M 6,4.5 L 10,4.5 L 10,19.5 L 6,19.5 Z M 14,4.5 L 18,4.5 L 18,19.5 L 14,19.5 Z" />
+    <!-- В начало и в конец: черта и треугольник к ней -->
+    <PathGeometry x:Key="Icon.ToStart" Figures="M 6,5 L 6,19 M 18,6 L 9,12 L 18,18 Z" />
+    <PathGeometry x:Key="Icon.ToEnd" Figures="M 18,5 L 18,19 M 6,6 L 15,12 L 6,18 Z" />
+    <!-- Двойные уголки: шаг на секунду назад и вперёд -->
+    <PathGeometry x:Key="Icon.StepBack" Figures="M 11,7 L 6,12 L 11,17 M 18,7 L 13,12 L 18,17" />
+    <PathGeometry x:Key="Icon.StepForward" Figures="M 13,7 L 18,12 L 13,17 M 6,7 L 11,12 L 6,17" />
+    <!-- Уголки рамки наружу: просмотр во весь экран -->
+    <PathGeometry x:Key="Icon.Fullscreen" Figures="M 4,9 L 4,4 L 9,4 M 15,4 L 20,4 L 20,9 M 20,15 L 20,20 L 15,20 M 9,20 L 4,20 L 4,15" />
+    <!-- Солнце и месяц: переключение темы. Значок показывает, куда переключит -->
+    <PathGeometry x:Key="Icon.Sun"
+                  Figures="M 12,8 A 4,4 0 1 0 12.01,8 M 12,2 L 12,4 M 12,20 L 12,22 M 4.9,4.9 L 6.3,6.3 M 17.7,17.7 L 19.1,19.1 M 2,12 L 4,12 M 20,12 L 22,12 M 4.9,19.1 L 6.3,17.7 M 17.7,6.3 L 19.1,4.9" />
+    <PathGeometry x:Key="Icon.Moon" Figures="M 20,14.5 A 8,8 0 0 1 9.5,4 A 8,8 0 1 0 20,14.5 Z" />
+    <!-- Три точки: ещё действия -->
+    <PathGeometry x:Key="Icon.More" Figures="M 5,12 L 5.01,12 M 12,12 L 12.01,12 M 19,12 L 19.01,12" />
+    <!-- Галочка: файл уже лежит на доске -->
+    <PathGeometry x:Key="Icon.Check" Figures="M 5,12.5 L 10,17 L 19,7" />
+    <!-- Подкова-магнит: прилипание к краям кусков -->
+    <PathGeometry x:Key="Icon.Magnet"
+                  Figures="M 5,4 L 9,4 L 9,12 A 3,3 0 0 0 15,12 L 15,4 L 19,4 L 19,12 A 7,7 0 0 1 5,12 Z M 5,8 L 9,8 M 15,8 L 19,8" />
+    <!-- Лупа с минусом: отдалить доску -->
+    <PathGeometry x:Key="Icon.ZoomOut"
+                  Figures="M 10.5,3.5 A 7,7 0 1 0 10.51,3.5 M 15.5,15.5 L 21,21 M 7.5,10.5 L 13.5,10.5" />
+    <!-- Пейзаж в рамке: фотография -->
+    <PathGeometry x:Key="Icon.Image"
+                  Figures="M 4,5 L 20,5 L 20,19 L 4,19 Z M 4,16 L 9,11 L 13,15 L 16,12 L 20,16 M 15,8.5 A 1,1 0 1 0 15.01,8.5" />
+    <!-- Стрелка по кругу назад: сбросить параметры -->
+    <PathGeometry x:Key="Icon.Reset" Figures="M 4,12 A 8,8 0 1 0 6.3,6.3 M 4,4 L 4,9 L 9,9" />
+    <!-- Стрелка вниз под уголком: раскрыть список -->
+    <PathGeometry x:Key="Icon.ChevronDown" Figures="M 6,9 L 12,15 L 18,9" />
+    <!-- Волна с вырезом: убрать паузы -->
+    <PathGeometry x:Key="Icon.Silence" Figures="M 3,12 L 5,12 M 7,8 L 7,16 M 11,5 L 11,19 M 15,9 L 15,15 M 19,11 L 19,13" />
+    <!-- Глаз: дорожка видна -->
+    <PathGeometry x:Key="Icon.Eye"
+                  Figures="M 2,12 C 4,7.5 8,5 12,5 C 16,5 20,7.5 22,12 C 20,16.5 16,19 12,19 C 8,19 4,16.5 2,12 Z M 12,9 A 3,3 0 1 0 12.01,9" />
+
     <!-- Кнопки окна. Рисуются тонкой линией, как в самой Windows -->
     <PathGeometry x:Key="Icon.WindowMinimize" Figures="M 5,12 L 19,12" />
 

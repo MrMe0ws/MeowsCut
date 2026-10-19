@@ -15,7 +15,7 @@ public sealed class PanelLayoutSettingsTests : IDisposable
     [Fact]
     public async Task Sizes_come_back_after_restart()
     {
-        var layout = new PanelLayout(410, 380, 0.42, 1500, 900, Maximized: true);
+        var layout = new PanelLayout(410, 380, 0.42, 1500, 900, Maximized: true, MediaWidth: 300, SoundListHeight: 240);
         await Store().SaveAsync(AppSettings.Default with { Layout = layout }, CancellationToken.None);
 
         var loaded = await Store().LoadAsync(CancellationToken.None);

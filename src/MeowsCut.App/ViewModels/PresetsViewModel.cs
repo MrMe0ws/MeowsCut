@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MeowsCut.Core.Editing;
@@ -59,8 +59,8 @@ public sealed partial class PresetsViewModel : ObservableObject
             Groups.Add(group);
         }
 
-        // При старте пресет не выбран: иначе любое открытое видео сразу получало бы
-        // настройки первого пресета в списке — а это квадратный стикер на три секунды.
+        // До открытия проекта пресет не выбран: какой ставить по умолчанию, зависит
+        // от ориентации кадра монтажа (см. PresetsViewModel.Defaults).
         _suppressAutoSelect = true;
         SelectedGroup = Groups.FirstOrDefault();
         _suppressAutoSelect = false;
@@ -117,7 +117,13 @@ public sealed partial class PresetsViewModel : ObservableObject
         Violations.Clear();
         AppliedPreset = null;
 
-        // Пресет могли выбрать до открытия файла — тогда его параметры применяются сейчас.
+        if (!_userPicked)
+        {
+            SelectDefault(project);
+            return;
+        }
+
+        // Пресет выбрали до открытия файла — его параметры применяются сейчас.
         ApplyTemplateOnly(SelectedPreset);
     }
 
@@ -133,6 +139,13 @@ public sealed partial class PresetsViewModel : ObservableObject
     public void UpdateProject(Project project)
     {
         _project = project;
+
+        if (!_userPicked && SelectedPreset is { } current && !current.IsDefaultFor(OrientationOf(project)))
+        {
+            SelectDefault(project);
+            return;
+        }
+
         RefreshValidation();
     }
 
@@ -156,6 +169,11 @@ public sealed partial class PresetsViewModel : ObservableObject
 
     partial void OnSelectedPresetChanged(PresetDefinition? value)
     {
+        if (value is not null && !_selectingDefault)
+        {
+            _userPicked = true;
+        }
+
         Notes.Clear();
 
         foreach (var note in value?.Notes ?? [])

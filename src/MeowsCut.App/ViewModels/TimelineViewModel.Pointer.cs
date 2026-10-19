@@ -231,6 +231,7 @@ public sealed partial class TimelineViewModel
         // целиться в видеоклип, и наоборот.
         _selection.Clear();
         SelectedClip = null;
+        SelectedTitle = null;
         ApplySelectionToClips();
 
         SelectedAudioTrack = trackId;
@@ -507,8 +508,9 @@ public sealed partial class TimelineViewModel
         }
 
         // Выделения не складываются в обе стороны: выбрав видеоклип, пользователь
-        // перестал целиться в звук, и панель свойств обязана показать клип.
+        // перестал целиться в звук и надпись, и панель свойств обязана показать клип.
         SelectedAudioClip = null;
+        SelectedTitle = null;
 
         ApplySelectionToClips();
     }

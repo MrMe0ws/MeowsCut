@@ -1,0 +1,111 @@
+<UserControl x:Class="MeowsCut.App.Views.Chips.AudioChipEditors"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:fmt="clr-namespace:MeowsCut.App.Formatting"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Name="Root"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:AudioInspectorViewModel}">
+
+    <UserControl.Resources>
+        <Style TargetType="Slider" BasedOn="{StaticResource Inspector.Slider}">
+            <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource FieldNumber}">
+            <Setter Property="EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Чип у куска звука: громкость, скорость, тональность, края и дорожка -->
+    <Grid Grid.IsSharedSizeScope="True">
+        <controls:ParamRow Icon="{StaticResource Icon.Volume}" Label="{loc:Tr FieldGain}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.AudioGain}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="400" Minimum="0" TickFrequency="5" Value="{Binding GainPercent}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0" Maximum="400" Minimum="0" Step="1" Suffix="%" Value="{Binding GainPercent}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <StackPanel Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.AudioSpeed}}">
+            <ItemsControl ItemsSource="{Binding SpeedPresets}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:ChoiceChip}">
+                        <Button Margin="0,0,4,0" Command="{Binding PickCommand}" Content="{Binding Title}" Style="{StaticResource Chip}" Tag="{Binding IsActive}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <controls:ParamRow Margin="0,8,0,0" Icon="{StaticResource Icon.Speed}" Label="{loc:Tr FieldSpeed}">
+                <Slider LargeChange="1" Maximum="{x:Static fmt:SpeedScale.Max}" Minimum="{x:Static fmt:SpeedScale.Min}" SmallChange="0.08" Value="{Binding SpeedSlider}" />
+                <controls:ParamRow.Trailing>
+                    <controls:NumberBox Format="0.##" Maximum="16" Minimum="0.1" Step="0.05" Suffix="×" Value="{Binding Speed}" />
+                </controls:ParamRow.Trailing>
+            </controls:ParamRow>
+        </StackPanel>
+
+        <StackPanel Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.Pitch}}">
+            <ItemsControl x:Name="PitchChips" ItemsSource="{x:Static vm:AudioInspectorViewModel.PitchPresets}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Margin="0,0,3,0"
+                                Padding="2,0"
+                                Command="{Binding DataContext.ApplyPitchCommand, ElementName=PitchChips}"
+                                CommandParameter="{Binding}"
+                                Content="{Binding StringFormat={}{0:+#;-#;0}}"
+                                Style="{StaticResource Chip}">
+                            <Button.Tag>
+                                <MultiBinding Converter="{StaticResource ValuesEqual}">
+                                    <Binding />
+                                    <Binding ElementName="PitchChips" Path="DataContext.PitchSemitones" />
+                                </MultiBinding>
+                            </Button.Tag>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <controls:ParamRow Margin="0,8,0,0" Icon="{StaticResource Icon.Note}" Label="{loc:Tr FieldPitch}">
+                <Slider IsSnapToTickEnabled="True" Maximum="12" Minimum="-12" TickFrequency="1" Value="{Binding PitchSemitones}" />
+                <controls:ParamRow.Trailing>
+                    <controls:NumberBox Format="+#;-#;0" Maximum="12" Minimum="-12" Step="1" Suffix=" пт" Value="{Binding PitchSemitones}" />
+                </controls:ParamRow.Trailing>
+            </controls:ParamRow>
+        </StackPanel>
+
+        <controls:ParamRow Icon="{StaticResource Icon.Fade}" Label="{loc:Tr FieldFadeIn}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.AudioFadeIn}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="{Binding MaxFadeSeconds}" Minimum="0" TickFrequency="0.1" Value="{Binding FadeInSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0" Maximum="{Binding MaxFadeSeconds}" Minimum="0" Step="0.1" Suffix=" с" Value="{Binding FadeInSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <controls:ParamRow Icon="{StaticResource Icon.FadeOut}" Label="{loc:Tr FieldFadeOut}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.AudioFadeOut}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="{Binding MaxFadeSeconds}" Minimum="0" TickFrequency="0.1" Value="{Binding FadeOutSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0" Maximum="{Binding MaxFadeSeconds}" Minimum="0" Step="0.1" Suffix=" с" Value="{Binding FadeOutSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <controls:ParamRow Icon="{StaticResource Icon.Layers}" Label="{loc:Tr FieldGain}" ToolTip="{loc:Tr FieldTrackGainHint}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.TrackGain}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="400" Minimum="0" TickFrequency="5" Value="{Binding TrackGainPercent}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0" Maximum="400" Minimum="0" Step="1" Suffix="%" Value="{Binding TrackGainPercent}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+    </Grid>
+</UserControl>

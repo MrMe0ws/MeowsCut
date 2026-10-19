@@ -1,0 +1,56 @@
+<UserControl x:Class="MeowsCut.App.Views.Chips.TitleChipEditors"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MeowsCut.App.Controls"
+             xmlns:loc="clr-namespace:MeowsCut.App.Localization"
+             xmlns:vm="clr-namespace:MeowsCut.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Name="Root"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:TitleInspectorViewModel}">
+
+    <UserControl.Resources>
+        <Style TargetType="Slider" BasedOn="{StaticResource Inspector.Slider}">
+            <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource FieldNumber}">
+            <Setter Property="EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Чип у надписи: текст, длительность, место, размер и цвет -->
+    <Grid Grid.IsSharedSizeScope="True">
+        <TextBox MinHeight="56"
+                 AcceptsReturn="True"
+                 Padding="8,6"
+                 Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                 TextWrapping="Wrap"
+                 Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.TitleText}}" />
+
+        <controls:ParamRow Label="{loc:Tr FieldTitleDuration}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.TitleDuration}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="20" Minimum="0.3" TickFrequency="0.1" Value="{Binding DurationSeconds}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.0" Maximum="20" Minimum="0.3" Step="0.1" Suffix=" с" Value="{Binding DurationSeconds}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <ComboBox ItemsSource="{Binding Anchors}"
+                  SelectedItem="{Binding Anchor}"
+                  Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.TitlePlace}}" />
+
+        <controls:ParamRow Label="{loc:Tr FieldTitleSize}"
+                           Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.TitleSize}}">
+            <Slider IsSnapToTickEnabled="True" Maximum="30" Minimum="2" TickFrequency="0.5" Value="{Binding ScalePercent}" />
+            <controls:ParamRow.Trailing>
+                <controls:NumberBox Format="0.#" Maximum="30" Minimum="2" Step="0.5" Suffix="%" Value="{Binding ScalePercent}" />
+            </controls:ParamRow.Trailing>
+        </controls:ParamRow>
+
+        <StackPanel Visibility="{Binding Parameter, ElementName=Root, Converter={StaticResource EnumToVisibility}, ConverterParameter={x:Static controls:ClipParameter.TitleColor}}">
+            <ComboBox ItemsSource="{Binding Colors}" SelectedItem="{Binding Color}" />
+            <CheckBox Margin="0,10,0,0" Content="{loc:Tr FieldTitleBackdrop}" IsChecked="{Binding Backdrop}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

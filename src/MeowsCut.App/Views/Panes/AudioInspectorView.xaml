@@ -11,264 +11,148 @@
              d:DataContext="{d:DesignInstance vm:AudioInspectorViewModel}">
 
     <UserControl.Resources>
-        <!-- Отпустили ползунок — склейка правок в истории заканчивается. Без этого
-             вся работа со звуком за сеанс становилась одной записью, а Ctrl+Z
-             возвращал кусок к исходному состоянию. -->
+        <!-- Отпустили ползунок — склейка правок в истории заканчивается -->
         <Style TargetType="Slider" BasedOn="{StaticResource Inspector.Slider}">
             <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
         </Style>
 
-        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource Inspector.NumberBox}">
+        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource FieldNumber}">
             <Setter Property="EndCommand" Value="{Binding EndInteractionCommand}" />
-        </Style>
-
-        <Style x:Key="FieldGrid" TargetType="Grid">
-            <Setter Property="Margin" Value="0,1" />
         </Style>
     </UserControl.Resources>
 
     <!-- Свойства выбранного куска звука. Раскладка та же, что у клипа: подпись,
-         орган, значение — чтобы переключение между картинкой и звуком не требовало
-         заново искать глазами, где что лежит. -->
-    <Border Padding="12,10"
-            Background="{DynamicResource Brush.Surface}"
-            BorderBrush="{DynamicResource Brush.Border}"
-            BorderThickness="0,1,0,0">
-        <StackPanel Grid.IsSharedSizeScope="True"
-                    Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+         орган, значение — переключаясь между картинкой и звуком, не ищешь заново. -->
+    <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <!-- Шапка: какой кусок и где он стоит -->
-            <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr SectionSound}" />
+        <Grid Margin="12,12,12,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Width="40" Height="40" Background="{DynamicResource Brush.AudioClip}" CornerRadius="9">
+                <Path Width="18" Height="18" Data="{StaticResource Icon.Note}" Stretch="Uniform" Stroke="{DynamicResource Brush.MusicMark}" StrokeThickness="1.6" />
+            </Border>
+            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Base}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" />
+                <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="{Binding RangeText}" />
+            </StackPanel>
+        </Grid>
 
-            <TextBlock Margin="0,2,0,0"
-                       Style="{StaticResource Text.Base}"
-                       Text="{Binding Title}"
-                       TextTrimming="CharacterEllipsis" />
+        <ScrollViewer Grid.Row="1"
+                      Padding="14,4,12,14"
+                      BorderBrush="{DynamicResource Brush.Border}"
+                      controls:SmoothScroll.IsEnabled="True"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Grid.IsSharedSizeScope="True">
+                <controls:ParamRow Icon="{StaticResource Icon.Volume}" Label="{loc:Tr FieldGain}">
+                    <Slider IsSnapToTickEnabled="True" Maximum="400" Minimum="0" TickFrequency="5" Value="{Binding GainPercent}" />
+                    <controls:ParamRow.Trailing>
+                        <controls:NumberBox Format="0" Maximum="400" Minimum="0" Step="1" Suffix="%" Value="{Binding GainPercent}" />
+                    </controls:ParamRow.Trailing>
+                </controls:ParamRow>
 
-            <TextBlock Style="{StaticResource Text.Muted}" Text="{Binding RangeText}" />
+                <!-- Скорость звука отдельно от скорости клипа: музыку подгоняют под
+                     монтаж, а не наоборот -->
+                <TextBlock Style="{StaticResource ParamSection}" Text="{loc:Tr FieldSpeed}" />
+                <ItemsControl ItemsSource="{Binding SpeedPresets}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:ChoiceChip}">
+                            <Button Margin="0,0,4,0" Command="{Binding PickCommand}" Content="{Binding Title}" Style="{StaticResource Chip}" Tag="{Binding IsActive}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <controls:ParamRow Margin="0,8,0,3" Icon="{StaticResource Icon.Speed}" Label="{loc:Tr FieldSpeed}" ToolTip="{loc:Tr FieldSpeedHint}">
+                    <Slider LargeChange="1"
+                            Maximum="{x:Static fmt:SpeedScale.Max}"
+                            Minimum="{x:Static fmt:SpeedScale.Min}"
+                            SmallChange="0.08"
+                            Value="{Binding SpeedSlider}" />
+                    <controls:ParamRow.Trailing>
+                        <controls:NumberBox Format="0.##" Maximum="16" Minimum="0.1" Step="0.05" Suffix="×" ToolTip="{loc:Tr FieldSpeedCustomHint}" Value="{Binding Speed}" />
+                    </controls:ParamRow.Trailing>
+                </controls:ParamRow>
 
-            <Border Style="{StaticResource Inspector.Separator}" />
+                <!-- Тональность: готовые интервалы и любое число полутонов -->
+                <TextBlock Style="{StaticResource ParamSection}" Text="{loc:Tr FieldPitch}" ToolTip="{loc:Tr FieldPitchHint}" />
+                <ItemsControl x:Name="PitchChips" ItemsSource="{x:Static vm:AudioInspectorViewModel.PitchPresets}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Margin="0,0,3,0"
+                                    Padding="2,0"
+                                    Command="{Binding DataContext.ApplyPitchCommand, ElementName=PitchChips}"
+                                    CommandParameter="{Binding}"
+                                    Content="{Binding StringFormat={}{0:+#;-#;0}}"
+                                    Style="{StaticResource Chip}">
+                                <Button.Tag>
+                                    <MultiBinding Converter="{StaticResource ValuesEqual}">
+                                        <Binding />
+                                        <Binding ElementName="PitchChips" Path="DataContext.PitchSemitones" />
+                                    </MultiBinding>
+                                </Button.Tag>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <controls:ParamRow Margin="0,8,0,3" Icon="{StaticResource Icon.Note}" Label="{loc:Tr FieldPitch}">
+                    <Slider IsSnapToTickEnabled="True" Maximum="12" Minimum="-12" TickFrequency="1" Value="{Binding PitchSemitones}" />
+                    <controls:ParamRow.Trailing>
+                        <controls:NumberBox Format="+#;-#;0" Maximum="12" Minimum="-12" Step="1" Suffix=" пт" Value="{Binding PitchSemitones}" />
+                    </controls:ParamRow.Trailing>
+                </controls:ParamRow>
 
-            <Grid Style="{StaticResource FieldGrid}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="*" MinWidth="60" />
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
-                </Grid.ColumnDefinitions>
+                <TextBlock Style="{StaticResource ParamSection}" Text="{loc:Tr SectionFade}" />
+                <controls:ParamRow Icon="{StaticResource Icon.Fade}" Label="{loc:Tr FieldFadeIn}" ToolTip="{loc:Tr FieldFadeInHint}">
+                    <Slider IsSnapToTickEnabled="True" Maximum="{Binding MaxFadeSeconds}" Minimum="0" TickFrequency="0.1" Value="{Binding FadeInSeconds}" />
+                    <controls:ParamRow.Trailing>
+                        <controls:NumberBox Format="0.0" Maximum="{Binding MaxFadeSeconds}" Minimum="0" Step="0.1" Suffix=" с" Value="{Binding FadeInSeconds}" />
+                    </controls:ParamRow.Trailing>
+                </controls:ParamRow>
+                <controls:ParamRow Icon="{StaticResource Icon.FadeOut}" Label="{loc:Tr FieldFadeOut}" ToolTip="{loc:Tr FieldFadeOutHint}">
+                    <Slider IsSnapToTickEnabled="True" Maximum="{Binding MaxFadeSeconds}" Minimum="0" TickFrequency="0.1" Value="{Binding FadeOutSeconds}" />
+                    <controls:ParamRow.Trailing>
+                        <controls:NumberBox Format="0.0" Maximum="{Binding MaxFadeSeconds}" Minimum="0" Step="0.1" Suffix=" с" Value="{Binding FadeOutSeconds}" />
+                    </controls:ParamRow.Trailing>
+                </controls:ParamRow>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Path Data="{StaticResource Icon.Volume}" Style="{StaticResource FieldIcon}" />
-                    <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldGain}" />
-                </StackPanel>
+                <!-- Дорожка целиком: её громкость лежит поверх громкости кусков -->
+                <Grid Margin="0,16,0,6">
+                    <TextBlock Margin="0" Style="{StaticResource ParamSection}" Text="{loc:Tr SectionTrack}" />
+                    <TextBlock Margin="60,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource Text.Caption}" Text="{Binding TrackTitle}" TextTrimming="CharacterEllipsis" />
+                </Grid>
+                <controls:ParamRow Icon="{StaticResource Icon.Layers}" Label="{loc:Tr FieldGain}" ToolTip="{loc:Tr FieldTrackGainHint}">
+                    <Slider IsSnapToTickEnabled="True" Maximum="400" Minimum="0" TickFrequency="5" Value="{Binding TrackGainPercent}" />
+                    <controls:ParamRow.Trailing>
+                        <controls:NumberBox Format="0" Maximum="400" Minimum="0" Step="1" Suffix="%" Value="{Binding TrackGainPercent}" />
+                    </controls:ParamRow.Trailing>
+                </controls:ParamRow>
+                <Grid Margin="0,8,0,0">
+                    <CheckBox VerticalAlignment="Center" Command="{Binding ToggleMutedCommand}" Content="{loc:Tr TrackMuted}" IsChecked="{Binding TrackMuted}" />
+                    <Button HorizontalAlignment="Right" Command="{Binding RemoveTrackCommand}" Style="{StaticResource FlatButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Trash}" Style="{StaticResource GlyphLead}" />
+                            <TextBlock Text="{loc:Tr RemoveTrack}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
 
-                <Slider Grid.Column="1"
-                        IsSnapToTickEnabled="True"
-                        Maximum="400"
-                        Minimum="0"
-                        TickFrequency="5"
-                        Value="{Binding GainPercent}" />
-
-                <controls:NumberBox Grid.Column="2"
-                                     Format="0"
-                                     Maximum="400"
-                                     Minimum="0"
-                                     Step="1"
-                                     Suffix="%"
-                                     Value="{Binding GainPercent}" />
-            </Grid>
-
-            <!-- Скорость звука отдельно от скорости клипа: музыку подгоняют под
-                 монтаж, а не наоборот, и от картинки она не зависит. -->
-            <Grid Style="{StaticResource FieldGrid}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="*" MinWidth="60" />
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Path Data="{StaticResource Icon.Speed}" Style="{StaticResource FieldIcon}" />
-                    <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldSpeed}" />
-                </StackPanel>
-
-                <Slider Grid.Column="1"
-                        LargeChange="1"
-                        Maximum="{x:Static fmt:SpeedScale.Max}"
-                        Minimum="{x:Static fmt:SpeedScale.Min}"
-                        SmallChange="0.08"
-                        ToolTip="{loc:Tr FieldSpeedHint}"
-                        Value="{Binding SpeedSlider}" />
-
-                <StackPanel Grid.Column="2" Margin="10,0,0,0" Orientation="Horizontal">
-                    <TextBox Width="42"
-                             VerticalAlignment="Center"
-                             Padding="4,2"
-                             TextAlignment="Center"
-                             Text="{Binding SpeedText, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="{loc:Tr FieldSpeedCustomHint}" />
-                    <TextBlock Margin="4,0,0,0"
-                               VerticalAlignment="Center"
-                               Style="{StaticResource Text.Muted}"
-                               Text="×" />
-                </StackPanel>
-            </Grid>
-
-            <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr FieldPitchHint}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="*" MinWidth="60" />
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Path Data="{StaticResource Icon.Note}" Style="{StaticResource FieldIcon}" />
-                    <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldPitch}" />
-                </StackPanel>
-
-                <Slider Grid.Column="1"
-                        IsSnapToTickEnabled="True"
-                        Maximum="12"
-                        Minimum="-12"
-                        TickFrequency="1"
-                        Value="{Binding PitchSemitones}" />
-
-                <controls:NumberBox Grid.Column="2"
-                                     Format="+#;-#;0"
-                                     Maximum="12"
-                                     Minimum="-12"
-                                     Step="1"
-                                     Suffix=" пт"
-                                     Value="{Binding PitchSemitones}" />
-            </Grid>
-
-            <Border Style="{StaticResource Inspector.Separator}" />
-
-            <TextBlock Style="{StaticResource Text.Section}" Text="{loc:Tr SectionFade}" />
-
-            <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr FieldFadeInHint}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="*" MinWidth="60" />
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Path Data="{StaticResource Icon.Fade}" Style="{StaticResource FieldIcon}" />
-                    <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldFadeIn}" />
-                </StackPanel>
-
-                <Slider Grid.Column="1"
-                        IsSnapToTickEnabled="True"
-                        Maximum="{Binding MaxFadeSeconds}"
-                        Minimum="0"
-                        TickFrequency="0.1"
-                        Value="{Binding FadeInSeconds}" />
-
-                <controls:NumberBox Grid.Column="2"
-                                     Format="0.0"
-                                     Maximum="{Binding MaxFadeSeconds}"
-                                     Minimum="0"
-                                     Step="0.1"
-                                     Suffix=" с"
-                                     Value="{Binding FadeInSeconds}" />
-            </Grid>
-
-            <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr FieldFadeOutHint}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="*" MinWidth="60" />
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Path Data="{StaticResource Icon.FadeOut}" Style="{StaticResource FieldIcon}" />
-                    <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldFadeOut}" />
-                </StackPanel>
-
-                <Slider Grid.Column="1"
-                        IsSnapToTickEnabled="True"
-                        Maximum="{Binding MaxFadeSeconds}"
-                        Minimum="0"
-                        TickFrequency="0.1"
-                        Value="{Binding FadeOutSeconds}" />
-
-                <controls:NumberBox Grid.Column="2"
-                                     Format="0.0"
-                                     Maximum="{Binding MaxFadeSeconds}"
-                                     Minimum="0"
-                                     Step="0.1"
-                                     Suffix=" с"
-                                     Value="{Binding FadeOutSeconds}" />
-            </Grid>
-
-            <Border Style="{StaticResource Inspector.Separator}" />
-
-            <!-- Дорожка целиком: её громкость лежит поверх громкости кусков,
-                 поэтому стоит отдельным разделом, а не рядом с ними. -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource Text.Section}"
-                           Text="{loc:Tr SectionTrack}" />
-
-                <TextBlock Grid.Column="1"
-                           Margin="10,0,0,0"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource Text.Base}"
-                           Text="{Binding TrackTitle}"
-                           TextTrimming="CharacterEllipsis" />
-            </Grid>
-
-            <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr FieldTrackGainHint}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="*" MinWidth="60" />
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0"
-                           Style="{StaticResource Inspector.Label}"
-                           Text="{loc:Tr FieldGain}" />
-
-                <Slider Grid.Column="1"
-                        IsSnapToTickEnabled="True"
-                        Maximum="400"
-                        Minimum="0"
-                        TickFrequency="5"
-                        Value="{Binding TrackGainPercent}" />
-
-                <controls:NumberBox Grid.Column="2"
-                                     Format="0"
-                                     Maximum="400"
-                                     Minimum="0"
-                                     Step="1"
-                                     Suffix="%"
-                                     Value="{Binding TrackGainPercent}" />
-            </Grid>
-
-            <Grid Margin="0,8,0,0">
-                <CheckBox VerticalAlignment="Center"
-                          Command="{Binding ToggleMutedCommand}"
-                          Content="{loc:Tr TrackMuted}"
-                          IsChecked="{Binding TrackMuted}" />
-
-                <Button HorizontalAlignment="Right"
-                        Padding="8,2"
-                        Command="{Binding RemoveTrackCommand}"
-                        Content="{loc:Tr RemoveTrack}"
-                        Style="{StaticResource Button.Ghost}" />
-            </Grid>
-
-            <TextBlock Margin="0,10,0,0"
-                       Style="{StaticResource Text.Muted}"
-                       Text="{loc:Tr AudioPreviewNote}"
-                       TextWrapping="Wrap" />
-        </StackPanel>
-    </Border>
+                <TextBlock Margin="0,12,0,0" Style="{StaticResource Text.Caption}" Text="{loc:Tr AudioPreviewNote}" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

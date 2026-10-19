@@ -378,8 +378,8 @@
         </Setter>
     </Style>
 
-    <!-- Разделитель панелей. Полоса захвата шире видимой линии: в шесть пикселей
-         попасть мышью легко, а рисовать такую толстую границу незачем. -->
+    <!-- Разделитель панелей. В версии 2.0 это просвет между карточками: линии
+         не видно, пока на неё не навели — тогда она загорается акцентом. -->
     <Style x:Key="Splitter.Horizontal" TargetType="GridSplitter">
         <Setter Property="Height" Value="6" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -393,7 +393,7 @@
                         <Rectangle x:Name="Line"
                                    Height="1"
                                    VerticalAlignment="Center"
-                                   Fill="{DynamicResource Brush.Border}" />
+                                   Fill="Transparent" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -420,7 +420,7 @@
                         <Rectangle x:Name="Line"
                                    Width="1"
                                    HorizontalAlignment="Center"
-                                   Fill="{DynamicResource Brush.Border}" />
+                                   Fill="Transparent" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">

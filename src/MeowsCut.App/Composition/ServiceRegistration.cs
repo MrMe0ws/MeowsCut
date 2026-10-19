@@ -83,6 +83,7 @@ public static class ServiceRegistration
 
         services.AddSingleton<ThumbnailImageCache>();
         services.AddSingleton<TimelineThumbnailLoader>();
+        services.AddSingleton<SourceThumbnailLoader>();
         services.AddSingleton<AudioWaveformCache>();
 
         services.AddSingleton<TimelineViewModel>();

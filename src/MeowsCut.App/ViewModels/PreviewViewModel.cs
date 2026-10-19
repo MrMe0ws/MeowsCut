@@ -89,6 +89,10 @@ public sealed partial class PreviewViewModel : ObservableObject
             {
                 OnPlayheadMoved();
             }
+            else if (e.PropertyName is nameof(TimelineViewModel.SelectedClip))
+            {
+                RefreshSelectionFrame();
+            }
         };
 
         _timeline.SequenceChanged += (_, sequence) =>
@@ -490,6 +494,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         FrameRotation = (transform.Rotation + PlayerRotation(placed)) % 360;
         FrameFill = (transform.Fit ?? _timeline.Sequence.Format.Fit) == Core.Export.FitMode.Cover;
         FadeDim = placed is { } clip ? DimAt(clip, _timeline.Playhead) : 0d;
+        RefreshSelectionFrame();
     }
 
     /// <summary>

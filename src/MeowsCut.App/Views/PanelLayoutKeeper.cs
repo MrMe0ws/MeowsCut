@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -19,13 +19,12 @@ namespace MeowsCut.App.Views;
 /// </remarks>
 internal sealed class PanelLayoutKeeper
 {
-    private const double MinSourcesShare = 0.1;
-    private const double MaxSourcesShare = 0.9;
-
     private readonly ShellWindow _window;
     private readonly ShellViewModel _viewModel;
 
     private double _ownBoardHeight;
+
+    /// <summary>Доля файлов из настроек 1.x: не используется, но и не теряется.</summary>
     private double _sourcesShare;
     /// <summary>Высота под дорожки. null — ещё не считали, 0 — пользователь ужал доску сам.</summary>
     private double? _fitBoardHeight;
@@ -35,11 +34,11 @@ internal sealed class PanelLayoutKeeper
         _window = window;
         _viewModel = viewModel;
         _ownBoardHeight = window.BoardRow.Height.Value;
-        _sourcesShare = Share(window.SourcesRow.Height.Value, window.InspectorRow.Height.Value);
 
         Restore(viewModel.SavedLayout);
 
         window.Workspace.SizeChanged += (_, _) => Apply();
+        window.MediaPane.SoundHeightCommitted += (_, _) => Save();
         viewModel.Timeline.PropertyChanged += OnTimelineChanged;
     }
 
@@ -59,12 +58,9 @@ internal sealed class PanelLayoutKeeper
 
     public void Save()
     {
-        var sources = _window.SourcesRow.ActualHeight;
-        var inspector = _window.InspectorRow.ActualHeight;
-        if (sources > 0 && inspector > 0)
-        {
-            _sourcesShare = Share(sources, inspector);
-        }
+        var media = _window.MediaColumn.ActualWidth > 0
+            ? _window.MediaColumn.ActualWidth
+            : _window.MediaColumn.Width.Value;
 
         var side = _window.SideColumn.ActualWidth > 0
             ? _window.SideColumn.ActualWidth
@@ -81,7 +77,9 @@ internal sealed class PanelLayoutKeeper
             Math.Round(_sourcesShare, 3),
             Math.Round(size.Width),
             Math.Round(size.Height),
-            maximized));
+            maximized,
+            Math.Round(media),
+            Math.Round(_window.MediaPane.SoundHeight)));
     }
 
     private void Restore(PanelLayout? layout)
@@ -109,12 +107,15 @@ internal sealed class PanelLayoutKeeper
             side.Width = new GridLength(Math.Clamp(layout.SideWidth, side.MinWidth, side.MaxWidth));
         }
 
-        if (layout.SourcesShare > 0)
+        _sourcesShare = layout.SourcesShare;
+
+        var mediaColumn = _window.MediaColumn;
+        if (layout.MediaWidth > 0)
         {
-            _sourcesShare = Math.Clamp(layout.SourcesShare, MinSourcesShare, MaxSourcesShare);
-            _window.SourcesRow.Height = new GridLength(_sourcesShare, GridUnitType.Star);
-            _window.InspectorRow.Height = new GridLength(1 - _sourcesShare, GridUnitType.Star);
+            mediaColumn.Width = new GridLength(Math.Clamp(layout.MediaWidth, mediaColumn.MinWidth, mediaColumn.MaxWidth));
         }
+
+        _window.MediaPane.SoundHeight = layout.SoundListHeight;
 
         if (layout.BoardHeight > 0)
         {
@@ -174,7 +175,4 @@ internal sealed class PanelLayoutKeeper
             row.Height = new GridLength(target);
         }
     }
-
-    private static double Share(double sources, double inspector) =>
-        Math.Clamp(sources / (sources + inspector), MinSourcesShare, MaxSourcesShare);
 }

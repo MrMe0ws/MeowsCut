@@ -177,6 +177,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 
             _toolsetProvider.Set(result.Toolset!);
             OnPropertyChanged(nameof(ToolsetSummary));
+            OnPropertyChanged(nameof(AboutComponents));
         }
 
         var settings = _store.Current with

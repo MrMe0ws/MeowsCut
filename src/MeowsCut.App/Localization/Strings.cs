@@ -606,6 +606,72 @@ public static class Strings
     public static string VoiceoverDenoiseFailed => Get(nameof(VoiceoverDenoiseFailed));
 
     public static string RecordingCleanSuffix => Get(nameof(RecordingCleanSuffix));
+    public static string SourceBadgeImage => Get(nameof(SourceBadgeImage));
+    public static string InspectorManySelected => Get(nameof(InspectorManySelected));
+    public static string TrackVideo => Get(nameof(TrackVideo));
+    public static string TrackTitles => Get(nameof(TrackTitles));
+    public static string CtxSpeed => Get(nameof(CtxSpeed));
+    public static string CtxVolume => Get(nameof(CtxVolume));
+    public static string CtxFadeIn => Get(nameof(CtxFadeIn));
+    public static string CtxFadeOut => Get(nameof(CtxFadeOut));
+    public static string CtxFit => Get(nameof(CtxFit));
+    public static string CtxRotate => Get(nameof(CtxRotate));
+    public static string CtxZoom => Get(nameof(CtxZoom));
+    public static string CtxPosition => Get(nameof(CtxPosition));
+    public static string CtxMotion => Get(nameof(CtxMotion));
+    public static string CtxPitch => Get(nameof(CtxPitch));
+    public static string CtxTrackGain => Get(nameof(CtxTrackGain));
+    public static string CtxTitleText => Get(nameof(CtxTitleText));
+    public static string CtxTitleDuration => Get(nameof(CtxTitleDuration));
+    public static string CtxTitleSize => Get(nameof(CtxTitleSize));
+    public static string CtxTitlePlace => Get(nameof(CtxTitlePlace));
+    public static string CtxTitleColor => Get(nameof(CtxTitleColor));
+    public static string CtxSplit => Get(nameof(CtxSplit));
+    public static string CtxDuplicate => Get(nameof(CtxDuplicate));
+    public static string CtxDelete => Get(nameof(CtxDelete));
+    public static string CtxDetachAudio => Get(nameof(CtxDetachAudio));
+    public static string CtxResetFrame => Get(nameof(CtxResetFrame));
+    public static string CtxClearFades => Get(nameof(CtxClearFades));
+    public static string ExportTargetTitle => Get(nameof(ExportTargetTitle));
+    public static string TrackHeaderHint => Get(nameof(TrackHeaderHint));
+    public static string CtxSplitHere => Get(nameof(CtxSplitHere));
+    public static string CtxTrackMute => Get(nameof(CtxTrackMute));
+    public static string AboutVersion => Get(nameof(AboutVersion));
+    public static string AboutComponents => Get(nameof(AboutComponents));
+    public static string AboutFfmpegMissing => Get(nameof(AboutFfmpegMissing));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private static string Get(string key) => LocalizationManager.Get(key);
 }

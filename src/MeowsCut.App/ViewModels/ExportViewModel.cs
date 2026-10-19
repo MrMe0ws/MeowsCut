@@ -218,6 +218,8 @@ public sealed partial class ExportViewModel : ObservableObject
                 RefreshScope();
             }
         };
+
+        SummaryLines.CollectionChanged += (_, _) => OnPropertyChanged(nameof(EstimatedSizeText));
     }
 
     /// <summary>Есть ли на доске выделение, которое можно отдать в экспорт отдельно.</summary>
@@ -262,6 +264,7 @@ public sealed partial class ExportViewModel : ObservableObject
     {
         RefreshSummary();
         RefreshCommands();
+        OnPropertyChanged(nameof(WholeSequence));
     }
 
     public bool IsIdle => State is ExportState.Idle or ExportState.Failed;

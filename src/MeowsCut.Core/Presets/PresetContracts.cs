@@ -1,4 +1,4 @@
-using MeowsCut.Core.Editing;
+﻿using MeowsCut.Core.Editing;
 using MeowsCut.Core.Export;
 
 namespace MeowsCut.Core.Presets;
@@ -14,6 +14,12 @@ public interface IPresetProvider
     IReadOnlyList<PresetDefinition> GetPresets(string groupId);
 
     PresetDefinition? Find(string id);
+
+    /// <summary>
+    /// Пресет, который стоит в экспорте, пока пользователь не выбрал свой: первый
+    /// по порядку групп с пометкой <c>defaultFor</c> под эту ориентацию.
+    /// </summary>
+    PresetDefinition? DefaultFor(FrameOrientation orientation);
 
     /// <summary>Перечитать пресеты с диска, не перезапуская приложение.</summary>
     void Reload();

@@ -4,7 +4,7 @@
     "id": "general",
     "title": "Общие",
     "description": "Частые случаи: выложить, отправить, сохранить",
-    "order": 20
+    "order": 5
   },
   "presets": [
     {
@@ -19,12 +19,14 @@
         "width": 1920,
         "height": 1080,
         "fit": "Contain",
+        "pixelFormat": "yuv420p",
         "audioEnabled": true,
         "audioCodec": "Aac",
         "audioBitrateKbps": 192
       },
       "constraints": {},
-      "notes": []
+      "notes": [],
+      "defaultFor": ["landscape", "square"]
     },
     {
       "id": "general.web-1440",
