@@ -37,6 +37,7 @@ public enum VoiceoverState
 public sealed partial class VoiceoverViewModel : ObservableObject
 {
     private readonly IVoiceRecorder _recorder;
+    private readonly INoiseReducer _noise;
     private readonly IAppSettingsStore _settings;
     private readonly PreviewViewModel _preview;
     private readonly TimelineViewModel _timeline;
@@ -54,6 +55,7 @@ public sealed partial class VoiceoverViewModel : ObservableObject
 
     public VoiceoverViewModel(
         IVoiceRecorder recorder,
+        INoiseReducer noise,
         IAppSettingsStore settings,
         PreviewViewModel preview,
         TimelineViewModel timeline,
@@ -64,6 +66,7 @@ public sealed partial class VoiceoverViewModel : ObservableObject
         ILogger<VoiceoverViewModel> logger)
     {
         _recorder = recorder;
+        _noise = noise;
         _settings = settings;
         _preview = preview;
         _timeline = timeline;
@@ -75,6 +78,7 @@ public sealed partial class VoiceoverViewModel : ObservableObject
 
         _meter = new DispatcherTimer(DispatcherPriority.Render) { Interval = MeterInterval };
         _meter.Tick += (_, _) => OnMeterTick();
+        _settings.Changed += OnSettingsChanged;
 
         _timeline.PropertyChanged += (_, e) =>
         {

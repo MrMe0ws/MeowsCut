@@ -47,6 +47,10 @@ public class MediaInfoMapperTests
         video.RotationDegrees.Should().Be(270, "поворот -90 нормализуется в 270");
         video.Size.Should().Be(new FrameSize(1920, 1080));
         video.DisplaySize.Should().Be(new FrameSize(1080, 1920), "вертикальное видео не должно показываться на боку");
+
+        // Метка −90 разворачивается ffmpeg через transpose=clock — проверено
+        // на роликах Pixel. Предпросмотр обязан доворачивать так же.
+        video.DisplayRotationClockwise.Should().Be(90);
     }
 
     [Fact]
@@ -54,7 +58,11 @@ public class MediaInfoMapperTests
     {
         var info = Map(FfprobeFixtures.RotatedByTag);
 
-        info.PrimaryVideo!.RotationDegrees.Should().Be(270);
+        // Старый тег считается по часовой (rotate=270), side_data — против часовой:
+        // для того же ролика она дала бы 90. Хранится один счёт — как в side_data.
+        info.PrimaryVideo!.RotationDegrees.Should().Be(90);
+        info.PrimaryVideo.DisplayRotationClockwise.Should().Be(270);
+        info.PrimaryVideo.DisplaySize.Should().Be(new Core.Media.FrameSize(1080, 1920));
     }
 
     [Fact]

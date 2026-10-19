@@ -88,7 +88,8 @@ public sealed partial class VoiceoverViewModel
 
         try
         {
-            var path = await recording.FinishAsync(CancellationToken.None).ConfigureAwait(true);
+            var path = await CleanAsync(await recording.FinishAsync(CancellationToken.None).ConfigureAwait(true))
+                .ConfigureAwait(true);
 
             if (ImportRecording is not null &&
                 await ImportRecording(path, CancellationToken.None).ConfigureAwait(true) is { } imported &&

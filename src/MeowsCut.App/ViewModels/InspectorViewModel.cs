@@ -121,9 +121,11 @@ public sealed partial class InspectorViewModel : ObservableObject
             AudioEnabled = clip.Clip.Audio.Enabled;
             VolumePercent = Math.Round(clip.Clip.Audio.Volume * 100);
             ZoomPercent = Math.Round(clip.Clip.Transform.Zoom * 100);
+            RefreshMotion(clip.Clip.Transform);
             OffsetXPercent = Math.Round(clip.Clip.Transform.OffsetX * 100);
             OffsetYPercent = Math.Round(clip.Clip.Transform.OffsetY * 100);
             Rotation = clip.Clip.Transform.Rotation;
+            FitOption = ClipFitOption.For(clip.Clip.Transform.Fit);
             FadeInSeconds = Round(clip.Clip.FadeIn);
             FadeOutSeconds = Round(clip.Clip.FadeOut);
         }
@@ -138,7 +140,9 @@ public sealed partial class InspectorViewModel : ObservableObject
             ZoomPercent = 100d;
             OffsetXPercent = 0d;
             OffsetYPercent = 0d;
+            RefreshMotion(ClipTransform.Identity);
             Rotation = 0;
+            FitOption = ClipFitOption.All[0];
             FadeInSeconds = 0d;
             FadeOutSeconds = 0d;
         }
@@ -268,11 +272,25 @@ public sealed partial class InspectorViewModel : ObservableObject
         _timeline.EndInteraction();
     }
 
-    partial void OnZoomPercentChanged(double value) => ApplyTransform();
+    partial void OnZoomPercentChanged(double value)
+    {
+        SyncZoomSlider(value);
+        ApplyTransform();
+    }
 
-    partial void OnOffsetXPercentChanged(double value) => ApplyTransform();
+    partial void OnOffsetXPercentChanged(double value)
+    {
+        OnPropertyChanged(nameof(OffsetLimitPercent));
+        OnPropertyChanged(nameof(MinOffsetPercent));
+        ApplyTransform();
+    }
 
-    partial void OnOffsetYPercentChanged(double value) => ApplyTransform();
+    partial void OnOffsetYPercentChanged(double value)
+    {
+        OnPropertyChanged(nameof(OffsetLimitPercent));
+        OnPropertyChanged(nameof(MinOffsetPercent));
+        ApplyTransform();
+    }
 
     /// <summary>
     /// Масштаб и сдвиг кадра внутри клипа: то, чем выбирают, какая часть картинки
@@ -288,7 +306,13 @@ public sealed partial class InspectorViewModel : ObservableObject
         var transform = new ClipTransform(
             Math.Clamp(ZoomPercent / 100d, ClipTransform.MinZoom, ClipTransform.MaxZoom),
             OffsetXPercent / 100d,
-            OffsetYPercent / 100d) with { Rotation = Rotation };
+            OffsetYPercent / 100d) with
+        {
+            Rotation = Rotation,
+            Fit = FitOption.Mode,
+            MotionSeconds = Math.Clamp(MotionSeconds, 0d, ClipMotion.MaxSeconds),
+            MotionOut = MotionOut
+        };
 
         if (transform == clip.Clip.Transform)
         {
@@ -305,6 +329,11 @@ public sealed partial class InspectorViewModel : ObservableObject
         OffsetXPercent = 0d;
         OffsetYPercent = 0d;
         Rotation = 0;
+        _updating = true;
+        MotionSeconds = 0d;
+        MotionOut = false;
+        FitOption = ClipFitOption.All[0];
+        _updating = false;
         _timeline.SetClipTransform(ClipTransform.Identity);
         _timeline.EndInteraction();
     }

@@ -18,6 +18,10 @@
             <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
         </Style>
 
+        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource Inspector.NumberBox}">
+            <Setter Property="EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+
         <Style x:Key="FieldGrid" TargetType="Grid">
             <Setter Property="Margin" Value="0,1" />
         </Style>
@@ -64,9 +68,13 @@
                         TickFrequency="5"
                         Value="{Binding GainPercent}" />
 
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource Inspector.Value}"
-                           Text="{Binding GainPercent, StringFormat={}{0:0}%}" />
+                <controls:NumberBox Grid.Column="2"
+                                     Format="0"
+                                     Maximum="400"
+                                     Minimum="0"
+                                     Step="1"
+                                     Suffix="%"
+                                     Value="{Binding GainPercent}" />
             </Grid>
 
             <!-- Скорость звука отдельно от скорости клипа: музыку подгоняют под
@@ -124,9 +132,13 @@
                         TickFrequency="1"
                         Value="{Binding PitchSemitones}" />
 
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource Inspector.Value}"
-                           Text="{Binding PitchSemitones, StringFormat={}{0:+#;-#;0} пт}" />
+                <controls:NumberBox Grid.Column="2"
+                                     Format="+#;-#;0"
+                                     Maximum="12"
+                                     Minimum="-12"
+                                     Step="1"
+                                     Suffix=" пт"
+                                     Value="{Binding PitchSemitones}" />
             </Grid>
 
             <Border Style="{StaticResource Inspector.Separator}" />
@@ -147,14 +159,18 @@
 
                 <Slider Grid.Column="1"
                         IsSnapToTickEnabled="True"
-                        Maximum="5"
+                        Maximum="{Binding MaxFadeSeconds}"
                         Minimum="0"
                         TickFrequency="0.1"
                         Value="{Binding FadeInSeconds}" />
 
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource Inspector.Value}"
-                           Text="{Binding FadeInSeconds, StringFormat={}{0:0.0} с}" />
+                <controls:NumberBox Grid.Column="2"
+                                     Format="0.0"
+                                     Maximum="{Binding MaxFadeSeconds}"
+                                     Minimum="0"
+                                     Step="0.1"
+                                     Suffix=" с"
+                                     Value="{Binding FadeInSeconds}" />
             </Grid>
 
             <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr FieldFadeOutHint}">
@@ -171,14 +187,18 @@
 
                 <Slider Grid.Column="1"
                         IsSnapToTickEnabled="True"
-                        Maximum="5"
+                        Maximum="{Binding MaxFadeSeconds}"
                         Minimum="0"
                         TickFrequency="0.1"
                         Value="{Binding FadeOutSeconds}" />
 
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource Inspector.Value}"
-                           Text="{Binding FadeOutSeconds, StringFormat={}{0:0.0} с}" />
+                <controls:NumberBox Grid.Column="2"
+                                     Format="0.0"
+                                     Maximum="{Binding MaxFadeSeconds}"
+                                     Minimum="0"
+                                     Step="0.1"
+                                     Suffix=" с"
+                                     Value="{Binding FadeOutSeconds}" />
             </Grid>
 
             <Border Style="{StaticResource Inspector.Separator}" />
@@ -223,9 +243,13 @@
                         TickFrequency="5"
                         Value="{Binding TrackGainPercent}" />
 
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource Inspector.Value}"
-                           Text="{Binding TrackGainPercent, StringFormat={}{0:0}%}" />
+                <controls:NumberBox Grid.Column="2"
+                                     Format="0"
+                                     Maximum="400"
+                                     Minimum="0"
+                                     Step="1"
+                                     Suffix="%"
+                                     Value="{Binding TrackGainPercent}" />
             </Grid>
 
             <Grid Margin="0,8,0,0">

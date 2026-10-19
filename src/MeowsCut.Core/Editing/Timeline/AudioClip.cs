@@ -97,6 +97,29 @@ public sealed record AudioClip(
         return SourceRange.Start + ToSource(offset);
     }
 
+    /// <summary>
+    /// Множитель громкости от нарастания и затухания в точке таймлайна: 0 на краю
+    /// куска, 1 вне затуханий. Линейно — как afade при экспорте.
+    /// </summary>
+    public double FadeGainAt(TimeSpan timelinePosition)
+    {
+        var offset = timelinePosition - TimelineStart;
+        var gain = 1d;
+
+        if (FadeIn > TimeSpan.Zero && offset < FadeIn)
+        {
+            gain = Math.Min(gain, offset / FadeIn);
+        }
+
+        var left = Duration - offset;
+        if (FadeOut > TimeSpan.Zero && left < FadeOut)
+        {
+            gain = Math.Min(gain, left / FadeOut);
+        }
+
+        return Math.Clamp(gain, 0d, 1d);
+    }
+
     public AudioClip MoveTo(TimeSpan start) =>
         this with { TimelineStart = start < TimeSpan.Zero ? TimeSpan.Zero : start };
 

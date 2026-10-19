@@ -119,56 +119,94 @@
                       HorizontalAlignment="Left"
                       VerticalAlignment="Center"
                       WindowChrome.IsHitTestVisibleInChrome="True">
+                    <!-- «Закрыть проект» внизу, рядом с «Выходом», а не под «Экспортом»:
+                         стоя вплотную к частой команде, он ловил промахи мышью. -->
                     <MenuItem Header="{loc:Tr MenuFile}">
                         <MenuItem Command="{Binding AddFileCommand}"
                                   Header="{loc:Tr MenuAddFile}"
+                                  Icon="{StaticResource Icon.Film}"
                                   InputGestureText="Ctrl+O" />
-                        <MenuItem Command="{Binding AddSoundCommand}" Header="{loc:Tr MenuAddAudio}" />
+                        <MenuItem Command="{Binding AddSoundCommand}"
+                                  Header="{loc:Tr MenuAddAudio}"
+                                  Icon="{StaticResource Icon.Note}" />
                         <Separator Style="{StaticResource MenuSeparator}" />
-                        <MenuItem Command="{Binding OpenProjectCommand}" Header="{loc:Tr MenuOpenProject}" />
+                        <MenuItem Command="{Binding OpenProjectCommand}"
+                                  Header="{loc:Tr MenuOpenProject}"
+                                  Icon="{StaticResource Icon.Open}" />
                         <MenuItem Command="{Binding SaveProjectCommand}"
                                   Header="{loc:Tr MenuSaveProject}"
+                                  Icon="{StaticResource Icon.Save}"
                                   InputGestureText="Ctrl+S" />
-                        <MenuItem Command="{Binding SaveProjectAsCommand}" Header="{loc:Tr MenuSaveProjectAs}" />
+                        <MenuItem Command="{Binding SaveProjectAsCommand}"
+                                  Header="{loc:Tr MenuSaveProjectAs}"
+                                  Icon="{StaticResource Icon.SaveAs}" />
                         <Separator Style="{StaticResource MenuSeparator}" />
                         <MenuItem Command="{Binding OpenExportCommand}"
                                   Header="{loc:Tr MenuExport}"
+                                  Icon="{StaticResource Icon.Export}"
                                   InputGestureText="Ctrl+E" />
+                        <MenuItem Command="{Binding OpenSettingsCommand}"
+                                  Header="{loc:Tr MenuSettings}"
+                                  Icon="{StaticResource Icon.Sliders}" />
                         <Separator Style="{StaticResource MenuSeparator}" />
-                        <MenuItem Command="{Binding CloseMediaCommand}" Header="{loc:Tr MenuCloseFile}" />
-                        <MenuItem Command="{Binding OpenSettingsCommand}" Header="{loc:Tr MenuSettings}" />
-                        <Separator Style="{StaticResource MenuSeparator}" />
-                        <MenuItem Click="OnExit" Header="{loc:Tr MenuExit}" />
+                        <MenuItem Command="{Binding CloseMediaCommand}"
+                                  Header="{loc:Tr MenuCloseFile}"
+                                  Icon="{StaticResource Icon.CloseProject}" />
+                        <MenuItem Click="OnExit"
+                                  Header="{loc:Tr MenuExit}"
+                                  Icon="{StaticResource Icon.Exit}" />
                     </MenuItem>
 
                     <MenuItem Header="{loc:Tr MenuEdit}">
                         <MenuItem Command="{Binding Timeline.UndoCommand}"
                                   Header="{loc:Tr MenuUndo}"
+                                  Icon="{StaticResource Icon.Undo}"
                                   InputGestureText="Ctrl+Z" />
                         <MenuItem Command="{Binding Timeline.RedoCommand}"
                                   Header="{loc:Tr MenuRedo}"
+                                  Icon="{StaticResource Icon.Redo}"
                                   InputGestureText="Ctrl+Y" />
                         <Separator Style="{StaticResource MenuSeparator}" />
                         <MenuItem Command="{Binding Timeline.SplitAtPlayheadCommand}"
                                   Header="{loc:Tr MenuSplit}"
+                                  Icon="{StaticResource Icon.Split}"
                                   InputGestureText="S" />
                         <MenuItem Command="{Binding Timeline.DuplicateSelectedCommand}"
                                   Header="{loc:Tr MenuDuplicate}"
+                                  Icon="{StaticResource Icon.Duplicate}"
                                   InputGestureText="Ctrl+D" />
                         <MenuItem Command="{Binding Timeline.DeleteSelectedCommand}"
                                   Header="{loc:Tr MenuDelete}"
+                                  Icon="{StaticResource Icon.Trash}"
                                   InputGestureText="Del" />
                     </MenuItem>
                 </Menu>
 
                 <!-- Имя черновика и кнопки окна -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <TextBlock Margin="12,0,12,0"
+                    <TextBlock Margin="12,0,0,0"
                                VerticalAlignment="Center"
                                MaxWidth="240"
                                Style="{StaticResource Text.Muted}"
                                Text="{Binding ProjectFileName}"
                                TextTrimming="CharacterEllipsis" />
+
+                    <!-- Сохранено ли: без этого «Сохранить» не давало видимого ответа,
+                         и было непонятно, записались правки или нет -->
+                    <TextBlock Margin="10,0,12,0"
+                               VerticalAlignment="Center"
+                               Text="{Binding SaveStateText}"
+                               ToolTip="{loc:Tr ProjectStateHint}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasUnsavedChanges}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
 
                     <Button Click="OnMinimize"
                             Style="{StaticResource WindowButton}"
@@ -280,12 +318,13 @@
         </Grid>
 
         <!-- Рабочий экран: предпросмотр, доска монтажа и свойства выбранного куска -->
-        <Grid Grid.Row="1" Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}">
+        <Grid x:Name="Workspace"
+              Grid.Row="1"
+              Visibility="{Binding HasMedia, Converter={StaticResource BoolToVisibility}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MinHeight="180" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="240" MinHeight="150" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition x:Name="BoardRow" Height="240" MinHeight="150" />
             </Grid.RowDefinitions>
 
             <!-- Предпросмотр и колонка свойств справа от него: по бокам кадра
@@ -295,11 +334,13 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MinWidth="320" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="330" MinWidth="220" MaxWidth="720" />
+                    <ColumnDefinition x:Name="SideColumn" Width="330" MinWidth="220" MaxWidth="720" />
                 </Grid.ColumnDefinitions>
 
                 <panes:PreviewPaneView Grid.Column="0" DataContext="{Binding Preview}" />
-                <GridSplitter Grid.Column="1" Style="{StaticResource Splitter.Vertical}" />
+                <GridSplitter Grid.Column="1"
+                              DragCompleted="OnSplitterDragCompleted"
+                              Style="{StaticResource Splitter.Vertical}" />
 
                 <Border Grid.Column="2"
                         BorderBrush="{DynamicResource Brush.Border}"
@@ -311,13 +352,15 @@
                          больше места; границу между ними двигает разделитель. -->
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="1*" MinHeight="90" />
+                            <RowDefinition x:Name="SourcesRow" Height="1*" MinHeight="90" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="1.7*" MinHeight="90" />
+                            <RowDefinition x:Name="InspectorRow" Height="1.7*" MinHeight="90" />
                         </Grid.RowDefinitions>
 
                         <panes:SourcesView Grid.Row="0" DataContext="{Binding Sources}" />
-                        <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
+                        <GridSplitter Grid.Row="1"
+                                      DragCompleted="OnSplitterDragCompleted"
+                                      Style="{StaticResource Splitter.Horizontal}" />
 
                         <ScrollViewer Grid.Row="2"
                                       controls:SmoothScroll.IsEnabled="True"
@@ -346,27 +389,11 @@
                 </Border>
             </Grid>
 
-            <GridSplitter Grid.Row="1" Style="{StaticResource Splitter.Horizontal}" />
-            <panes:TimelinePaneView Grid.Row="2" DataContext="{Binding Timeline}" />
+            <GridSplitter Grid.Row="1"
+                          DragCompleted="OnSplitterDragCompleted"
+                          Style="{StaticResource Splitter.Horizontal}" />
+            <panes:TimelinePaneView x:Name="TimelinePane" Grid.Row="2" DataContext="{Binding Timeline}" />
 
-            <!-- Финальный шаг. Настройки вывода живут в своём окне: за монтажом
-                 они не нужны, а места занимали треть экрана. -->
-            <Border Grid.Row="3"
-                    Background="{DynamicResource Brush.Surface}"
-                    BorderBrush="{DynamicResource Brush.Border}"
-                    BorderThickness="0,1,0,0"
-                    Padding="12,10">
-                <Grid>
-                    <TextBlock VerticalAlignment="Center"
-                               Style="{StaticResource Text.Muted}"
-                               Text="{Binding Timeline.SummaryLine}" />
-
-                    <Button HorizontalAlignment="Right"
-                            Command="{Binding OpenExportCommand}"
-                            Content="{loc:Tr OpenExportStep}"
-                            Style="{StaticResource Button.Primary}" />
-                </Grid>
-            </Border>
         </Grid>
 
         <!-- Статусная строка -->

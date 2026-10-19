@@ -11,7 +11,7 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
 
-    <!-- Вопрос с двумя ответами. Системный MessageBox не знает про палитру
+    <!-- Вопрос с двумя или тремя ответами. Системный MessageBox не знает про палитру
          редактора и в тёмной теме остаётся белым окном посреди экрана. -->
     <StackPanel Margin="22">
         <TextBlock Style="{StaticResource Text.Title}"
@@ -24,6 +24,14 @@
                    TextWrapping="Wrap" />
 
         <StackPanel Margin="0,20,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+            <!-- Третий ответ — «передумал»: есть не у каждого вопроса -->
+            <Button Margin="0,0,10,0"
+                    Click="OnCancel"
+                    Content="{Binding CancelText}"
+                    IsCancel="True"
+                    Style="{StaticResource Button.Ghost}"
+                    Visibility="{Binding HasCancel, Converter={StaticResource BoolToVisibility}}" />
+
             <Button Click="OnDecline"
                     Content="{Binding DeclineText}"
                     Style="{StaticResource Button.Ghost}" />

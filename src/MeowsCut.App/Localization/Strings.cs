@@ -225,7 +225,6 @@ public static class Strings
 
     public static string AddFileHint => Get(nameof(AddFileHint));
 
-    public static string OpenExportStep => Get(nameof(OpenExportStep));
 
     public static string ExportStepTitle => Get(nameof(ExportStepTitle));
 
@@ -233,7 +232,6 @@ public static class Strings
 
     public static string SectionFrameHint => Get(nameof(SectionFrameHint));
 
-    public static string TimelineSummary => Get(nameof(TimelineSummary));
 
     public static string AudioTrackDefaultName => Get(nameof(AudioTrackDefaultName));
 
@@ -312,6 +310,34 @@ public static class Strings
     public static string SectionClip => Get(nameof(SectionClip));
 
     public static string NoClipSelected => Get(nameof(NoClipSelected));
+
+    public static string NumberBoxHint => Get(nameof(NumberBoxHint));
+
+    public static string SaveChangesTitle => Get(nameof(SaveChangesTitle));
+
+    public static string SaveChangesMessage => Get(nameof(SaveChangesMessage));
+
+    public static string SaveChangesMessageNew => Get(nameof(SaveChangesMessageNew));
+
+    public static string SaveChangesAccept => Get(nameof(SaveChangesAccept));
+
+    public static string SaveChangesDecline => Get(nameof(SaveChangesDecline));
+
+    public static string SaveChangesCancel => Get(nameof(SaveChangesCancel));
+
+    public static string ProjectStateUnsaved => Get(nameof(ProjectStateUnsaved));
+
+    public static string ProjectStateSaved => Get(nameof(ProjectStateSaved));
+
+    public static string ProjectStateHint => Get(nameof(ProjectStateHint));
+
+    public static string FieldMotion => Get(nameof(FieldMotion));
+
+    public static string FieldMotionHint => Get(nameof(FieldMotionHint));
+
+    public static string FieldMotionOut => Get(nameof(FieldMotionOut));
+
+    public static string FieldMotionOutHint => Get(nameof(FieldMotionOutHint));
 
     public static string FieldOnTimeline => Get(nameof(FieldOnTimeline));
 
@@ -564,6 +590,22 @@ public static class Strings
     public static string MicrophoneDefault => Get(nameof(MicrophoneDefault));
 
     public static string MicrophoneDefaultSuffix => Get(nameof(MicrophoneDefaultSuffix));
+
+    public static string ClipFit => Get(nameof(ClipFit));
+
+    public static string ClipFitHint => Get(nameof(ClipFitHint));
+
+    public static string ClipFitProject => Get(nameof(ClipFitProject));
+
+    public static string ClipFitContain => Get(nameof(ClipFitContain));
+
+    public static string ClipFitCover => Get(nameof(ClipFitCover));
+
+    public static string VoiceoverCleaning => Get(nameof(VoiceoverCleaning));
+
+    public static string VoiceoverDenoiseFailed => Get(nameof(VoiceoverDenoiseFailed));
+
+    public static string RecordingCleanSuffix => Get(nameof(RecordingCleanSuffix));
 
     private static string Get(string key) => LocalizationManager.Get(key);
 }

@@ -224,6 +224,25 @@ public class FilterGraphBuilderTests
     }
 
     [Fact]
+    public void Clip_with_its_own_fit_fills_the_frame_while_the_rest_stays_fitted()
+    {
+        var wide = Fake.Source(seconds: 10);
+        var tall = Fake.Source(seconds: 10, width: 1080, height: 1920, path: @"C:\видео\вертикальное.mp4");
+        var filled = Clip.FromSource(tall);
+        filled = filled.WithTransform(filled.Transform with { Fit = FitMode.Cover });
+
+        var sequence = new Sequence(
+            new VideoTrack([Clip.FromSource(wide), filled]),
+            SequenceFormat.FromMedia(wide.Info));
+
+        var map = new Dictionary<SourceId, int> { [wide.Id] = 0, [tall.Id] = 1 };
+        var text = Builder.Build(sequence, map, ExportSettings.Default).Text;
+
+        text.Should().Contain("[1:v]trim=start=0:end=10,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080");
+        text.Should().Contain("[0:v]trim=start=0:end=10,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease");
+    }
+
+    [Fact]
     public void Graph_never_ends_with_a_stray_separator()
     {
         var source = Fake.Source(seconds: 10);

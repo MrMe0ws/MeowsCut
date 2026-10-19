@@ -50,6 +50,18 @@ public sealed record AppSettings
     /// </summary>
     public int RecordingOffsetMs { get; init; }
 
+    /// <summary>Убирать шум микрофона из дубля сразу после записи.</summary>
+    public bool ReduceRecordingNoise { get; init; } = true;
+
+    /// <summary>
+    /// Насколько приглушать шум, в децибелах. Больше — тише фон, но голос
+    /// начинает звучать как из-под воды.
+    /// </summary>
+    public int RecordingNoiseReductionDb { get; init; } = 20;
+
+    /// <summary>Раскладка окна с прошлого запуска. null — заводская.</summary>
+    public PanelLayout? Layout { get; init; }
+
     public AppSettings WithRecentFile(string path, int limit = 10)
     {
         var list = new List<string> { path };

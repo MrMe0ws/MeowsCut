@@ -18,6 +18,10 @@
             <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
         </Style>
 
+        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource Inspector.NumberBox}">
+            <Setter Property="EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+
         <!-- Одна сетка на все поля раздела: подпись, орган, значение.
              Ширины подписей и чисел общие на всю панель — поля разных разделов
              стоят по одной линии, и взгляд идёт сверху вниз, а не зигзагом. -->
@@ -124,15 +128,19 @@
                     <Slider Grid.Column="1"
                             IsEnabled="{Binding AudioEnabled}"
                             IsSnapToTickEnabled="True"
-                            Maximum="200"
+                            Maximum="400"
                             Minimum="0"
                             TickFrequency="5"
                             ToolTip="{loc:Tr FieldVolume}"
                             Value="{Binding VolumePercent}" />
 
-                    <TextBlock Grid.Column="2"
-                               Style="{StaticResource Inspector.Value}"
-                               Text="{Binding VolumePercent, StringFormat={}{0:0}%}" />
+                    <controls:NumberBox Grid.Column="2"
+                                         Format="0"
+                                         Maximum="400"
+                                         Minimum="0"
+                                         Step="1"
+                                         Suffix="%"
+                                         Value="{Binding VolumePercent}" />
                 </Grid>
 
                 <Border Style="{StaticResource Inspector.Separator}" />
@@ -176,9 +184,13 @@
                             TickFrequency="0.1"
                             Value="{Binding FadeInSeconds}" />
 
-                    <TextBlock Grid.Column="2"
-                               Style="{StaticResource Inspector.Value}"
-                               Text="{Binding FadeInSeconds, StringFormat={}{0:0.0} с}" />
+                    <controls:NumberBox Grid.Column="2"
+                                         Format="0.0"
+                                         Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                                         Minimum="0"
+                                         Step="0.1"
+                                         Suffix=" с"
+                                         Value="{Binding FadeInSeconds}" />
                 </Grid>
 
                 <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr ClipFadeOutHint}">
@@ -200,9 +212,13 @@
                             TickFrequency="0.1"
                             Value="{Binding FadeOutSeconds}" />
 
-                    <TextBlock Grid.Column="2"
-                               Style="{StaticResource Inspector.Value}"
-                               Text="{Binding FadeOutSeconds, StringFormat={}{0:0.0} с}" />
+                    <controls:NumberBox Grid.Column="2"
+                                         Format="0.0"
+                                         Maximum="{x:Static vm:InspectorViewModel.MaxFadeSeconds}"
+                                         Minimum="0"
+                                         Step="0.1"
+                                         Suffix=" с"
+                                         Value="{Binding FadeOutSeconds}" />
                 </Grid>
 
                 <Border Style="{StaticResource Inspector.Separator}" />
@@ -217,6 +233,26 @@
                 <StackPanel Margin="0,6,0,0"
                             Visibility="{Binding IsChecked, ElementName=FrameToggle,
                                 Converter={StaticResource BoolToVisibility}}">
+                    <!-- Подгонка куска к кадру ролика — исключение из галочки «Заполнить кадр» -->
+                    <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr ClipFitHint}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="*" MinWidth="60" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Frame}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr ClipFit}" />
+                        </StackPanel>
+
+                        <ComboBox Grid.Column="1"
+                                  Grid.ColumnSpan="2"
+                                  ItemTemplate="{StaticResource TitleTemplate}"
+                                  ItemsSource="{Binding FitOptions}"
+                                  SelectedItem="{Binding FitOption}" />
+                    </Grid>
+
                     <Grid Style="{StaticResource FieldGrid}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
@@ -224,9 +260,10 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
-                                   Style="{StaticResource Inspector.Label}"
-                                   Text="{loc:Tr FieldRotation}" />
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.RotateRight}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldRotation}" />
+                        </StackPanel>
 
                         <StackPanel Grid.Column="1" HorizontalAlignment="Left" Orientation="Horizontal">
                             <Button Command="{Binding RotateLeftCommand}"
@@ -260,20 +297,26 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
-                                   Style="{StaticResource Inspector.Label}"
-                                   Text="{loc:Tr FieldZoom}" />
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Zoom}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldZoom}" />
+                        </StackPanel>
 
+                        <!-- Ползунок по логарифму: от 10% до 5000%, и 100% ближе к середине -->
                         <Slider Grid.Column="1"
-                                IsSnapToTickEnabled="True"
-                                Maximum="300"
-                                Minimum="50"
-                                TickFrequency="5"
-                                Value="{Binding ZoomPercent}" />
+                                LargeChange="1"
+                                Maximum="{x:Static fmt:ZoomScale.Max}"
+                                Minimum="{x:Static fmt:ZoomScale.Min}"
+                                SmallChange="0.1"
+                                Value="{Binding ZoomSlider}" />
 
-                        <TextBlock Grid.Column="2"
-                                   Style="{StaticResource Inspector.Value}"
-                                   Text="{Binding ZoomPercent, StringFormat={}{0:0}%}" />
+                        <controls:NumberBox Grid.Column="2"
+                                             Format="0"
+                                             Maximum="{x:Static fmt:ZoomScale.MaxPercent}"
+                                             Minimum="{x:Static fmt:ZoomScale.MinPercent}"
+                                             Step="1"
+                                             Suffix="%"
+                                             Value="{Binding ZoomPercent}" />
                     </Grid>
 
                     <Grid Style="{StaticResource FieldGrid}">
@@ -283,19 +326,24 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
-                                   Style="{StaticResource Inspector.Label}"
-                                   Text="{loc:Tr FieldOffsetX}" />
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.MoveHorizontal}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldOffsetX}" />
+                        </StackPanel>
 
                         <Slider Grid.Column="1"
-                                Maximum="50"
-                                Minimum="-50"
+                                Maximum="{Binding OffsetLimitPercent}"
+                                Minimum="{Binding MinOffsetPercent}"
                                 TickFrequency="5"
                                 Value="{Binding OffsetXPercent}" />
 
-                        <TextBlock Grid.Column="2"
-                                   Style="{StaticResource Inspector.Value}"
-                                   Text="{Binding OffsetXPercent, StringFormat={}{0:0}%}" />
+                        <controls:NumberBox Grid.Column="2"
+                                             Format="0"
+                                             Maximum="{Binding OffsetLimitPercent}"
+                                             Minimum="{Binding MinOffsetPercent}"
+                                             Step="1"
+                                             Suffix="%"
+                                             Value="{Binding OffsetXPercent}" />
                     </Grid>
 
                     <Grid Style="{StaticResource FieldGrid}">
@@ -305,20 +353,59 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
-                                   Style="{StaticResource Inspector.Label}"
-                                   Text="{loc:Tr FieldOffsetY}" />
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.MoveVertical}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldOffsetY}" />
+                        </StackPanel>
 
                         <Slider Grid.Column="1"
-                                Maximum="50"
-                                Minimum="-50"
+                                Maximum="{Binding OffsetLimitPercent}"
+                                Minimum="{Binding MinOffsetPercent}"
                                 TickFrequency="5"
                                 Value="{Binding OffsetYPercent}" />
 
-                        <TextBlock Grid.Column="2"
-                                   Style="{StaticResource Inspector.Value}"
-                                   Text="{Binding OffsetYPercent, StringFormat={}{0:0}%}" />
+                        <controls:NumberBox Grid.Column="2"
+                                             Format="0"
+                                             Maximum="{Binding OffsetLimitPercent}"
+                                             Minimum="{Binding MinOffsetPercent}"
+                                             Step="1"
+                                             Suffix="%"
+                                             Value="{Binding OffsetYPercent}" />
                     </Grid>
+
+                    <!-- Наезд: от 100% к масштабу и сдвигу выше за это время с начала куска -->
+                    <Grid Style="{StaticResource FieldGrid}" ToolTip="{loc:Tr FieldMotionHint}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="*" MinWidth="60" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Value" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Motion}" Style="{StaticResource FieldIcon}" />
+                            <TextBlock Style="{StaticResource Inspector.Label}" Text="{loc:Tr FieldMotion}" />
+                        </StackPanel>
+
+                        <Slider Grid.Column="1"
+                                IsSnapToTickEnabled="True"
+                                Maximum="{Binding MotionSliderMax}"
+                                Minimum="0"
+                                TickFrequency="0.1"
+                                Value="{Binding MotionSeconds}" />
+
+                        <controls:NumberBox Grid.Column="2"
+                                             Format="0.0"
+                                             Maximum="{x:Static vm:InspectorViewModel.MaxMotionSeconds}"
+                                             Minimum="0"
+                                             Step="0.1"
+                                             Suffix=" с"
+                                             Value="{Binding MotionSeconds}" />
+                    </Grid>
+
+                    <CheckBox Margin="0,4,0,0"
+                              Content="{loc:Tr FieldMotionOut}"
+                              IsChecked="{Binding MotionOut}"
+                              ToolTip="{loc:Tr FieldMotionOutHint}" />
 
                     <Button Margin="0,6,0,0"
                             HorizontalAlignment="Left"

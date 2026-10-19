@@ -95,6 +95,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _showAdvancedRecording;
 
+    [ObservableProperty]
+    private bool _reduceRecordingNoise;
+
+    [ObservableProperty]
+    private int _recordingNoiseReductionDb;
+
     /// <summary>Где приложение нашло FFmpeg на самом деле — это не всегда то, что в настройках.</summary>
     public string ToolsetSummary =>
         _toolsetProvider.Current is { } toolset
@@ -117,7 +123,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         Microphone = Microphones.First(option => option.Id == settings.RecordingDeviceId);
         MuteWhileRecording = settings.MuteWhileRecording;
         RecordingOffsetMs = settings.RecordingOffsetMs;
-        ShowAdvancedRecording = settings.RecordingOffsetMs != 0;
+        ReduceRecordingNoise = settings.ReduceRecordingNoise;
+        RecordingNoiseReductionDb = settings.RecordingNoiseReductionDb;
+        ShowAdvancedRecording = settings.RecordingOffsetMs != 0 ||
+                                settings.RecordingNoiseReductionDb != AppSettings.Default.RecordingNoiseReductionDb;
     }
 
     public IReadOnlyList<ThemeOption> Themes { get; } = ThemeOption.All;
@@ -181,7 +190,9 @@ public sealed partial class SettingsViewModel : ObservableObject
             VerboseLogging = VerboseLogging,
             RecordingDeviceId = Microphone.Id,
             MuteWhileRecording = MuteWhileRecording,
-            RecordingOffsetMs = Math.Clamp(RecordingOffsetMs, -MaxRecordingOffsetMs, MaxRecordingOffsetMs)
+            RecordingOffsetMs = Math.Clamp(RecordingOffsetMs, -MaxRecordingOffsetMs, MaxRecordingOffsetMs),
+            ReduceRecordingNoise = ReduceRecordingNoise,
+            RecordingNoiseReductionDb = Math.Clamp(RecordingNoiseReductionDb, 3, 60)
         };
 
         await _store.SaveAsync(settings, cancellationToken).ConfigureAwait(true);

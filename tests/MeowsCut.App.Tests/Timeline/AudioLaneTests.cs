@@ -52,6 +52,28 @@ public class TimelineLayoutTests
 
         lanes[0].Height.Should().BeGreaterThanOrEqualTo(TimelineLayout.MinVideoLaneHeight);
     }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void At_the_fit_height_every_track_is_on_the_board(int count)
+    {
+        var tracks = Enumerable.Range(0, count).Select(_ => AudioTrackId.New()).ToArray();
+        var height = TimelineLayout.FitHeight(count, hasTitles: true);
+
+        var lanes = new TimelineLayout().Build(height, tracks, hasTitles: true);
+
+        lanes.Max(lane => lane.Bottom).Should().BeLessThanOrEqualTo(height);
+        lanes[0].Height.Should().BeGreaterThanOrEqualTo(TimelineLayout.ComfortVideoLaneHeight - 0.01);
+    }
+
+    [Fact]
+    public void The_board_grows_by_itself_only_up_to_three_tracks()
+    {
+        TimelineLayout.FitHeight(5, false).Should().Be(TimelineLayout.FitHeight(3, false),
+            "дальше доску растягивают сами, иначе она съела бы весь кадр");
+    }
 }
 
 /// <summary>Правка звука на доске: выделение, перенос, обрезка, разрез.</summary>

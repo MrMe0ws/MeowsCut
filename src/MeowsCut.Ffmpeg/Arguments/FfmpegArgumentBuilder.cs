@@ -94,6 +94,13 @@ public sealed class FfmpegArgumentBuilder
         return this;
     }
 
+    /// <summary>Ключ без значения перед следующим -i, например -noaccurate_seek.</summary>
+    public FfmpegArgumentBuilder InputFlag(string key)
+    {
+        _inputs.Add(key);
+        return this;
+    }
+
     public FfmpegArgumentBuilder InputFormat(string demuxer) => InputOption("-f", demuxer);
 
     public FfmpegArgumentBuilder FilterComplex(string graph)

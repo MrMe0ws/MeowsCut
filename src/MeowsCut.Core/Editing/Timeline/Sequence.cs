@@ -239,7 +239,16 @@ public sealed record Sequence(VideoTrack Video, SequenceFormat Format)
     /// кадре — это ровно тот случай, ради которого формат и меняют.
     /// </remarks>
     public bool NeedsUniformFrame =>
-        Video.HasGaps || HasImages || HasVideoTail || HasRotation || Format.IsCustom;
+        Video.HasGaps || HasImages || HasVideoTail || HasRotation || Format.IsCustom || HasOwnFit || HasFraming;
+
+    /// <summary>
+    /// Есть ли куски с масштабом или сдвигом. Кадр после них возвращается к своему
+    /// размеру с точностью до пикселя, а concat склеивает только одинаковые.
+    /// </summary>
+    public bool HasFraming => Video.Clips.Any(clip => !clip.Transform.IsUnscaled);
+
+    /// <summary>Есть ли куски, которые ложатся в кадр иначе, чем весь ролик.</summary>
+    public bool HasOwnFit => Video.Clips.Any(clip => clip.Transform.Fit is { } fit && fit != Format.Fit);
 
     /// <summary>Есть ли на видеоряде повороты — их кадр надо приводить к общему размеру.</summary>
     public bool HasRotation

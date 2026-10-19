@@ -129,6 +129,7 @@ public sealed partial class ShellViewModel : ObservableObject
             }
 
             Project = Project.WithSequence(sequence);
+            HasUnsavedChanges = true;
             Export.UpdateProject(Project);
             Presets.UpdateProject(Project);
 
@@ -266,6 +267,12 @@ public sealed partial class ShellViewModel : ObservableObject
         if (!IsToolsetReady)
         {
             _dialogService.ShowError(Strings.FfmpegNotFoundTitle, Strings.FfmpegNotFoundMessage);
+            return;
+        }
+
+        // Новый файл заменяет весь монтаж — несохранённое сначала спасаем.
+        if (!await ConfirmDiscardAsync().ConfigureAwait(true))
+        {
             return;
         }
 
@@ -455,11 +462,17 @@ public sealed partial class ShellViewModel : ObservableObject
         Export.Attach(project);
         Presets.Attach(project);
         Sources.Update(project);
+        MarkFresh();
     }
 
     [RelayCommand]
-    private void CloseMedia()
+    private async Task CloseMediaAsync()
     {
+        if (!await ConfirmDiscardAsync().ConfigureAwait(true))
+        {
+            return;
+        }
+
         // Незаконченный дубль выбрасывается: класть его уже некуда.
         _ = Voiceover.AbortAsync();
 
@@ -476,6 +489,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Preview.Detach();
         Export.Detach();
         Presets.Detach();
+        MarkFresh();
     }
 
     [RelayCommand]

@@ -141,10 +141,12 @@ internal static class MediaInfoMapper
             return NormalizeRotation((int)Math.Round(rotation));
         }
 
+        // Старый тег считается в обратную сторону: rotate=90 — «поверни по часовой»,
+        // а side_data для того же ролика даёт −90. Приводим к одному счёту.
         var tag = ReadTag(stream, "rotate");
         if (tag is not null && int.TryParse(tag, NumberStyles.Integer, CultureInfo.InvariantCulture, out var tagValue))
         {
-            return NormalizeRotation(tagValue);
+            return NormalizeRotation(-tagValue);
         }
 
         return 0;

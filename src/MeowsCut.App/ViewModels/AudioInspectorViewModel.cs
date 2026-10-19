@@ -66,6 +66,10 @@ public sealed partial class AudioInspectorViewModel : ObservableObject
     [ObservableProperty]
     private double _fadeInSeconds;
 
+    /// <summary>Затухание может длиться весь кусок — дальше его ужимает сама модель.</summary>
+    [ObservableProperty]
+    private double _maxFadeSeconds = 5d;
+
     [ObservableProperty]
     private double _fadeOutSeconds;
 
@@ -96,6 +100,7 @@ public sealed partial class AudioInspectorViewModel : ObservableObject
             Speed = clip.Speed;
             SpeedText = SpeedScale.Format(clip.Speed);
             SpeedSlider = SpeedScale.ToSlider(clip.Speed);
+            MaxFadeSeconds = Math.Max(0.1, Math.Round(clip.Duration.TotalSeconds, 1));
             FadeInSeconds = Math.Round(clip.FadeIn.TotalSeconds, 2);
             FadeOutSeconds = Math.Round(clip.FadeOut.TotalSeconds, 2);
         }

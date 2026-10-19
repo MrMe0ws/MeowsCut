@@ -160,8 +160,11 @@ public sealed record Clip(
         FadeOut = Clamp(fadeOut ?? FadeOut, TimeSpan.Zero, MaxFade)
     };
 
-    /// <summary>Дольше этого затухание перестаёт читаться как приём и выглядит поломкой.</summary>
-    public static readonly TimeSpan MaxFade = TimeSpan.FromSeconds(10);
+    /// <summary>
+    /// Самое долгое затемнение. Длиннее куска оно всё равно не бывает — его ужимает
+    /// <see cref="EffectiveFadeIn"/>; минута — с запасом для медленного ухода в чёрное.
+    /// </summary>
+    public static readonly TimeSpan MaxFade = TimeSpan.FromSeconds(60);
 
     public Clip WithTransform(ClipTransform transform) => this with { Transform = transform };
 

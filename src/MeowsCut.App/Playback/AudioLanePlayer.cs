@@ -11,8 +11,9 @@ namespace MeowsCut.App.Playback;
 /// второй — элемент интерфейса и требует места в визуальном дереве, а звуковой дорожке
 /// показывать нечего. Спрятанный элемент нулевого размера молчит, и звук не шёл.
 ///
-/// Тональность здесь не сдвигается и затухания не применяются — системный
-/// проигрыватель этого не умеет. В экспорте всё это применяется полностью.
+/// Тональность здесь не сдвигается — системный проигрыватель этого не умеет,
+/// в экспорте она применяется полностью. Нарастание и затухание куска идут
+/// громкостью проигрывателя: дорожку и так сверяют с плейхедом на каждом кадре.
 /// </remarks>
 public sealed class AudioLanePlayer
 {
@@ -65,19 +66,28 @@ public sealed class AudioLanePlayer
         }
 
         var sourceTime = clip.SourceTimeAt(position);
-        var changed = _currentClip != clip.Id || !SameFile(filePath);
 
-        _player.Volume = Math.Clamp(track.Gain * clip.Gain, 0d, 1d);
+        _player.Volume = Math.Clamp(track.Gain * clip.Gain * clip.FadeGainAt(position), 0d, 1d);
         _player.SpeedRatio = Math.Clamp(clip.Speed, 0.05, 16d);
         _wantsPlay = playing;
 
-        if (changed)
+        if (!SameFile(filePath))
         {
             _currentClip = clip.Id;
             _isOpened = false;
             _pendingSeek = sourceTime;
             _player.Open(new Uri(filePath));
             return;
+        }
+
+        // Следующий кусок того же файла — разрезанный дубль, кусок после паузы.
+        // Файл не переоткрывается: MediaPlayer на повторное открытие того же файла
+        // события «открыт» не присылает, и дорожка молчала до конца воспроизведения.
+        // Достаточно перемотать на точку входа нового куска.
+        if (_currentClip != clip.Id)
+        {
+            _currentClip = clip.Id;
+            seeked = true;
         }
 
         if (!_isOpened)

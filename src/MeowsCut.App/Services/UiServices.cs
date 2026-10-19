@@ -172,6 +172,12 @@ public interface IDialogService
 
     /// <summary>Настройки поиска пауз. null — передумали.</summary>
     Core.Abstractions.SilenceOptions? AskSilenceOptions(Core.Abstractions.SilenceOptions current);
+
+    /// <summary>
+    /// Вопрос с тремя ответами: true — «да», false — «нет», null — передумали
+    /// (третья кнопка или крестик окна).
+    /// </summary>
+    bool? Ask(string title, string message, string acceptText, string declineText, string cancelText);
 }
 
 /// <summary>
@@ -237,6 +243,17 @@ public sealed class DialogService(
         };
 
         return dialog.ShowDialog() == true;
+    }
+
+    public bool? Ask(string title, string message, string acceptText, string declineText, string cancelText)
+    {
+        var dialog = new Views.Dialogs.ConfirmDialog(title, message, acceptText, declineText, cancelText)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        dialog.ShowDialog();
+        return dialog.Answer;
     }
 
     public Core.Abstractions.SilenceOptions? AskSilenceOptions(Core.Abstractions.SilenceOptions current)

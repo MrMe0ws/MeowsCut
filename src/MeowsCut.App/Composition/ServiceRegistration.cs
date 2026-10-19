@@ -11,6 +11,7 @@ using MeowsCut.Core.Jobs;
 using MeowsCut.Core.Presets;
 using MeowsCut.Core.Projects;
 using MeowsCut.Core.Processing;
+using MeowsCut.Ffmpeg.Audio;
 using MeowsCut.Ffmpeg.Execution;
 using MeowsCut.Ffmpeg.Planning;
 using MeowsCut.Ffmpeg.Probing;
@@ -53,6 +54,7 @@ public static class ServiceRegistration
         services.AddSingleton<ISilenceDetector, FfmpegSilenceDetector>();
         services.AddSingleton<IThumbnailService, FfmpegThumbnailService>();
         services.AddSingleton<IWaveformService, FfmpegWaveformService>();
+        services.AddSingleton<INoiseReducer, FfmpegNoiseReducer>();
         services.AddSingleton<IExportPlanner, FfmpegExportPlanner>();
         services.AddSingleton<ITempWorkspaceFactory, TempWorkspaceFactory>();
         services.AddTransient<IExportEngine, FfmpegExportEngine>();

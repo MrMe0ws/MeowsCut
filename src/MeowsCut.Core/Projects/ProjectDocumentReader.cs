@@ -112,7 +112,12 @@ public static class ProjectDocumentReader
             fitted,
             Math.Clamp(entry.Speed, Clip.MinSpeed, Clip.MaxSpeed),
             new ClipAudio(entry.AudioEnabled, entry.Volume),
-            new ClipTransform(entry.Zoom, entry.OffsetX, entry.OffsetY).WithRotation(entry.Rotation),
+            new ClipTransform(entry.Zoom, entry.OffsetX, entry.OffsetY).WithRotation(entry.Rotation) with
+            {
+                Fit = entry.Fit is { } fit && Enum.IsDefined((Export.FitMode)fit) ? (Export.FitMode)fit : null,
+                MotionSeconds = Math.Clamp(entry.MotionSeconds, 0d, ClipMotion.MaxSeconds),
+                MotionOut = entry.MotionOut
+            },
             entry.Label,
             TimeSpan.FromMilliseconds(Math.Max(0, entry.LeadingGapMs)),
             source.IsImage)

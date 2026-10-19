@@ -91,6 +91,12 @@ public sealed partial class ShellViewModel
             return;
         }
 
+        // Открытый черновик заменяет весь монтаж — несохранённое сначала спасаем.
+        if (!await ConfirmDiscardAsync().ConfigureAwait(true))
+        {
+            return;
+        }
+
         BusyText = Strings.BusyOpeningProject;
         IsBusy = true;
         try
@@ -99,6 +105,9 @@ public sealed partial class ShellViewModel
 
             Attach(result.Project, MediaSummaryOf(result.Project));
             ProjectPath = path;
+
+            // Только что открытый черновик и есть сохранённое: время — от самого файла.
+            SavedAt = File.GetLastWriteTime(path);
 
             var settings = _settingsStore.Current.WithRecentFile(path);
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(true);
@@ -165,6 +174,10 @@ public sealed partial class ShellViewModel
             // а не в папку автосохранения.
             ProjectPath = state.ProjectPath;
 
+            // Восстановленного монтажа в файле черновика нет — иначе нечего было бы
+            // восстанавливать. Без пометки его выбрасывали открытием того же черновика.
+            HasUnsavedChanges = true;
+
             if (result.HasWarnings)
             {
                 _dialogService.ShowError(
@@ -196,6 +209,7 @@ public sealed partial class ShellViewModel
             await _projectStore.SaveAsync(project, path, cancellationToken).ConfigureAwait(true);
             ProjectPath = path;
             ToolsetStatus = string.Format(Strings.ProjectSaved, Path.GetFileName(path));
+            MarkSaved();
 
             // Сохранённое руками важнее нашей страховки: дальше отсчёт идёт
             // от этого черновика.

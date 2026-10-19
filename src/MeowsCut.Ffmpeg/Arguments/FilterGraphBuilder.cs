@@ -249,10 +249,7 @@ public sealed class FilterGraphBuilder
         var size = sequence.Format.Size;
         var frameRate = sequence.Format.FrameRate;
 
-        // Дробью, а не числом: 30000/1001 в виде 29.97 даёт дрейф на длинном зазоре.
-        var rate = frameRate.IsZero
-            ? "30"
-            : $"{frameRate.Numerator.ToString(CultureInfo.InvariantCulture)}/{frameRate.Denominator.ToString(CultureInfo.InvariantCulture)}";
+        var rate = RateText(frameRate);
 
         builder
             .Append($"color=c=black:s={size.Width}x{size.Height}:r={rate}:d={Time(gap)}")
@@ -291,7 +288,7 @@ public sealed class FilterGraphBuilder
                 : "setpts=PTS-STARTPTS"
         };
 
-        AppendTransform(chain, clip.Transform);
+        TransformFilter.Append(chain, clip.Transform, clip.TimelineDuration, RateText(format.FrameRate));
         AppendFades(chain, clip);
 
         if (normalize)
@@ -301,13 +298,19 @@ public sealed class FilterGraphBuilder
             // кусок ложится в кадр — выбор пользователя: горизонтальное видео
             // в вертикальном формате либо стоит полосой с полями, либо
             // заполняет кадр с обрезкой по бокам.
-            chain.AddRange(ScaleFilters(format.Size, format.Fit));
+            chain.AddRange(ScaleFilters(format.Size, clip.Transform.Fit ?? format.Fit));
             chain.Add(NormalizeFilters);
         }
 
         builder.Append($"[{input}:v]").Append(string.Join(',', chain)).Append($"[{label}];");
         labels.Add(label);
     }
+
+    /// <summary>Частота кадров ролика для фильтров. Дробью, а не числом: 30000/1001 в виде 29.97 даёт дрейф на длинном куске.</summary>
+    private static string RateText(Rational frameRate) =>
+        frameRate.IsZero
+            ? "30"
+            : $"{frameRate.Numerator.ToString(CultureInfo.InvariantCulture)}/{frameRate.Denominator.ToString(CultureInfo.InvariantCulture)}";
 
     private static bool HasForeignSizes(
         IReadOnlyList<Clip> clips,
@@ -352,66 +355,6 @@ public sealed class FilterGraphBuilder
         {
             var start = clip.TimelineDuration - fadeOut;
             chain.Add($"fade=t=out:st={Time(start)}:d={Time(fadeOut)}");
-        }
-    }
-
-    /// <summary>
-    /// Масштаб, поворот и смещение кадра внутри клипа. При увеличении лишнее
-    /// обрезается, при уменьшении добавляются поля — иначе размеры клипов
-    /// в concat разъедутся.
-    /// </summary>
-    private static void AppendTransform(List<string> chain, ClipTransform transform)
-    {
-        if (transform.IsIdentity)
-        {
-            return;
-        }
-
-        // Поворот идёт первым: масштаб и смещение пользователь задаёт, глядя
-        // на уже развёрнутый кадр, и применять их к исходной ориентации значило бы
-        // двигать картинку не в ту сторону.
-        AppendRotation(chain, transform.Rotation);
-
-        var zoom = SpeedFilter.FormatFactor(transform.Zoom);
-        var dx = SpeedFilter.FormatFactor(transform.OffsetX);
-        var dy = SpeedFilter.FormatFactor(transform.OffsetY);
-
-        chain.Add($"scale=iw*{zoom}:ih*{zoom}");
-
-        if (transform.Zoom >= 1d)
-        {
-            chain.Add($"crop=w=iw/{zoom}:h=ih/{zoom}:x=(iw-ow)/2+ow*{dx}:y=(ih-oh)/2+oh*{dy}");
-        }
-        else
-        {
-            // Знак как у обрезки и в предпросмотре: положительный сдвиг уводит
-            // картинку влево и вверх. С плюсом уменьшенный кадр ехал в обратную сторону.
-            chain.Add($"pad=w=iw/{zoom}:h=ih/{zoom}:x=(ow-iw)/2-ow*{dx}:y=(oh-ih)/2-oh*{dy}:color=black");
-        }
-    }
-
-    /// <summary>
-    /// Поворот на прямой угол. transpose работает без потерь и без интерполяции,
-    /// в отличие от rotate с произвольным углом.
-    /// </summary>
-    private static void AppendRotation(List<string> chain, int rotation)
-    {
-        switch (rotation)
-        {
-            case 90:
-                chain.Add("transpose=1");
-                break;
-
-            case 180:
-                // Отражение по обеим осям дешевле двух transpose подряд
-                // и не требует дважды переписывать кадр в памяти.
-                chain.Add("hflip");
-                chain.Add("vflip");
-                break;
-
-            case 270:
-                chain.Add("transpose=2");
-                break;
         }
     }
 

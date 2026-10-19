@@ -91,7 +91,8 @@ public sealed class TimelineThumbnailLoader(
 
                     var width = Math.Min(SlotWidth, right - x);
                     var centre = metrics.XToTime(x + (width / 2));
-                    var sourceTime = clip.SourceTimeAt(centre);
+                    var slotSpan = TimeSpan.FromSeconds(SlotWidth / metrics.PixelsPerSecond * clip.Clip.Speed);
+                    var sourceTime = ThumbnailGrid.Snap(clip.SourceTimeAt(centre), slotSpan);
 
                     var path = await thumbnails
                         .GetFrameAsync(clip.SourcePath, sourceTime, (int)SlotWidth * 2, cancellationToken)

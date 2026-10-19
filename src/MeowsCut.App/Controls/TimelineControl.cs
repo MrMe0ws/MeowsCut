@@ -775,7 +775,10 @@ public sealed class TimelineControl : Control
         }
 
         var position = e.GetPosition(this);
-        var lanes = _layout.Build(ActualHeight, [.. _model.Sequence.AudioTracks.Select(track => track.Id)]);
+        var lanes = _layout.Build(
+            ActualHeight,
+            [.. _model.Sequence.AudioTracks.Select(track => track.Id)],
+            _model.Sequence.Titles.Count > 0);
         var lane = lanes.FirstOrDefault(item => item.Kind == LaneKind.Audio && item.Contains(position.Y));
 
         if (lane.Kind != LaneKind.Audio || _model.Sequence.FindTrack(lane.TrackId) is not { } track)

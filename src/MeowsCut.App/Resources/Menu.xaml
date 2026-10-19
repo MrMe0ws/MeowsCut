@@ -45,17 +45,35 @@
                             SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentPresenter Grid.Column="0"
+                            <!-- Значок пункта: геометрия из Icons.xaml в свойстве Icon.
+                                 Место под него есть у каждого пункта списка, и подписи
+                                 стоят ровной колонкой, даже если значка нет. -->
+                            <Path x:Name="Glyph"
+                                  Grid.Column="0"
+                                  Width="15"
+                                  Height="15"
+                                  Margin="0,0,10,0"
+                                  VerticalAlignment="Center"
+                                  Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}"
+                                  Stretch="Uniform"
+                                  Stroke="{TemplateBinding Foreground}"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  StrokeStartLineCap="Round"
+                                  StrokeThickness="1.6" />
+
+                            <ContentPresenter Grid.Column="1"
                                               VerticalAlignment="Center"
                                               ContentSource="Header" />
 
                             <!-- Горячая клавиша справа: подсказка, а не кнопка -->
                             <TextBlock x:Name="Gesture"
-                                       Grid.Column="1"
+                                       Grid.Column="2"
                                        Margin="24,0,0,0"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource Brush.TextDisabled}"
@@ -87,10 +105,11 @@
                             <Setter TargetName="Gesture" Property="Visibility" Value="Collapsed" />
                         </Trigger>
 
-                        <!-- Корневой пункт тянется во всю высоту строки меню -->
+                        <!-- Корневой пункт тянется во всю высоту строки меню, значка у него нет -->
                         <Trigger Property="Role" Value="TopLevelHeader">
                             <Setter TargetName="Root" Property="VerticalAlignment" Value="Stretch" />
                             <Setter TargetName="Root" Property="MinHeight" Value="26" />
+                            <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
                         </Trigger>
 
                         <!-- В списке строки, наоборот, дышат: там их читают, а не целятся мышью -->

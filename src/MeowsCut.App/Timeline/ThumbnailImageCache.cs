@@ -46,9 +46,25 @@ public sealed class ThumbnailImageCache
         return brush;
     }
 
-    public BitmapSource? Load(string path)
+    public BitmapSource? Load(string path) => Load(path, decodeWidth: 0);
+
+    /// <summary>Уже готовая картинка нужной ширины — без чтения с диска.</summary>
+    public BitmapSource? TryGet(string path, int decodeWidth) => _images.GetValueOrDefault(Key(path, decodeWidth));
+
+    /// <summary>
+    /// Картинка, уменьшенная при декодировании до <paramref name="decodeWidth"/> точек.
+    /// </summary>
+    /// <remarks>
+    /// Для фотографий в предпросмотре: снимок телефона — 4000×3000, это 48 МБ
+    /// в памяти и треть секунды декодирования, хотя на экране он занимает
+    /// меньше тысячи точек. JPEG уменьшается прямо при распаковке, и это
+    /// в разы быстрее, чем распаковать целиком. 0 — без уменьшения.
+    /// </remarks>
+    public BitmapSource? Load(string path, int decodeWidth)
     {
-        if (_images.TryGetValue(path, out var cached))
+        var key = Key(path, decodeWidth);
+
+        if (_images.TryGetValue(key, out var cached))
         {
             return cached;
         }
@@ -65,21 +81,39 @@ public sealed class ThumbnailImageCache
             image.CacheOption = BitmapCacheOption.OnLoad;   // файл не остаётся заблокированным
             image.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
             image.UriSource = new Uri(path);
+
+            // Только уменьшаем: скриншот шириной меньше заданной
+            // растянулся бы при распаковке и занял бы больше памяти, а не меньше.
+            if (decodeWidth > 0 && SourceWidth(path) > decodeWidth)
+            {
+                image.DecodePixelWidth = decodeWidth;
+            }
+
             image.EndInit();
             image.Freeze();
 
-            _images[path] = image;
-            _order.Enqueue(path);
+            _images[key] = image;
+            _order.Enqueue(key);
             TrimIfNeeded();
 
             return image;
         }
-        catch (Exception ex) when (ex is IOException or NotSupportedException or UriFormatException)
+        catch (Exception ex) when (ex is IOException or NotSupportedException or UriFormatException or FileFormatException)
         {
             // Битый или недописанный кадр — просто не показываем его.
             return null;
         }
     }
+
+    /// <summary>Ширина картинки по заголовку файла — без распаковки самих точек.</summary>
+    private static int SourceWidth(string path)
+    {
+        var decoder = BitmapDecoder.Create(new Uri(path), BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
+        return decoder.Frames.Count > 0 ? decoder.Frames[0].PixelWidth : 0;
+    }
+
+    private static string Key(string path, int decodeWidth) =>
+        decodeWidth > 0 ? $"{path}@{decodeWidth}" : path;
 
     private void TrimIfNeeded()
     {

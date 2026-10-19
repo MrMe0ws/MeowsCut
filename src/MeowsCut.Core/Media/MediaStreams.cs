@@ -43,6 +43,19 @@ public sealed record VideoStreamInfo(
         RotationDegrees is 90 or 270 or -90 or -270
             ? new FrameSize(Size.Height, Size.Width)
             : Size;
+
+    /// <summary>
+    /// На сколько градусов по часовой стрелке надо повернуть хранимый кадр,
+    /// чтобы увидеть его так, как задумал телефон.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="RotationDegrees"/> — угол из метаданных, а он считается против
+    /// часовой: метка 90 значит «поверни на 90° против часовой». Проверено на роликах
+    /// Pixel: ffmpeg разворачивает метку 90 через transpose=cclock, метку 270 (−90) —
+    /// через transpose=clock. Системный проигрыватель метку не применяет, поэтому
+    /// предпросмотр доворачивает кадр сам, иначе он расходится с экспортом.
+    /// </remarks>
+    public int DisplayRotationClockwise => (360 - RotationDegrees % 360) % 360;
 }
 
 /// <summary>

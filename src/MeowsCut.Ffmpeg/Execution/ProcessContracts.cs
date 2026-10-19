@@ -6,11 +6,17 @@ namespace MeowsCut.Ffmpeg.Execution;
 /// Запрос на запуск процесса. Аргументы — строго список: их экранированием занимается
 /// рантайм, а не мы. Это то, что делает безопасными пути с пробелами и кириллицей.
 /// </summary>
+/// <param name="Background">
+/// Фоновая работа — кадры доски, волны звука. Такой процесс идёт с пониженным
+/// приоритетом: предпросмотр в это время декодирует тот же 4K, и уступать
+/// процессор должен тот, кого никто не ждёт.
+/// </param>
 public sealed record ProcessRequest(
     string FileName,
     IReadOnlyList<string> Arguments,
     string? WorkingDirectory = null,
-    bool RedirectStandardInput = false);
+    bool RedirectStandardInput = false,
+    bool Background = false);
 
 /// <summary>
 /// Итог запуска. Хвост stderr нужен для диагностики; целиком поток не храним.

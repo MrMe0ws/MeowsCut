@@ -58,7 +58,8 @@ if (-not (Test-Path $ffmpeg) -or -not (Test-Path $ffprobe)) {
 # Без явной проверки это выглядело отказом в доступе к случайной библиотеке
 # вроде PresentationCore.resources.dll — по такому сообщению причину не найти.
 $running = @(Get-Process -Name 'MeowsCut' -ErrorAction SilentlyContinue | Where-Object {
-    $_.Path -and $_.Path.StartsWith($Output, [System.StringComparison]::OrdinalIgnoreCase)
+    # Со слешем на конце: иначе соседняя папка publish\MeowsCut-fix считалась бы этой же
+    $_.Path -and $_.Path.StartsWith($Output.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)
 })
 
 if ($running.Count -gt 0) {

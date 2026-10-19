@@ -119,16 +119,6 @@ public sealed partial class TimelineViewModel : ObservableObject
 
     public bool HasProject => _history is not null;
 
-    /// <summary>Короткий итог доски для строки перед экспортом.</summary>
-    public string SummaryLine => _history is null
-        ? string.Empty
-        : string.Format(
-            System.Globalization.CultureInfo.CurrentUICulture,
-            Localization.Strings.TimelineSummary,
-            Clips.Count,
-            Duration.ToString(Duration.TotalHours >= 1 ? @"h\:mm\:ss" : @"m\:ss\.ff",
-                System.Globalization.CultureInfo.InvariantCulture));
-
     /// <summary>Сколько клипов выделено — инспектор показывает это, когда их несколько.</summary>
     public int SelectionCount => _selection.Count;
 
@@ -169,6 +159,9 @@ public sealed partial class TimelineViewModel : ObservableObject
 
     public bool HasAudioTracks => Sequence.AudioTracks.Count > 0;
 
+    /// <summary>Высота доски, при которой видны видеоряд и первые дорожки звука.</summary>
+    public double FitHeight => TimelineLayout.FitHeight(Sequence.AudioTracks.Count, Sequence.Titles.Count > 0);
+
     /// <summary>Выделенные клипы в порядке дорожки.</summary>
     public IReadOnlyList<ClipViewModel> SelectedClips =>
         [.. Clips.Where(clip => _selection.Contains(clip.Id))];
@@ -202,7 +195,7 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         Metrics.ZoomToFit(project.Sequence.Duration);
         RebuildClips();
-        OnPropertyChanged(nameof(SummaryLine));
+        OnPropertyChanged(nameof(FitHeight));
         RefreshProjectCommands();
     }
 
@@ -293,7 +286,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         OnPropertyChanged(nameof(CanUndo));
         OnPropertyChanged(nameof(CanRedo));
         OnPropertyChanged(nameof(Duration));
-        OnPropertyChanged(nameof(SummaryLine));
+        OnPropertyChanged(nameof(FitHeight));
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
     }

@@ -18,7 +18,7 @@
         <Style TargetType="MediaElement">
             <Setter Property="Stretch" Value="Uniform" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding FillFrame}" Value="True">
+                <DataTrigger Binding="{Binding FrameFill}" Value="True">
                     <Setter Property="Stretch" Value="UniformToFill" />
                 </DataTrigger>
             </Style.Triggers>
@@ -59,7 +59,7 @@
                         <Style TargetType="Image">
                             <Setter Property="Stretch" Value="Uniform" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding FillFrame}" Value="True">
+                                <DataTrigger Binding="{Binding FrameFill}" Value="True">
                                     <Setter Property="Stretch" Value="UniformToFill" />
                                 </DataTrigger>
                             </Style.Triggers>
@@ -204,28 +204,39 @@
                     Style="{StaticResource Button.Ghost}" />
 
             <!-- Озвучка: модель записи живёт в оболочке, рядом с проектом -->
-            <Grid Margin="14,0,0,0"
-                  DataContext="{Binding DataContext.Voiceover, RelativeSource={RelativeSource AncestorType=Window}}">
-                <Button Command="{Binding ToggleRecordCommand}"
-                        Style="{StaticResource Button.Ghost}"
-                        ToolTip="{loc:Tr RecordHint}"
-                        Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibility}}">
-                    <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource Icon.Mic}" Style="{StaticResource ToolIconStroke}" />
-                        <TextBlock Text="{loc:Tr Record}" />
-                    </StackPanel>
-                </Button>
-                <Button Padding="12,6"
-                        Command="{Binding ToggleRecordCommand}"
-                        Style="{StaticResource Button.Record}"
-                        ToolTip="{loc:Tr RecordStopHint}"
-                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
-                    <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource Icon.Stop}" Style="{StaticResource ToolIcon}" />
-                        <TextBlock Text="{loc:Tr RecordStop}" />
-                    </StackPanel>
-                </Button>
-            </Grid>
+            <StackPanel Margin="14,0,0,0"
+                        DataContext="{Binding DataContext.Voiceover, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Orientation="Horizontal">
+                <Grid>
+                    <Button Command="{Binding ToggleRecordCommand}"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="{loc:Tr RecordHint}"
+                            Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Mic}" Style="{StaticResource ToolIconStroke}" />
+                            <TextBlock Text="{loc:Tr Record}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Padding="12,6"
+                            Command="{Binding ToggleRecordCommand}"
+                            Style="{StaticResource Button.Record}"
+                            ToolTip="{loc:Tr RecordStopHint}"
+                            Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource Icon.Stop}" Style="{StaticResource ToolIcon}" />
+                            <TextBlock Text="{loc:Tr RecordStop}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Шумоподавление под рукой: включают и выключают его как раз перед дублем -->
+                <ToggleButton Margin="6,0,0,0"
+                              IsChecked="{Binding ReduceNoise}"
+                              Style="{StaticResource ToolButton}"
+                              ToolTip="{loc:Tr NoiseReductionToggleHint}">
+                    <Path Data="{StaticResource Icon.Denoise}" Style="{StaticResource ToolIconOnly}" />
+                </ToggleButton>
+            </StackPanel>
 
             <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Muted}">
                 <Run Text="{Binding PositionText, Mode=OneWay}" />

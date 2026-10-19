@@ -32,6 +32,17 @@ public sealed partial class PreviewViewModel : ObservableObject
     private readonly MediaElementPlayer _player;
     private readonly SequencePlaybackController _playback;
     private readonly AudioMixPreview _audio = new();
+
+    /// <summary>
+    /// Ширина, до которой фотография уменьшается при декодировании. С запасом
+    /// на развёрнутое окно на экране 2K; больше предпросмотр не покажет.
+    /// </summary>
+    private const int StillImageWidth = 2560;
+
+    private string? _stillPath;
+
+    /// <summary>Наложенный звук играет, только пока ролик действительно идёт.</summary>
+    private readonly PlaybackMotion _motion = new();
     private readonly DispatcherTimer _timer;
 
     private CancellationTokenSource? _cancellation;
@@ -62,7 +73,8 @@ public sealed partial class PreviewViewModel : ObservableObject
         _timer.Tick += (_, _) =>
         {
             _playback.Tick();
-            _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: false);
+            var moving = _motion.Observe(_playback.Position, _playback.IsPlaying, _playback.IsWaitingForPlayer);
+            _audio.Sync(_playback.Position, moving, seeked: false);
             ReportTick();
         };
 
@@ -83,7 +95,7 @@ public sealed partial class PreviewViewModel : ObservableObject
         {
             _playback.UpdateSequence(sequence);
             _audio.UpdateSequence(sequence);
-            _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: true);
+            _audio.Sync(_playback.Position, _motion.IsMoving, seeked: true);
 
             RefreshTexts();
             RefreshFormat();
@@ -106,6 +118,13 @@ public sealed partial class PreviewViewModel : ObservableObject
     /// </remarks>
     [ObservableProperty]
     private bool _fillFrame;
+
+    /// <summary>
+    /// Заполняет ли кадр кусок под курсором: у куска может быть своя подгонка,
+    /// отличная от галочки на весь ролик.
+    /// </summary>
+    [ObservableProperty]
+    private bool _frameFill;
 
     /// <summary>Формат ролика: пропорции кадра, в который складывается монтаж.</summary>
     public IReadOnlyList<SequenceFormatOption> FormatOptions { get; } = SequenceFormatOption.All;
@@ -323,7 +342,10 @@ public sealed partial class PreviewViewModel : ObservableObject
         }
 
         _playback.TogglePlay();
-        _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: true);
+
+        // Звук стартует не сейчас, а с первым сдвигом картинки: 4K раскачивается до секунды.
+        _motion.Restart(_playback.Position);
+        _audio.Sync(_playback.Position, playing: false, seeked: true);
         RefreshPlaybackState();
     }
 
@@ -331,6 +353,7 @@ public sealed partial class PreviewViewModel : ObservableObject
     private void Step(double seconds)
     {
         _playback.Pause();
+        _motion.Restart(_playback.Position);
         _audio.Sync(_playback.Position, playing: false, seeked: true);
 
         var target = _timeline.Playhead + TimeSpan.FromSeconds(seconds);
@@ -356,7 +379,8 @@ public sealed partial class PreviewViewModel : ObservableObject
         }
 
         _playback.Seek(_timeline.Playhead);
-        _audio.Sync(_timeline.Playhead, _playback.IsPlaying, seeked: true);
+        _motion.Restart(_timeline.Playhead);
+        _audio.Sync(_timeline.Playhead, playing: false, seeked: true);
         RequestFrame();
         UserSeeked?.Invoke(this, EventArgs.Empty);
     }
@@ -372,9 +396,19 @@ public sealed partial class PreviewViewModel : ObservableObject
             RefreshTexts();
         });
 
-    /// <summary>Показывает фотографию из видеоряда или возвращает кадр проигрывателю.</summary>
+    /// <summary>
+    /// Показывает фотографию из видеоряда или возвращает кадр проигрывателю.
+    /// </summary>
+    /// <remarks>
+    /// Фотография декодируется в фоне и сразу под размер экрана. Раньше снимок
+    /// 4000×3000 распаковывался целиком прямо в шаге воспроизведения: интерфейс
+    /// вставал на треть секунды на каждой фотографии, часы ролика это время
+    /// теряли, и наложенную музыку отдёргивало назад.
+    /// </remarks>
     private void ShowStillImage(string? path)
     {
+        _stillPath = path;
+
         if (path is null)
         {
             IsStillImage = false;
@@ -382,7 +416,25 @@ public sealed partial class PreviewViewModel : ObservableObject
         }
 
         IsStillImage = true;
-        Frame = _cache.Load(path);
+
+        if (_cache.TryGet(path, StillImageWidth) is { } ready)
+        {
+            Frame = ready;
+            return;
+        }
+
+        _ = LoadStillImageAsync(path);
+    }
+
+    private async Task LoadStillImageAsync(string path)
+    {
+        var image = await Task.Run(() => _cache.Load(path, StillImageWidth)).ConfigureAwait(true);
+
+        // Пока картинка готовилась, ролик мог уйти к следующему клипу.
+        if (_stillPath == path && image is not null)
+        {
+            Frame = image;
+        }
     }
 
     private void RefreshPlaybackState()
@@ -405,15 +457,38 @@ public sealed partial class PreviewViewModel : ObservableObject
     }
 
     /// <summary>Кадрирование берётся у клипа под курсором и меняется вместе с ним.</summary>
+    /// <summary>
+    /// Поворот из метаданных файла, который системный проигрыватель сам не применяет.
+    /// </summary>
+    /// <remarks>
+    /// Вертикальное видео с телефона хранится лёжа плюс метка поворота. ffmpeg метку
+    /// применяет, MediaElement — нет, и ролик в предпросмотре лежал на боку. Его
+    /// доворачивали руками, а в готовом файле поворот складывался с меткой — и ролик
+    /// снова ложился. Кадры из ffmpeg (запасной режим) уже развёрнуты, их не трогаем.
+    /// </remarks>
+    private int PlayerRotation(Core.Editing.Timeline.PlacedClip? placed)
+    {
+        if (placed is not { } clip || clip.Clip.SourceIsImage || UseFallbackFrames)
+        {
+            return 0;
+        }
+
+        return _project?.Find(clip.Clip.SourceId)?.Info.PrimaryVideo?.DisplayRotationClockwise ?? 0;
+    }
+
     private void RefreshFraming()
     {
         var placed = _timeline.Sequence.ClipAt(_timeline.Playhead);
-        var transform = placed?.Clip.Transform ?? Core.Editing.Timeline.ClipTransform.Identity;
+        // Кадр в этот момент: наезд идёт от начала куска, сдвиг ужат до картинки — как в файле.
+        var transform = placed is { } current
+            ? current.Clip.Transform.At(_timeline.Playhead - current.Start, current.Clip.TimelineDuration)
+            : Core.Editing.Timeline.ClipTransform.Identity;
 
         FrameZoom = transform.Zoom;
         FrameOffsetX = transform.OffsetX;
         FrameOffsetY = transform.OffsetY;
-        FrameRotation = transform.Rotation;
+        FrameRotation = (transform.Rotation + PlayerRotation(placed)) % 360;
+        FrameFill = (transform.Fit ?? _timeline.Sequence.Format.Fit) == Core.Export.FitMode.Cover;
         FadeDim = placed is { } clip ? DimAt(clip, _timeline.Playhead) : 0d;
     }
 

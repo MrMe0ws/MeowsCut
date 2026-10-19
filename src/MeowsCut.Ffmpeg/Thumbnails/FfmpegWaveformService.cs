@@ -75,6 +75,7 @@ public sealed class FfmpegWaveformService(
                 .OverwriteOutput()
                 .NoStdin()
                 .LogLevel("error")
+                .InputOption("-threads", "1")
                 .Input(sourcePath)
                 // scale=sqrt, а не линейная: музыка сводится с запасом по громкости,
                 // и в линейном масштабе типичная дорожка выглядит ниткой по центру.
@@ -87,7 +88,7 @@ public sealed class FfmpegWaveformService(
                 .Build();
 
             var result = await processRunner
-                .RunAsync(new ProcessRequest(toolset.FfmpegPath, arguments), null, null, cancellationToken)
+                .RunAsync(new ProcessRequest(toolset.FfmpegPath, arguments, Background: true), null, null, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!result.Success || !File.Exists(temporaryPath))

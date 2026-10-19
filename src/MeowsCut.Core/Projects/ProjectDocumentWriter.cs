@@ -52,6 +52,9 @@ public static class ProjectDocumentWriter
         OffsetX = clip.Transform.OffsetX,
         OffsetY = clip.Transform.OffsetY,
         Rotation = clip.Transform.Rotation,
+        Fit = clip.Transform.Fit is { } fit ? (int)fit : null,
+        MotionSeconds = clip.Transform.MotionSeconds,
+        MotionOut = clip.Transform.MotionOut,
         FadeInMs = clip.FadeIn.TotalMilliseconds,
         FadeOutMs = clip.FadeOut.TotalMilliseconds,
         Label = clip.Label

@@ -54,7 +54,8 @@ public sealed partial class PreviewViewModel
         }
 
         _playback.Play();
-        _audio.Sync(_playback.Position, _playback.IsPlaying, seeked: true);
+        _motion.Restart(_playback.Position);
+        _audio.Sync(_playback.Position, playing: false, seeked: true);
         RefreshPlaybackState();
     }
 
@@ -66,6 +67,7 @@ public sealed partial class PreviewViewModel
         }
 
         _playback.Pause();
+        _motion.Restart(_playback.Position);
         _audio.Sync(_playback.Position, playing: false, seeked: true);
         RefreshPlaybackState();
     }

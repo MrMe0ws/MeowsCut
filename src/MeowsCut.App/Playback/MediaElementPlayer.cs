@@ -17,6 +17,12 @@ public sealed class MediaElementPlayer : IMediaPlayer
     private readonly MediaElement _element;
     private bool _isOpened;
 
+    /// <summary>Файл ни разу не запускали с момента открытия.</summary>
+    private bool _neverPlayed;
+
+    /// <summary>Последняя позиция, которую просили выставить.</summary>
+    private TimeSpan? _requestedPosition;
+
     public MediaElementPlayer()
     {
         _element = new MediaElement
@@ -30,6 +36,8 @@ public sealed class MediaElementPlayer : IMediaPlayer
         _element.MediaOpened += (_, _) =>
         {
             _isOpened = true;
+            _neverPlayed = true;
+            _requestedPosition = null;
             Opened?.Invoke(this, EventArgs.Empty);
         };
 
@@ -53,6 +61,7 @@ public sealed class MediaElementPlayer : IMediaPlayer
             if (_isOpened)
             {
                 _element.Position = value;
+                _requestedPosition = value;
             }
         }
     }
@@ -95,6 +104,12 @@ public sealed class MediaElementPlayer : IMediaPlayer
         _isOpened = false;
         Source = path;
         _element.Source = new Uri(path);
+
+        // Новый файл открывается на паузе. Без явной команды MediaElement мог начать
+        // играть его сам, ещё до события открытия: кусок успевал отыграть со звуком,
+        // а потом контроллер отматывал его к точке входа клипа — повтор.
+        IsPlaying = false;
+        _element.Pause();
     }
 
     public void Play()
@@ -106,6 +121,17 @@ public sealed class MediaElementPlayer : IMediaPlayer
 
         IsPlaying = true;
         _element.Play();
+
+        // Перемотку, сделанную до первого запуска после открытия, MediaElement
+        // забывает и начинает файл с нуля. Плейхед посреди клипа отскакивал к его
+        // началу — на десятки секунд назад, и до только что записанной озвучки
+        // ролик просто не доходил. Поэтому позиция повторяется после запуска.
+        if (_neverPlayed && _requestedPosition is { } position)
+        {
+            _element.Position = position;
+        }
+
+        _neverPlayed = false;
     }
 
     public void Pause()

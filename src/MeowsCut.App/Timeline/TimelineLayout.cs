@@ -47,6 +47,30 @@ public sealed class TimelineLayout
     public const double MinVideoLaneHeight = 44d;
 
     /// <summary>
+    /// Высота видеоряда, при которой кадры ещё узнаются. Под неё доска растёт сама,
+    /// когда добавляют дорожки звука.
+    /// </summary>
+    public const double ComfortVideoLaneHeight = 64d;
+
+    /// <summary>
+    /// Сколько дорожек звука доска вмещает, вырастая сама. Дальше — решение
+    /// пользователя: растянуть доску разделителем или отдать место кадру.
+    /// </summary>
+    public const int FittedAudioTracks = 3;
+
+    /// <summary>
+    /// Высота, при которой видны видеоряд и первые <see cref="FittedAudioTracks"/> дорожки.
+    /// </summary>
+    public static double FitHeight(int audioTracks, bool hasTitles)
+    {
+        var tracks = Math.Clamp(audioTracks, 0, FittedAudioTracks);
+        var titles = hasTitles ? TitleLaneHeight + LaneGap : 0d;
+
+        return RulerHeight + TrackPadding + titles + ComfortVideoLaneHeight +
+               tracks * (AudioLaneHeight + LaneGap) + TrackPadding;
+    }
+
+    /// <summary>
     /// Раскладывает полосы по высоте.
     /// </summary>
     /// <remarks>

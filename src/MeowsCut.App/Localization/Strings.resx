@@ -386,9 +386,6 @@
   <data name="AddFileHint" xml:space="preserve">
     <value>Добавить видео или фотографию в конец видеоряда. Файл можно и перетащить на окно</value>
   </data>
-  <data name="OpenExportStep" xml:space="preserve">
-    <value>Экспорт видео  →</value>
-  </data>
   <data name="ExportStepTitle" xml:space="preserve">
     <value>Экспорт</value>
   </data>
@@ -397,9 +394,6 @@
   </data>
   <data name="SectionFrameHint" xml:space="preserve">
     <value>Масштаб и сдвиг картинки внутри кадра</value>
-  </data>
-  <data name="TimelineSummary" xml:space="preserve">
-    <value>Клипов: {0} · длительность {1}</value>
   </data>
   <data name="AudioTrackDefaultName" xml:space="preserve">
     <value>Дорожка 1</value>
@@ -928,5 +922,86 @@
   </data>
   <data name="RecordingOffsetHint" xml:space="preserve">
     <value>Плюс сдвигает голос раньше, минус — позже. Нужна, если озвучка стабильно отстаёт от картинки.</value>
+  </data>
+  <data name="ClipFit" xml:space="preserve">
+    <value>Подгонка</value>
+  </data>
+  <data name="ClipFitHint" xml:space="preserve">
+    <value>Как этот кусок ложится в кадр ролика: целиком с полями или на весь кадр с обрезкой краёв</value>
+  </data>
+  <data name="ClipFitProject" xml:space="preserve">
+    <value>Как в проекте</value>
+  </data>
+  <data name="ClipFitContain" xml:space="preserve">
+    <value>Вписать</value>
+  </data>
+  <data name="ClipFitCover" xml:space="preserve">
+    <value>Заполнить</value>
+  </data>
+  <data name="VoiceoverCleaning" xml:space="preserve">
+    <value>Убираю шум микрофона…</value>
+  </data>
+  <data name="VoiceoverDenoiseFailed" xml:space="preserve">
+    <value>Шум убрать не удалось — дубль положен как записан. Подробности в логе.</value>
+  </data>
+  <data name="RecordingCleanSuffix" xml:space="preserve">
+    <value> (без шума)</value>
+  </data>
+  <data name="NoiseReduction" xml:space="preserve">
+    <value>Шумоподавление</value>
+  </data>
+  <data name="NoiseReductionHint" xml:space="preserve">
+    <value>Убирает из дубля постоянный шум микрофона и комнаты. Исходная запись остаётся рядом</value>
+  </data>
+  <data name="NoiseReductionStrength" xml:space="preserve">
+    <value>Сила шумоподавления, дБ</value>
+  </data>
+  <data name="NoiseReductionStrengthHint" xml:space="preserve">
+    <value>Насколько приглушить фон. Больше — тише шум, но голос может зазвучать глухо</value>
+  </data>
+  <data name="NoiseReductionToggleHint" xml:space="preserve">
+    <value>Шумоподавление: убирать из дубля шум микрофона и комнаты. Подсвечено — включено</value>
+  </data>
+  <data name="NumberBoxHint" xml:space="preserve">
+    <value>Число можно набрать или крутить колёсиком; с Shift — шаг крупнее</value>
+  </data>
+  <data name="FieldMotion" xml:space="preserve">
+    <value>Наезд</value>
+  </data>
+  <data name="FieldMotionHint" xml:space="preserve">
+    <value>За сколько секунд от начала куска кадр плавно доходит от 100% до масштаба и сдвига выше. 0 — сразу</value>
+  </data>
+  <data name="FieldMotionOut" xml:space="preserve">
+    <value>Отъезд: от кадра к 100%</value>
+  </data>
+  <data name="FieldMotionOutHint" xml:space="preserve">
+    <value>Кадр начинается с заданного масштаба и сдвига и плавно возвращается к 100%</value>
+  </data>
+  <data name="SaveChangesTitle" xml:space="preserve">
+    <value>Сохранить изменения?</value>
+  </data>
+  <data name="SaveChangesMessage" xml:space="preserve">
+    <value>В черновике «{0}» есть несохранённые правки. Без сохранения они пропадут.</value>
+  </data>
+  <data name="SaveChangesMessageNew" xml:space="preserve">
+    <value>Этот монтаж ещё ни разу не сохраняли. Без сохранения он пропадёт.</value>
+  </data>
+  <data name="SaveChangesAccept" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="SaveChangesDecline" xml:space="preserve">
+    <value>Не сохранять</value>
+  </data>
+  <data name="SaveChangesCancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="ProjectStateUnsaved" xml:space="preserve">
+    <value>● не сохранено</value>
+  </data>
+  <data name="ProjectStateSaved" xml:space="preserve">
+    <value>сохранено в {0:HH:mm}</value>
+  </data>
+  <data name="ProjectStateHint" xml:space="preserve">
+    <value>Ctrl+S — сохранить черновик</value>
   </data>
 </root>

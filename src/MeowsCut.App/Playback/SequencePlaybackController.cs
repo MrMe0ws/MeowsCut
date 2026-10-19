@@ -157,12 +157,43 @@ public sealed class SequencePlaybackController
         IsPlaying = true;
         _lastTickAt = _now();
 
-        if (!_onImage && !_onBlackScreen)
-        {
-            player.Play();
-        }
+        StartPlayer();
 
         StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Ролик идёт, но проигрыватель ещё открывает файл следующего клипа: картинка стоит.
+    /// Наложенный звук в это время обязан ждать, иначе он уезжает вперёд, и его
+    /// отдёргивает назад — на слух это повтор одного и того же куска.
+    /// </summary>
+    public bool IsWaitingForPlayer => IsPlaying && _awaitingOpen;
+
+    /// <summary>
+    /// Запустить проигрыватель, но не раньше, чем файл открыт.
+    /// </summary>
+    /// <remarks>
+    /// Команда «играть», отданная до открытия, срабатывала сразу: ролик успевал
+    /// отыграть кусок со звуком, а обработчик открытия, который выполняется в потоке
+    /// интерфейса, потом отматывал его к началу клипа. Когда интерфейс занят —
+    /// кадр фотографии, перерисовка доски, — это секунда-полторы, и картинка
+    /// со звуком повторяли один и тот же кусок. Поэтому до открытия запуск
+    /// только откладывается и происходит в обработчике, уже после перемотки.
+    /// </remarks>
+    private void StartPlayer()
+    {
+        if (_onImage || _onBlackScreen)
+        {
+            return;
+        }
+
+        if (_awaitingOpen)
+        {
+            _pendingPlay = true;
+            return;
+        }
+
+        player.Play();
     }
 
     public void Pause()
@@ -414,10 +445,7 @@ public sealed class SequencePlaybackController
                 IsPlaying = true;
                 _lastTickAt = _now();
 
-                if (!_onImage && !_onBlackScreen)
-                {
-                    player.Play();
-                }
+                StartPlayer();
             }
         }
     }
@@ -490,10 +518,7 @@ public sealed class SequencePlaybackController
             IsPlaying = true;
             _lastTickAt = _now();
 
-            if (!_onImage && !_onBlackScreen)
-            {
-                player.Play();
-            }
+            StartPlayer();
         }
     }
 

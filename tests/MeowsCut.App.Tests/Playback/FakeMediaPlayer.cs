@@ -52,9 +52,11 @@ internal sealed class FakeMediaPlayer : IMediaPlayer
             return;
         }
 
+        // Новый файл не играет сам по себе, пока ему не скажут «играть».
         Source = path;
         OpenCount++;
         _isOpened = false;
+        IsPlaying = false;
 
         if (OpenImmediately)
         {

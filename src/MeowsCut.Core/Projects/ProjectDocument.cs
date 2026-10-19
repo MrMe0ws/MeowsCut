@@ -133,6 +133,18 @@ public sealed class ProjectClipDocument
     [JsonPropertyName("rotation")]
     public int Rotation { get; init; }
 
+    /// <summary>Своя подгонка кадра: null — как в проекте. В старых черновиках поля нет.</summary>
+    [JsonPropertyName("fit")]
+    public int? Fit { get; init; }
+
+    /// <summary>Наезд: за сколько секунд кадр доходит до заданного масштаба. 0 — без наезда.</summary>
+    [JsonPropertyName("motionSeconds")]
+    public double MotionSeconds { get; init; }
+
+    /// <summary>Отъезд вместо наезда: от заданного кадра к 100%.</summary>
+    [JsonPropertyName("motionOut")]
+    public bool MotionOut { get; init; }
+
     [JsonPropertyName("fadeInMs")]
     public double FadeInMs { get; init; }
 

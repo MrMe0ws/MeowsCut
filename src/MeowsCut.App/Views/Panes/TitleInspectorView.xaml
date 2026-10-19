@@ -14,6 +14,10 @@
             <Setter Property="controls:SliderInteraction.EndCommand" Value="{Binding EndInteractionCommand}" />
         </Style>
 
+        <Style TargetType="controls:NumberBox" BasedOn="{StaticResource Inspector.NumberBox}">
+            <Setter Property="EndCommand" Value="{Binding EndInteractionCommand}" />
+        </Style>
+
         <Style x:Key="FieldGrid" TargetType="Grid">
             <Setter Property="Margin" Value="0,1" />
         </Style>
@@ -99,9 +103,13 @@
                         TickFrequency="0.1"
                         Value="{Binding DurationSeconds}" />
 
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource Inspector.Value}"
-                           Text="{Binding DurationSeconds, StringFormat={}{0:0.0} с}" />
+                <controls:NumberBox Grid.Column="2"
+                                     Format="0.0"
+                                     Maximum="20"
+                                     Minimum="0.3"
+                                     Step="0.1"
+                                     Suffix=" с"
+                                     Value="{Binding DurationSeconds}" />
             </Grid>
 
             <Border Style="{StaticResource Inspector.Separator}" />
@@ -143,9 +151,13 @@
                         ToolTip="{loc:Tr FieldTitleSizeHint}"
                         Value="{Binding ScalePercent}" />
 
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource Inspector.Value}"
-                           Text="{Binding ScalePercent, StringFormat={}{0:0.#}%}" />
+                <controls:NumberBox Grid.Column="2"
+                                     Format="0.#"
+                                     Maximum="30"
+                                     Minimum="2"
+                                     Step="0.5"
+                                     Suffix="%"
+                                     Value="{Binding ScalePercent}" />
             </Grid>
 
             <Grid Style="{StaticResource FieldGrid}">

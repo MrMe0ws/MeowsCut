@@ -69,11 +69,17 @@ public sealed class FfmpegThumbnailService(
             // и файл вида "кадр.jpg.tmp" он записать отказывается.
             var temporaryPath = cachePath + ".part.jpg";
 
+            // Миниатюре хватает ближайшего ключевого кадра: декодируется ровно один кадр,
+            // а не вся цепочка от ключевого до нужного. Для 4K HEVC с телефона это
+            // разница в разы, и именно эти пачки декодирования отнимали процессор
+            // у предпросмотра. Один поток — по той же причине.
             var builder = FfmpegArgumentBuilder.Create()
                 .HideBanner()
                 .OverwriteOutput()
                 .NoStdin()
-                .LogLevel("error");
+                .LogLevel("error")
+                .InputOption("-threads", "1")
+                .InputOption("-skip_frame", "nokey");
 
             // -ss до -i даёт быстрый поиск: для миниатюры точность до кадра не нужна.
             // На нуле его не ставим вовсе: у фотографии кадр один, и перемотка
@@ -81,7 +87,7 @@ public sealed class FfmpegThumbnailService(
             // не создавал, и полоса кадров у фотографий оставалась пустой.
             if (position > TimeSpan.Zero)
             {
-                builder = builder.InputSeek(position);
+                builder = builder.InputSeek(position).InputFlag("-noaccurate_seek");
             }
 
             var arguments = builder
@@ -93,7 +99,7 @@ public sealed class FfmpegThumbnailService(
                 .Build();
 
             var result = await processRunner
-                .RunAsync(new ProcessRequest(toolset.FfmpegPath, arguments), null, null, cancellationToken)
+                .RunAsync(new ProcessRequest(toolset.FfmpegPath, arguments, Background: true), null, null, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!result.Success || !File.Exists(temporaryPath))

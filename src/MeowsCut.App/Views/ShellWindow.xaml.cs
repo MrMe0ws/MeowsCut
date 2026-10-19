@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using MeowsCut.App.Services;
 using MeowsCut.App.Localization;
 using MeowsCut.App.ViewModels;
@@ -12,12 +14,54 @@ namespace MeowsCut.App.Views;
 public partial class ShellWindow : Window
 {
     private readonly ShellViewModel _viewModel;
+    private readonly PanelLayoutKeeper _layout;
+    private bool _closeConfirmed;
 
     public ShellWindow(ShellViewModel viewModel)
     {
         _viewModel = viewModel;
         DataContext = viewModel;
         InitializeComponent();
+        _layout = new PanelLayoutKeeper(this, viewModel);
+    }
+
+    private void OnSplitterDragCompleted(object sender, DragCompletedEventArgs e) => _layout.OnSplitterMoved(sender);
+
+    /// <summary>
+    /// Закрытие с несохранёнными правками сначала спрашивает, что с ними делать.
+    /// Вопрос асинхронный (сохранение — запись файла), а Closing ждать не умеет:
+    /// закрытие отменяется и повторяется, когда ответ получен.
+    /// </summary>
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        base.OnClosing(e);
+        if (e.Cancel)
+        {
+            return;
+        }
+
+        if (!_closeConfirmed)
+        {
+            e.Cancel = true;
+            _ = Dispatcher.InvokeAsync(ConfirmCloseAsync);
+            return;
+        }
+
+        _layout.Save();
+    }
+
+    private async Task ConfirmCloseAsync()
+    {
+        if (!await _viewModel.ConfirmDiscardAsync())
+        {
+            return;
+        }
+
+        // Монтаж сохранён или выброшен осознанно: при следующем запуске
+        // предлагать его восстановить незачем.
+        _viewModel.ForgetRecovery();
+        _closeConfirmed = true;
+        Close();
     }
 
     /// <summary>

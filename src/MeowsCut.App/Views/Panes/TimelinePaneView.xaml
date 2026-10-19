@@ -166,7 +166,7 @@
                 </StackPanel>
             </Grid>
 
-            <controls:TimelineControl Grid.Row="1" Margin="0,0,0,0" />
+            <controls:TimelineControl x:Name="Board" Grid.Row="1" Margin="0,0,0,0" />
         </Grid>
     </Border>
 </UserControl>

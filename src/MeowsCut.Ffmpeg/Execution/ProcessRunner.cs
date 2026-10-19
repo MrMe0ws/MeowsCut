@@ -52,6 +52,7 @@ public sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRunne
         logger.LogDebug("Запуск: {CommandLine}", CommandLineFormatter.Format(request));
 
         process.Start();
+        LowerPriorityIfBackground(process, request);
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
@@ -93,6 +94,25 @@ public sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRunne
             .ConfigureAwait(false);
 
         return (result, output.ToString());
+    }
+
+    private void LowerPriorityIfBackground(Process process, ProcessRequest request)
+    {
+        if (!request.Background)
+        {
+            return;
+        }
+
+        try
+        {
+            process.PriorityClass = ProcessPriorityClass.BelowNormal;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            // Процесс успел завершиться или система не дала сменить приоритет —
+            // кадр всё равно будет, просто без уступки предпросмотру.
+            logger.LogDebug(ex, "Не удалось понизить приоритет {FileName}", Path.GetFileName(request.FileName));
+        }
     }
 
     private static Process CreateProcess(ProcessRequest request)
